@@ -64,3 +64,7 @@ android/local.properties
 .dartServer/
 .android/
 .config/
+
+# More sandbox caches
+.cache/
+.npm/
