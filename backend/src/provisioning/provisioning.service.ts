@@ -75,6 +75,14 @@ export class ProvisioningService {
     return key ? this.toContract(key) : null;
   }
 
+  /** Admin: all keys with user emails (admin panel visibility). */
+  async allKeys() {
+    return this.prisma.accessKey.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { id: true, email: true } } },
+    });
+  }
+
   /** Revoke: the key stops working immediately (checked on connect). */
   async revoke(user: SafeUser, id: string) {
     const result = await this.prisma.accessKey.updateMany({

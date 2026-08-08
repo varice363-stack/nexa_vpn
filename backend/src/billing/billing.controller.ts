@@ -20,6 +20,15 @@ export class BillingController {
     return this.billing.checkout(user, dto.planId);
   }
 
+  /** POST /billing/mock-pay/:transactionId — confirm a mock payment. */
+  @Post('mock-pay/:transactionId')
+  mockPay(
+    @CurrentUser() user: SafeUser,
+    @Param('transactionId', ParseUUIDPipe) transactionId: string,
+  ) {
+    return this.billing.mockPay(user, transactionId);
+  }
+
   /** POST /billing/webhook/:provider — idempotent payment events. */
   @Public()
   @Post('webhook/:provider')

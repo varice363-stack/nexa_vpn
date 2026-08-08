@@ -17,6 +17,7 @@ const BILLING_NAV = [
   { href: '/plans', label: 'Plans', icon: '💎' },
   { href: '/subscriptions', label: 'Subscriptions', icon: '🔁' },
   { href: '/transactions', label: 'Transactions', icon: '💳' },
+  { href: '/keys', label: 'Access Keys', icon: '🔑' },
 ];
 
 export default function Sidebar() {

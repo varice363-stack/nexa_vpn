@@ -76,6 +76,64 @@ export class BillingService {
     });
   }
 
+
+  // ── Mock payment (TASK #009-A) ─────────────────────────────────────────
+
+  /**
+   * POST /billing/mock-pay/:transactionId — confirms a mock payment.
+   *
+   * Rules:
+   *  * the transaction must belong to the authenticated user;
+   *  * only PENDING transactions may be paid (FAILED/CANCELLED → 400);
+   *  * a repeated call for an already-PAID transaction is idempotent:
+   *    returns the current state without creating a new subscription/key.
+   */
+  async mockPay(user: SafeUser, transactionId: string) {
+    const transaction = await this.prisma.paymentTransaction.findFirst({
+      where: { id: transactionId, userId: user.id },
+      include: { plan: true },
+    });
+    if (!transaction) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    // Idempotent: already paid → no side effects, return current state.
+    if (transaction.status === PaymentStatus.PAID) {
+      const subscription = await this.prisma.subscription.findFirst({
+        where: { userId: user.id, status: SubscriptionStatus.ACTIVE },
+        orderBy: { createdAt: 'desc' },
+      });
+      const accessKey = await this.prisma.accessKey.findFirst({
+        where: { userId: user.id, status: 'ACTIVE' },
+      });
+      return {
+        status: 'already_paid',
+        subscription: subscription ? 'ACTIVE' : 'NONE',
+        accessKey: accessKey ? 'ACTIVE' : 'NONE',
+      };
+    }
+
+    // Only PENDING may be paid.
+    if (transaction.status !== PaymentStatus.PENDING) {
+      throw new BadRequestException(
+        `Cannot pay a transaction in status ${transaction.status}`,
+      );
+    }
+
+    const result = await this._onPaid(transaction.id);
+
+    const accessKey = await this.prisma.accessKey.findFirst({
+      where: { userId: user.id, status: 'ACTIVE' },
+    });
+
+    return {
+      status: 'PAID',
+      subscription: result.subscriptionId ? 'ACTIVE' : 'NONE',
+      accessKey: accessKey ? 'ACTIVE' : 'NONE',
+      subscriptionId: result.subscriptionId,
+    };
+  }
+
   // ── Webhook ────────────────────────────────────────────────────────────
 
   /**

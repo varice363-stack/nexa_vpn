@@ -57,6 +57,13 @@ function makePrisma(overrides: Record<string, unknown> = {}) {
       }),
       findMany: jest.fn(async () => store.subscriptionPlan),
     },
+    user: { findUnique: jest.fn(async () => null) },
+    // Spread overrides but exclude keys merged separately below.
+    ...(() => {
+      const { paymentTransaction: _pt, subscription: _sb, accessKey: _ak, ...rest } = overrides;
+      return rest;
+    })(),
+    // deep-merge paymentTransaction so partial overrides keep default mocks
     paymentTransaction: {
       findUnique: jest.fn(async ({ where }: { where: unknown }) => {
         const key = (where as { provider_providerPaymentId?: { providerPaymentId: string } })
@@ -83,18 +90,8 @@ function makePrisma(overrides: Record<string, unknown> = {}) {
         return store.paymentTransaction[idx];
       }),
       updateMany: jest.fn(async () => ({ count: 1 })),
+      ...(overrides.paymentTransaction as Record<string, unknown> | undefined),
     },
-    accessKey: {
-      findFirst: jest.fn(async () => null),
-      create: jest.fn(async (args: { data: Record<string, unknown> }) => {
-        const key = { id: 'key1', ...args.data };
-        store.accessKey.push(key);
-        return key;
-      }),
-      updateMany: jest.fn(async () => ({ count: 1 })),
-    },
-    user: { findUnique: jest.fn(async () => null) },
-    ...overrides,
     // deep-merge subscription so partial overrides keep the default mocks
     subscription: {
       findFirst: jest.fn(async () => null),
@@ -112,6 +109,18 @@ function makePrisma(overrides: Record<string, unknown> = {}) {
       }),
       updateMany: jest.fn(async () => ({ count: 1 })),
       ...(overrides.subscription as Record<string, unknown> | undefined),
+    },
+    accessKey: {
+      findFirst: jest.fn(async () =>
+        store.accessKey.find((k) => (k as { status: string }).status === 'ACTIVE') ?? null,
+      ),
+      create: jest.fn(async (args: { data: Record<string, unknown> }) => {
+        const key = { id: 'key1', ...args.data };
+        store.accessKey.push(key);
+        return key;
+      }),
+      updateMany: jest.fn(async () => ({ count: 1 })),
+      ...(overrides.accessKey as Record<string, unknown> | undefined),
     },
   } as unknown as PrismaService;
 }
@@ -263,6 +272,76 @@ describe('BillingService', () => {
       });
       // No key was issued on a failed payment:
       expect((prisma.accessKey.create as jest.Mock).mock.calls.length).toBe(0);
+    });
+  });
+
+  describe('mockPay (TASK #009-A — monetization loop)', () => {
+    const pendingTx = { ...transaction, status: PaymentStatus.PENDING };
+
+    it('PENDING → PAID, creates an ACTIVE subscription and an ACTIVE key', async () => {
+      const prisma = makePrisma({
+        paymentTransaction: { findFirst: jest.fn(async () => ({ ...pendingTx, plan })) },
+      });
+      const service = new BillingService(prisma);
+
+      const result = await service.mockPay(user, 'tx1');
+
+      expect(result.status).toBe('PAID');
+      expect(result.subscription).toBe('ACTIVE');
+      expect(result.accessKey).toBe('ACTIVE');
+      // transaction marked PAID
+      const txUpdate = (prisma.paymentTransaction.update as jest.Mock).mock.calls[0][0];
+      expect(txUpdate.data.status).toBe(PaymentStatus.PAID);
+      // subscription created ACTIVE
+      const sub = (prisma.subscription.create as jest.Mock).mock.calls[0][0].data;
+      expect(sub.status).toBe(SubscriptionStatus.ACTIVE);
+      expect(sub.planId).toBe('p1');
+      // access key created ACTIVE
+      const key = (prisma.accessKey.create as jest.Mock).mock.calls[0][0].data;
+      expect(key.status).toBe('ACTIVE');
+    });
+
+    it('is idempotent — repeated call returns already_paid, no duplicate key', async () => {
+      const paidTx = { ...transaction, status: PaymentStatus.PAID, plan };
+      const prisma = makePrisma({
+        paymentTransaction: { findFirst: jest.fn(async () => paidTx) },
+        subscription: {
+          findFirst: jest.fn(async () => ({ id: 'sub1', status: SubscriptionStatus.ACTIVE })),
+        },
+        accessKey: {
+          findFirst: jest.fn(async () => ({ id: 'key1', status: 'ACTIVE' })),
+        },
+      });
+      const service = new BillingService(prisma);
+
+      const result = await service.mockPay(user, 'tx1');
+
+      expect(result.status).toBe('already_paid');
+      expect(result.subscription).toBe('ACTIVE');
+      expect(result.accessKey).toBe('ACTIVE');
+      expect((prisma.accessKey.create as jest.Mock).mock.calls.length).toBe(0);
+      expect((prisma.subscription.create as jest.Mock).mock.calls.length).toBe(0);
+      expect((prisma.paymentTransaction.update as jest.Mock).mock.calls.length).toBe(0);
+    });
+
+    it('rejects a foreign transaction', async () => {
+      const prisma = makePrisma(); // findFirst → null → not found
+      const service = new BillingService(prisma);
+
+      await expect(
+        service.mockPay({ id: 'other-user', email: 'x@y.dev' } as never, 'tx1'),
+      ).rejects.toThrow('Transaction not found');
+    });
+
+    it('rejects paying a FAILED transaction', async () => {
+      const prisma = makePrisma({
+        paymentTransaction: {
+          findFirst: jest.fn(async () => ({ ...transaction, status: PaymentStatus.FAILED, plan })),
+        },
+      });
+      const service = new BillingService(prisma);
+
+      await expect(service.mockPay(user, 'tx1')).rejects.toThrow('Cannot pay');
     });
   });
 });

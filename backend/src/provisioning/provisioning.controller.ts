@@ -1,7 +1,9 @@
 import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
 
 import { CurrentUser, SafeUser } from '../common/decorators/current-user.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
 import { ProvisioningService } from './provisioning.service';
 import { CreateKeyDto } from './dto/create-key.dto';
 
@@ -9,6 +11,13 @@ import { CreateKeyDto } from './dto/create-key.dto';
 @Controller('provisioning')
 export class ProvisioningController {
   constructor(private readonly provisioning: ProvisioningService) {}
+
+  /** Admin: all keys. */
+  @Roles(Role.ADMIN)
+  @Get('all')
+  allKeys() {
+    return this.provisioning.allKeys();
+  }
 
   @Get()
   list(@CurrentUser() user: SafeUser) {

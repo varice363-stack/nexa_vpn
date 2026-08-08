@@ -119,3 +119,17 @@ export interface BillingTransaction {
   createdAt: string;
   user?: { id: string; email: string };
 }
+
+export interface AdminAccessKey {
+  id: string;
+  userId: string;
+  deviceId: string | null;
+  name: string;
+  protocol: string;
+  uuid: string;
+  status: string;
+  createdAt: string;
+  expiresAt: string | null;
+  lastUsedAt: string | null;
+  user?: { id: string; email: string };
+}

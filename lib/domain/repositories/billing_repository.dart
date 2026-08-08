@@ -1,4 +1,5 @@
 import '../../models/checkout_result.dart';
+import '../../models/mock_pay_result.dart';
 import '../../models/payment_transaction.dart';
 import '../../models/subscription_plan.dart';
 
@@ -9,6 +10,9 @@ abstract class BillingRepository {
 
   /// POST /billing/checkout — initiates a (mock) checkout for a plan.
   Future<CheckoutResult> createCheckout(String planId);
+
+  /// POST /billing/mock-pay/:transactionId — confirms a mock payment.
+  Future<MockPayResult> mockPay(String transactionId);
 
   /// GET /billing/transactions — own payment transactions.
   Future<List<PaymentTransaction>> getTransactions();

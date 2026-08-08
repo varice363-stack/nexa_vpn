@@ -87,6 +87,42 @@ class MyAccessScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 20),
                     const SectionHeader(title: 'ACCESS KEYS'),
+                    // ── No active access banner ─────────────────────────
+                    if (keys.isNotEmpty && !keys.any((k) => k.isActive)) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: GlassContainer(
+                          borderRadius: BorderRadius.circular(16),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          color: AppColors.warning.withValues(alpha: 0.08),
+                          borderColor:
+                              AppColors.warning.withValues(alpha: 0.3),
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                size: 18,
+                                color: AppColors.warning,
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'No active access — renew your subscription '
+                                  'to activate a key.',
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                     // ── Keys / empty ────────────────────────────────────
                     if (keys.isEmpty)
                       EmptyState(

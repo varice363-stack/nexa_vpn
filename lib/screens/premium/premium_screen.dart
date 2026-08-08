@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/utils/formatters.dart';
+import '../../models/checkout_result.dart';
 import '../../models/subscription_plan.dart';
 import '../../providers/access_providers.dart';
 import '../../providers/app_providers.dart';
@@ -33,6 +34,11 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
   String? _checkoutError;
   bool _checkingOut = false;
 
+  /// Pending checkout awaiting the mock payment confirmation.
+  CheckoutResult? _pendingCheckout;
+  bool _paying = false;
+  bool _paymentSuccess = false;
+
   Future<void> _checkout(SubscriptionPlan plan) async {
     final authUser = ref.read(authProvider).value;
     if (authUser == null) {
@@ -42,6 +48,8 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
     setState(() {
       _checkingOut = true;
       _checkoutError = null;
+      _paymentSuccess = false;
+      _pendingCheckout = null;
     });
     try {
       final result =
@@ -51,22 +59,51 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
             source: 'billing',
           );
       if (!mounted) return;
-      // Mock checkout: no real payment, simulate a successful activation
-      // by refreshing server state (idempotent).
-      await ref.read(subscriptionProvider.notifier).refresh();
-      await ref.read(accessKeysProvider.notifier).refresh();
-      if (!mounted) return;
-      setState(() => _checkingOut = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Checkout initiated — payment is simulated.'),
-        ),
-      );
+      setState(() {
+        _checkingOut = false;
+        _pendingCheckout = result;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _checkingOut = false;
         _checkoutError = 'Checkout failed: $e';
+      });
+    }
+  }
+
+  /// POST /billing/mock-pay — confirms the pending transaction.
+  Future<void> _mockPay() async {
+    final checkout = _pendingCheckout;
+    if (checkout == null) return;
+    setState(() {
+      _paying = true;
+      _checkoutError = null;
+    });
+    try {
+      final result =
+          await ref.read(billingRepositoryProvider).mockPay(checkout.transactionId);
+      ref.read(loggerProvider).info(
+            'Mock payment: ${result.status} (sub=${result.subscription}, key=${result.accessKey})',
+            source: 'billing',
+          );
+      if (!mounted) return;
+      setState(() {
+        _paying = false;
+        _paymentSuccess = true;
+        _pendingCheckout = null;
+      });
+      // Refresh the server truth (subscription + access keys).
+      await ref.read(subscriptionProvider.notifier).refresh();
+      await ref.read(accessKeysProvider.notifier).refresh();
+      if (!mounted) return;
+      // Deliver the user to their access.
+      context.push('/access');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _paying = false;
+        _checkoutError = 'Payment failed: $e';
       });
     }
   }
@@ -146,6 +183,16 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                 ),
               ),
             ],
+            // ── Mock payment stage ──────────────────────────────────────
+            if (_pendingCheckout != null) ...[
+              const SizedBox(height: 8),
+              _MockPaymentCard(
+                transactionId: _pendingCheckout!.transactionId,
+                paying: _paying,
+                success: _paymentSuccess,
+                onPay: _mockPay,
+              ),
+            ],
             const SizedBox(height: 8),
             if (authUser == null)
               GlassButton(
@@ -155,7 +202,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                 foreground: Colors.black87,
                 onTap: () => context.push('/login'),
               )
-            else if (selected != null)
+            else if (selected != null && _pendingCheckout == null)
               GlassButton(
                 label:
                     'Get Premium — ${selected.priceLabel}${selected.durationDays > 0 ? ' / ${selected.durationLabel}' : ''}',
@@ -171,6 +218,92 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                 'Payments are simulated in this build. Store integration planned.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 10.5, color: AppColors.textTertiary),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Mock payment card ─────────────────────────────────────────────────────
+
+class _MockPaymentCard extends StatelessWidget {
+  const _MockPaymentCard({
+    required this.transactionId,
+    required this.paying,
+    required this.success,
+    required this.onPay,
+  });
+
+  final String transactionId;
+  final bool paying;
+  final bool success;
+  final VoidCallback onPay;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassContainer(
+      borderRadius: BorderRadius.circular(18),
+      padding: const EdgeInsets.all(16),
+      color: success
+          ? AppColors.success.withValues(alpha: 0.07)
+          : AppColors.primary.withValues(alpha: 0.05),
+      borderColor: success
+          ? AppColors.success.withValues(alpha: 0.35)
+          : AppColors.primary.withValues(alpha: 0.25),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                success ? Icons.check_circle_rounded : Icons.payment_rounded,
+                size: 20,
+                color: success ? AppColors.success : AppColors.primaryBright,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  success
+                      ? 'Payment successful — access activated'
+                      : 'Payment (demo)',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            success
+                ? 'Your subscription and access key are now active.'
+                : 'Confirm the mock payment to activate your subscription and access key.',
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          if (!success) ...[
+            const SizedBox(height: 12),
+            GlassButton(
+              label: 'Pay now (demo)',
+              icon: Icons.bolt_rounded,
+              loading: paying,
+              gradient: AppColors.premiumGradient,
+              foreground: Colors.black87,
+              onTap: onPay,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Tx: $transactionId',
+              style: const TextStyle(
+                fontSize: 10,
+                color: AppColors.textTertiary,
               ),
             ),
           ],
