@@ -1,0 +1,30 @@
+import '../domain/repositories/access_repository.dart';
+import '../models/access_key.dart';
+import '../services/api/api_client.dart';
+import '../services/api/api_exception.dart';
+
+/// [AccessRepository] backed by the Nexa VPN API.
+class AccessRepositoryImpl implements AccessRepository {
+  AccessRepositoryImpl({required ApiClient api}) : _api = api;
+
+  final ApiClient _api;
+
+  @override
+  Future<List<AccessKey>> getKeys() async {
+    final data = await _api.get('/provisioning');
+    if (data is! List) {
+      throw const ApiException('Unexpected keys response', code: 'BAD_RESPONSE');
+    }
+    return data
+        .map((item) =>
+            AccessKey.fromJson(Map<String, Object?>.from(item as Map)))
+        .toList();
+  }
+
+  @override
+  Future<AccessKey?> getActiveKey() async {
+    final data = await _api.get('/provisioning/active');
+    if (data == null) return null;
+    return AccessKey.fromJson(Map<String, Object?>.from(data as Map));
+  }
+}

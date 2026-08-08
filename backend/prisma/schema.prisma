@@ -1,0 +1,267 @@
+// Nexa VPN — data model (billing foundation)
+// PostgreSQL via Prisma ORM.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ────────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  PREMIUM
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  DELETED
+}
+
+enum ServerProtocol {
+  WIREGUARD
+  OPENVPN
+  IKEV2
+}
+
+enum ServerStatus {
+  ACTIVE
+  DISABLED
+}
+
+/// Product codes of the subscription plans.
+enum PlanCode {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  LIFETIME
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  EXPIRED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+/// Extensible payment provider registry (real integrations come later).
+enum PaymentProvider {
+  INTERNAL
+  SBP
+  CARD
+  APPLE
+  GOOGLE
+  CRYPTO
+}
+
+// ── User ─────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  country      String?
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime @default(now())
+  lastLogin    DateTime?
+
+  subscriptions      Subscription[]
+  connectionLogs     ConnectionLog[]
+  notifications      Notification[]
+  devices            Device[]
+  accessKeys         AccessKey[]
+  paymentTransactions PaymentTransaction[]
+
+  @@index([role])
+  @@index([status])
+}
+
+// ── VPN Server ───────────────────────────────────────────────────────────
+
+model VpnServer {
+  id          String   @id @default(uuid())
+  name        String
+  country     String
+  countryCode String
+  city        String
+  ip          String   @unique
+  protocol    ServerProtocol @default(WIREGUARD)
+  load        Float    @default(0)
+  ping        Int      @default(0)
+  premium     Boolean  @default(false)
+  status      ServerStatus @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  connectionLogs ConnectionLog[]
+
+  @@index([status])
+  @@index([country])
+}
+
+// ── Subscription Plan ────────────────────────────────────────────────────
+// The sellable product. NOT tied to any payment provider.
+
+model SubscriptionPlan {
+  id          String    @id @default(uuid())
+  code        PlanCode  @unique
+  name        String
+  description String?
+  durationDays Int
+  price       Decimal   @db.Decimal(10, 2)
+  currency    String    @default("USD")
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  subscriptions      Subscription[]
+  paymentTransactions PaymentTransaction[]
+}
+
+// ── Subscription ─────────────────────────────────────────────────────────
+
+model Subscription {
+  id        String             @id @default(uuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId    String
+  plan      SubscriptionPlan   @relation(fields: [planId], references: [id])
+  status    SubscriptionStatus @default(ACTIVE)
+  startedAt DateTime           @default(now())
+  expiresAt DateTime?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  paymentTransactions PaymentTransaction[]
+
+  @@index([userId, status])
+  @@index([planId])
+}
+
+// ── Payment Transaction ──────────────────────────────────────────────────
+// One row per checkout attempt. `providerPaymentId` is the provider-side
+// id; the unique pair (provider, providerPaymentId) is the idempotency key
+// for webhook events (PostgreSQL treats NULLs as distinct, so PENDING rows
+// without a provider id do not collide).
+
+model PaymentTransaction {
+  id                String          @id @default(uuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId    String?
+  subscription      Subscription?   @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  planId            String?         // plan resolved at checkout (billing truth)
+  plan              SubscriptionPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+  provider          PaymentProvider
+  providerPaymentId String?
+  amount            Decimal         @db.Decimal(10, 2)
+  currency          String          @default("USD")
+  status            PaymentStatus   @default(PENDING)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@unique([provider, providerPaymentId])
+  @@index([userId])
+  @@index([status])
+}
+
+// ── Banner ───────────────────────────────────────────────────────────────
+
+model Banner {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  imageUrl    String?
+  buttonText  String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+}
+
+// ── Connection Log ───────────────────────────────────────────────────────
+
+model ConnectionLog {
+  id             String    @id @default(uuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serverId       String
+  server         VpnServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  connectedAt    DateTime  @default(now())
+  disconnectedAt DateTime?
+  durationSec    Int?
+  trafficMb      Int?
+  createdAt      DateTime  @default(now())
+
+  @@index([userId, connectedAt])
+  @@index([serverId, connectedAt])
+}
+
+// ── Notification ─────────────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  type      String   @default("info")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+// ── Device ────────────────────────────────────────────────────────────────
+
+model Device {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  platform   String?
+  lastSeenAt DateTime?
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+
+  accessKeys AccessKey[]
+
+  @@index([userId])
+}
+
+// ── AccessKey (Provisioning) ──────────────────────────────────────────────
+
+model AccessKey {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId   String?
+  device     Device?   @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  name       String
+  protocol   String    @default("VLESS")
+  uuid       String    @unique
+  status     String    @default("ACTIVE") // ACTIVE | REVOKED | EXPIRED
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+  lastUsedAt DateTime?
+
+  @@index([userId, status])
+}

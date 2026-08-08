@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: nexa_vpn_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nexa
+      POSTGRES_PASSWORD: nexa
+      POSTGRES_DB: nexa_vpn
+    ports:
+      - "5432:5432"
+    volumes:
+      - nexa_pgdata:/var/lib/postgresql/data
+
+volumes:
+  nexa_pgdata:
