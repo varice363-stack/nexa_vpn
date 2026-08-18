@@ -56,8 +56,15 @@ function makePrisma(overrides: Record<string, unknown> = {}) {
         return store.subscriptionPlan.find((p) => (p as { code: string }).code === where.code) ?? null;
       }),
       findMany: jest.fn(async () => store.subscriptionPlan),
+      findFirst: jest.fn(async () => store.subscriptionPlan[0] ?? null),
     },
-    user: { findUnique: jest.fn(async () => null) },
+    user: {
+      findUnique: jest.fn(async () => ({ id: 'u1', email: 'u@test.dev' })),
+      update: jest.fn(async (args: { data: Record<string, unknown> }) => args.data),
+    },
+    webhookLog: {
+      create: jest.fn(async (args: { data: Record<string, unknown> }) => ({ id: 'wl1', ...args.data })),
+    },
     // Spread overrides but exclude keys merged separately below.
     ...(() => {
       const { paymentTransaction: _pt, subscription: _sb, accessKey: _ak, ...rest } = overrides;
@@ -157,6 +164,7 @@ describe('BillingService', () => {
         event: 'payment.paid',
         providerPaymentId: 'pay_1',
         transactionId: 'tx1',
+        signature: 'mock-signature',
       });
 
       expect(result.status).toBe('PAID');
@@ -200,6 +208,7 @@ describe('BillingService', () => {
         event: 'payment.paid',
         providerPaymentId: 'pay_1',
         transactionId: 'tx1',
+        signature: 'mock-signature',
       });
 
       expect(result.status).toBe('PAID');
@@ -220,9 +229,14 @@ describe('BillingService', () => {
         event: 'payment.paid',
         providerPaymentId: 'pay_1',
         transactionId: 'tx1',
+        signature: 'mock-signature',
       });
 
-      expect(result).toEqual({ idempotent: true, status: 'PAID' });
+      expect(result).toEqual({
+        idempotent: true,
+        status: 'PAID',
+        already_processed: true,
+      });
       expect((prisma.subscription.create as jest.Mock).mock.calls.length).toBe(0);
       expect((prisma.accessKey.create as jest.Mock).mock.calls.length).toBe(0);
     });
@@ -237,6 +251,7 @@ describe('BillingService', () => {
         event: 'payment.failed',
         providerPaymentId: 'pay_1',
         transactionId: 'tx1',
+        signature: 'mock-signature',
       });
 
       expect(result.status).toBe('FAILED');
@@ -269,6 +284,7 @@ describe('BillingService', () => {
         event: 'payment.failed',
         providerPaymentId: 'pay_1',
         transactionId: 'tx1',
+        signature: 'mock-signature',
       });
       // No key was issued on a failed payment:
       expect((prisma.accessKey.create as jest.Mock).mock.calls.length).toBe(0);
@@ -342,6 +358,327 @@ describe('BillingService', () => {
       const service = new BillingService(prisma);
 
       await expect(service.mockPay(user, 'tx1')).rejects.toThrow('Cannot pay');
+    });
+  });
+
+  describe('checkout idempotency (TASK #009-B)', () => {
+    it('reuses the transaction for the same Idempotency-Key', async () => {
+      const existingTx = {
+        ...transaction,
+        idempotencyKey: 'key-123',
+        status: PaymentStatus.PENDING,
+      };
+      const prisma = makePrisma({
+        paymentTransaction: {
+          findFirst: jest.fn(async () => existingTx),
+        },
+      });
+      const service = new BillingService(prisma);
+
+      const result = await service.checkout(user, 'p1', 'key-123');
+
+      expect(result.transactionId).toBe(existingTx.id);
+      // No new transaction was created.
+      expect((prisma.paymentTransaction.create as jest.Mock).mock.calls.length).toBe(0);
+    });
+
+    it('creates a NEW transaction for a different key', async () => {
+      const prisma = makePrisma(); // findFirst → null
+      const service = new BillingService(prisma);
+
+      const result = await service.checkout(user, 'p1', 'key-456');
+
+      expect(result.transactionId).toBeTruthy();
+      const created = (prisma.paymentTransaction.create as jest.Mock).mock.calls[0][0].data;
+      expect(created.idempotencyKey).toBe('key-456');
+      expect(created.status).toBe(PaymentStatus.PENDING);
+    });
+  });
+
+  describe('webhook security & idempotency (TASK #009-B)', () => {
+    it('rejects a webhook with an invalid signature', async () => {
+      const prisma = makePrisma();
+      const service = new BillingService(prisma);
+
+      await expect(
+        service.handleWebhook('mock', {
+          event: 'payment.paid',
+          providerPaymentId: 'pay_1',
+          transactionId: 'tx1',
+          signature: 'WRONG',
+        }),
+      ).rejects.toThrow('Invalid webhook signature');
+    });
+
+    it('returns already_processed for a duplicate webhook', async () => {
+      const paidTx = { ...transaction, status: PaymentStatus.PAID, plan };
+      const prisma = makePrisma();
+      (prisma.paymentTransaction.findUnique as jest.Mock).mockResolvedValue(paidTx);
+      const service = new BillingService(prisma);
+
+      const result = await service.handleWebhook('mock', {
+        event: 'payment.paid',
+        providerPaymentId: 'pay_1',
+        transactionId: 'tx1',
+        signature: 'mock-signature',
+      });
+
+      expect(result).toMatchObject({ already_processed: true, status: 'PAID' });
+      expect((prisma.subscription.create as jest.Mock).mock.calls.length).toBe(0);
+      expect((prisma.accessKey.create as jest.Mock).mock.calls.length).toBe(0);
+    });
+
+    it('forbids FAILED → PAID transition via webhook', async () => {
+      const failedTx = { ...transaction, status: PaymentStatus.FAILED, plan };
+      const prisma = makePrisma();
+      (prisma.paymentTransaction.findUnique as jest.Mock).mockResolvedValue(failedTx);
+      const service = new BillingService(prisma);
+
+      await expect(
+        service.handleWebhook('mock', {
+          event: 'payment.paid',
+          providerPaymentId: 'pay_1',
+          transactionId: 'tx1',
+          signature: 'mock-signature',
+        }),
+      ).rejects.toThrow('A failed transaction cannot be paid');
+    });
+
+    it('forbids refunding a non-paid transaction', async () => {
+      const pendingTx = { ...transaction, status: PaymentStatus.PENDING, plan };
+      const prisma = makePrisma();
+      (prisma.paymentTransaction.findUnique as jest.Mock).mockResolvedValue(pendingTx);
+      const service = new BillingService(prisma);
+
+      await expect(
+        service.handleWebhook('mock', {
+          event: 'payment.refunded',
+          providerPaymentId: 'pay_1',
+          transactionId: 'tx1',
+          signature: 'mock-signature',
+        }),
+      ).rejects.toThrow('Only paid transactions can be refunded');
+    });
+
+    it('records webhook status fields on a paid event', async () => {
+      const prisma = makePrisma();
+      const service = new BillingService(prisma);
+
+      await service.handleWebhook('mock', {
+        event: 'payment.paid',
+        providerPaymentId: 'pay_1',
+        transactionId: 'tx1',
+        signature: 'mock-signature',
+      });
+
+      const stampUpdate = (prisma.paymentTransaction.update as jest.Mock).mock.calls.find(
+        (c: Array<{ data?: Record<string, unknown> }>) =>
+          c[0]?.data?.webhookEvent === 'PAID',
+      );
+      expect(stampUpdate).toBeTruthy();
+      expect(stampUpdate![0].data!.webhookProcessedAt).toBeInstanceOf(Date);
+    });
+  });
+
+  describe('trial (TASK #009-C)', () => {
+    it('activates a 3-day TRIAL, issues a scoped key, marks trialUsedAt', async () => {
+      const prisma = makePrisma();
+      const service = new BillingService(prisma);
+
+      const result = await service.activateTrial(user);
+
+      expect(result.status).toBe('TRIAL');
+      const sub = (prisma.subscription.create as jest.Mock).mock.calls[0][0].data;
+      expect(sub.status).toBe('TRIAL');
+      expect(sub.expiresAt).toBeInstanceOf(Date);
+      // ~3 days ahead
+      const days = (sub.expiresAt.getTime() - Date.now()) / 86400000;
+      expect(days).toBeGreaterThan(2.9);
+      const key = (prisma.accessKey.create as jest.Mock).mock.calls[0][0].data;
+      expect(key.status).toBe('ACTIVE');
+      expect(key.expiresAt).toBeInstanceOf(Date);
+      const userUpdate = (prisma.user.update as jest.Mock).mock.calls[0][0];
+      expect(userUpdate.data.trialUsedAt).toBeInstanceOf(Date);
+    });
+
+    it('forbids a second trial (trialUsedAt set)', async () => {
+      const prisma = makePrisma({
+        user: {
+          findUnique: jest.fn(async () => ({
+            id: 'u1', email: 'u@test.dev', trialUsedAt: new Date(),
+          })),
+        },
+      });
+      const service = new BillingService(prisma);
+      await expect(service.activateTrial(user)).rejects.toThrow('already been used');
+    });
+
+    it('forbids a trial when an active subscription exists', async () => {
+      const prisma = makePrisma({
+        subscription: {
+          findFirst: jest.fn(async () => ({ id: 'sub1', status: SubscriptionStatus.ACTIVE })),
+        },
+      });
+      const service = new BillingService(prisma);
+      await expect(service.activateTrial(user)).rejects.toThrow('already exists');
+    });
+
+    it('trialStatus reports availability for a fresh account', async () => {
+      const prisma = makePrisma();
+      const service = new BillingService(prisma);
+      const status = await service.trialStatus(user);
+      expect(status.available).toBe(true);
+      expect(status.used).toBe(false);
+    });
+  });
+
+  describe('cleanup (TASK #009-C)', () => {
+    it('cancels stale PENDING transactions and leaves fresh ones', async () => {
+      const prisma = makePrisma();
+      const service = new BillingService(prisma);
+
+      const result = await service.cleanupPending(24);
+
+      expect(result.cancelled).toBe(1);
+      const where = (prisma.paymentTransaction.updateMany as jest.Mock).mock.calls[0][0].where;
+      expect(where.status).toBe(PaymentStatus.PENDING);
+      expect(where.createdAt.lt).toBeInstanceOf(Date);
+      const data = (prisma.paymentTransaction.updateMany as jest.Mock).mock.calls[0][0].data;
+      expect(data.status).toBe(PaymentStatus.CANCELLED);
+    });
+
+    it('expires overdue trials and their keys', async () => {
+      const prisma = makePrisma();
+      const service = new BillingService(prisma);
+
+      const result = await service.expireOverdueTrials();
+
+      const subWhere = (prisma.subscription.updateMany as jest.Mock).mock.calls[0][0].where;
+      expect(subWhere.status).toBe(SubscriptionStatus.TRIAL);
+      const keyWhere = (prisma.accessKey.updateMany as jest.Mock).mock.calls[0][0].where;
+      expect(keyWhere.status).toBe('ACTIVE');
+      expect(result.subscriptions).toBe(1);
+      expect(result.keys).toBe(1);
+    });
+  });
+
+  describe('webhook replay protection (TASK #009-C)', () => {
+    it('rejects a webhook with an outdated timestamp', async () => {
+      const prisma = makePrisma();
+      const service = new BillingService(prisma);
+      const stale = Date.now() - 60 * 60 * 1000; // 1 hour old (tolerance 5 min)
+
+      await expect(
+        service.handleWebhook('mock', {
+          event: 'payment.paid',
+          providerPaymentId: 'pay_1',
+          transactionId: 'tx1',
+          signature: 'mock-signature',
+          timestamp: stale,
+        }),
+      ).rejects.toThrow('timestamp out of tolerance');
+    });
+
+    it('accepts a webhook with a fresh timestamp', async () => {
+      const prisma = makePrisma();
+      const service = new BillingService(prisma);
+
+      const result = await service.handleWebhook('mock', {
+        event: 'payment.paid',
+        providerPaymentId: 'pay_1',
+        transactionId: 'tx1',
+        signature: 'mock-signature',
+        timestamp: Date.now(),
+      });
+
+      expect(result.status).toBe('PAID');
+    });
+
+    it('records every webhook event in the audit log', async () => {
+      const prisma = makePrisma();
+      const service = new BillingService(prisma);
+
+      await service.handleWebhook('mock', {
+        event: 'payment.paid',
+        providerPaymentId: 'pay_1',
+        transactionId: 'tx1',
+        signature: 'mock-signature',
+        timestamp: Date.now(),
+      });
+
+      const logCall = (prisma.webhookLog.create as jest.Mock).mock.calls[0][0];
+      expect(logCall.data.event).toBe('payment.paid');
+      expect(logCall.data.verified).toBe(true);
+    });
+  });
+
+  describe('provider factory (TASK #009-C)', () => {
+    it('mock provider is used by default and works', async () => {
+      const prisma = makePrisma();
+      const service = new BillingService(prisma);
+      const result = await service.checkout(user, 'p1');
+      expect(result.status).toBe('PENDING');
+    });
+
+    it('real provider placeholder rejects checkout', async () => {
+      process.env.PAYMENT_PROVIDER = 'real';
+      try {
+        const prisma = makePrisma();
+        const service = new BillingService(prisma);
+        await expect(service.checkout(user, 'p1')).rejects.toThrow('not configured');
+      } finally {
+        delete process.env.PAYMENT_PROVIDER;
+      }
+    });
+  });
+
+  describe('real payment verification (TASK #015)', () => {
+    it('rejects a webhook whose amount differs from the plan price', async () => {
+      const prisma = makePrisma();
+      const service = new BillingService(prisma);
+
+      await expect(
+        service.handleWebhook('mock', {
+          event: 'payment.paid',
+          providerPaymentId: 'pay_1',
+          transactionId: 'tx1',
+          signature: 'mock-signature',
+          timestamp: Date.now(),
+          amount: 0.01, // forged amount
+        }),
+      ).rejects.toThrow('Amount mismatch');
+    });
+
+    it('accepts a webhook whose amount matches the plan price', async () => {
+      const prisma = makePrisma();
+      const service = new BillingService(prisma);
+
+      const result = await service.handleWebhook('mock', {
+        event: 'payment.paid',
+        providerPaymentId: 'pay_1',
+        transactionId: 'tx1',
+        signature: 'mock-signature',
+        timestamp: Date.now(),
+        amount: 11.99,
+      });
+
+      expect(result.status).toBe('PAID');
+    });
+
+    it('forged client success is impossible — webhook requires a real transaction', async () => {
+      const prisma = makePrisma();
+      const service = new BillingService(prisma);
+
+      // A client cannot call the webhook with an unknown payment id.
+      await expect(
+        service.handleWebhook('mock', {
+          event: 'payment.paid',
+          providerPaymentId: 'forged-pay-id',
+          transactionId: 'forged-tx',
+          signature: 'mock-signature',
+          timestamp: Date.now(),
+        }),
+      ).rejects.toThrow('Unknown transaction');
     });
   });
 });

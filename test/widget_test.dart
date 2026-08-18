@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -98,6 +99,8 @@ void main() {
     expect(find.text('Current server'), findsOneWidget);
     // Guest mode is reflected in the profile tab.
     expect(find.text('Guest mode'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 100));
   });
 
   testWidgets('servers screen opens from bottom navigation', (tester) async {
@@ -113,6 +116,8 @@ void main() {
     expect(find.text('Search country or city'), findsOneWidget);
     expect(find.text('Fastest'), findsOneWidget);
     expect(find.text('Premium'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 100));
   });
 
   testWidgets('guest connect attempt opens login screen', (tester) async {
@@ -128,5 +133,7 @@ void main() {
 
     expect(find.text('Welcome back'), findsOneWidget);
     expect(find.text('Continue as guest'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 100));
   });
 }

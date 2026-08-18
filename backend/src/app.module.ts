@@ -18,6 +18,7 @@ import { DevicesModule } from './devices/devices.module';
 import { ProvisioningModule } from './provisioning/provisioning.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { BillingModule } from './billing/billing.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { BillingModule } from './billing/billing.module';
     ProvisioningModule,
     SessionsModule,
     BillingModule,
+    HealthModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

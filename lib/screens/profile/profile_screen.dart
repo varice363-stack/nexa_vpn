@@ -78,6 +78,12 @@ class ProfileScreen extends ConsumerWidget {
             onTap: () => context.push('/access'),
           ),
           GlassListTile(
+            icon: Icons.receipt_long_rounded,
+            title: 'Payment History',
+            subtitle: 'Checkouts and payments',
+            onTap: () => context.push('/payment-history'),
+          ),
+          GlassListTile(
             icon: Icons.star_rounded,
             title: 'Favorites',
             subtitle: 'Saved locations',

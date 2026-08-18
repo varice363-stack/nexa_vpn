@@ -98,6 +98,86 @@ Production: S3/GCS + signed URL (TODO).
 
 ---
 
+## Payment Provider — YooKassa (TASK #015)
+
+- `PAYMENT_PROVIDER=mock|real` (env). `real` → **YooKassa** hosted checkout.
+- env: `YOOKASSA_SHOP_ID`, `YOOKASSA_SECRET_KEY`, `PAYMENT_RETURN_URL` (значения — только в .env, не в git).
+- Flutter НЕ подтверждает оплату: `POST /billing/checkout` → hosted page → возврат → клиент опрашивает `GET /billing/transactions/:id`; истина — webhook от YooKassa (`payment.succeeded`), который переводит Payment → PAID → Subscription ACTIVE → AccessKey ACTIVE.
+- Безопасность webhook: структурная валидация payload (object.id/event/amount), сверка суммы с планом (amount mismatch → 400), уникальность (provider, providerPaymentId), идемпотентность (повторный webhook → already_processed).
+- Карты/CVV не хранятся (hosted page YooKassa).
+
+## VLESS Access Delivery (TASK #010)
+
+Цепочка доступа: **Payment → Subscription ACTIVE → AccessKey ACTIVE → VLESS Config**.
+
+Конфигурация генерируется backend-side детерминированно из (AccessKey.uuid + VpnServer)
+сервисом `VlessConfigService` и **не хранится в БД** и **не логируется**.
+
+### Контракт AccessKey (расширен)
+
+```json
+{
+  "id": "…",
+  "name": "My iPhone",
+  "protocol": "VLESS",
+  "status": "ACTIVE",
+  "expiresAt": "…",
+  "server": { "id": "…", "name": "Istanbul TR-01", "country": "Turkey",
+              "countryCode": "TR", "city": "Istanbul", "ip": "185.65.134.22" },
+  "config": {
+    "format": "vless",
+    "uri": "vless://…",
+    "qrPayload": "vless://…"
+  }
+}
+```
+
+### Назначение сервера (TASK #011)
+
+- При создании AccessKey backend назначает `serverId` **детерминированно**: ACTIVE-сервер с минимальным ping; при равенстве — стабильный tie-breaker по id.
+- Назначенный сервер **не меняется** между запросами; пользователь не может выбрать ноду (`CreateKeyDto` не принимает `serverId`).
+- Конфигурация генерируется **только из назначенного сервера**; если сервер недоступен/неактивен или отсутствуют обязательные параметры (port/transport/security) — `config.uri = null` (без подмены другим сервером).
+- Существующие ключи без назначения безопасно backfill-ятся при чтении (данные не удаляются).
+- Admin `GET /provisioning/all` возвращает назначенный сервер и его статус.
+
+### Xray ingress contract (TASK #012)
+
+- `ServerStatus` расширен: `ACTIVE | INACTIVE | MAINTENANCE | UNAVAILABLE | DISABLED`.
+- `VpnServer` += `flow`, `publicKey`, `shortId` (публичные параметры REALITY; секреты — только в env-слое ингресса).
+- `XrayIngressConfig` — provider-independent контракт (host/port/transport/security/sni/flow/publicKey/shortId) с валидацией перед генерацией URI:
+  - обязательны host, port, transport, security;
+  - `security=tls|reality` → требуется sni;
+  - `security=reality` → требуется publicKey.
+- Если назначенный сервер недоступен (`status != ACTIVE`) → `config.uri = null`, причина `SERVER_<STATUS>` / `CONFIGURATION_UNAVAILABLE` / `INGRESS_CONFIG_INVALID` (никогда не подставляется другой сервер).
+- Admin `GET /servers/all` возвращает `_count.accessKeys` (число назначенных ключей).
+
+### Правила выдачи
+
+| Статус ключа | config.uri / qrPayload | Доступ |
+|---|---|---|
+| ACTIVE | vless://… (сгенерирован) | ✅ |
+| EXPIRED | null | ❌ |
+| REVOKED | null | ❌ |
+| чужой ключ | 404 (ownership через userId) | ❌ |
+| неавторизованный | 401 (JwtAuthGuard) | ❌ |
+
+- `config.uri` никогда не попадает в публичный `GET /servers`;
+- полный URI не логируется (production logs без секретов);
+- поле `VpnServer` расширены: `port`, `transport` (tcp/ws/grpc), `security` (none/tls/reality), `sni` — nullable;
+- TODO(Xray): реальные ingress-параметры заменят placeholder (443/tcp/none) при подключении Xray-слоя.
+
+### Пример URI (без реальных секретов)
+
+```
+vless://11111111-2222-3333-4444-555555555555@185.65.134.22:443?encryption=none&type=tcp&security=none#My%20iPhone
+```
+
+Совместим с v2rayNG, Shadowrocket, sing-box и любым VLESS-клиентом.
+
+### Миграции
+
+- `20260810_vless_server_fields` — VpnServer: port/transport/security/sni.
+
 ## Analytics (`/analytics`) — ADMIN only
 
 | Method | Path | Query | Response |

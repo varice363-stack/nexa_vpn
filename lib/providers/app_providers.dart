@@ -25,6 +25,7 @@ import '../repositories/notification_repository_impl.dart';
 import '../repositories/server_repository_impl.dart';
 import '../repositories/subscription_repository_impl.dart';
 import '../services/api/api_client.dart';
+import '../services/api/api_config.dart';
 import '../services/api/token_storage.dart';
 import '../services/notification_service.dart';
 
@@ -61,6 +62,7 @@ final apiClientProvider = Provider<ApiClient>(
   (ref) => ApiClient(
     tokenStorage: ref.watch(tokenStorageProvider),
     logger: ref.watch(loggerProvider),
+    baseUrl: ApiConfig.resolvedBaseUrl,
   ),
 );
 

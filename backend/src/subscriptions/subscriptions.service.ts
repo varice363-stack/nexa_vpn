@@ -11,14 +11,20 @@ export class SubscriptionsService {
 
   async mySubscriptions(user: SafeUser) {
     const now = new Date();
-    // Auto-expire stale records so the client always sees the truth.
+    // Auto-expire stale records so the client always sees the truth
+    // (covers ACTIVE and TRIAL subscriptions).
     await this.prisma.subscription.updateMany({
       where: {
         userId: user.id,
-        status: SubscriptionStatus.ACTIVE,
+        status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] },
         expiresAt: { lt: now },
       },
       data: { status: SubscriptionStatus.EXPIRED },
+    });
+    // Expire access keys whose window passed (trial / paid expiry).
+    await this.prisma.accessKey.updateMany({
+      where: { userId: user.id, status: 'ACTIVE', expiresAt: { lt: now } },
+      data: { status: 'EXPIRED' },
     });
     const subs = await this.prisma.subscription.findMany({
       where: { userId: user.id },

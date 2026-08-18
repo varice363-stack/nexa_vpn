@@ -18,6 +18,7 @@ import '../../screens/home/home_screen.dart';
 import '../../screens/logs/logs_screen.dart';
 import '../../screens/notifications/notifications_screen.dart';
 import '../../screens/onboarding/onboarding_screen.dart';
+import '../../screens/payments/payment_history_screen.dart';
 import '../../screens/premium/premium_screen.dart';
 import '../../screens/privacy/privacy_screen.dart';
 import '../../screens/profile/profile_screen.dart';
@@ -112,6 +113,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/access',
         builder: (context, state) => const MyAccessScreen(),
+      ),
+      GoRoute(
+        path: '/payment-history',
+        builder: (context, state) => const PaymentHistoryScreen(),
       ),
       GoRoute(
         path: '/favorites',

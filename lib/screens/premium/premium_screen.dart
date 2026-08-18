@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/utils/formatters.dart';
 import '../../models/checkout_result.dart';
 import '../../models/subscription_plan.dart';
+import '../../models/trial_status.dart';
 import '../../providers/access_providers.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
@@ -72,6 +75,50 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
     }
   }
 
+  /// GET /billing/transactions/:id — server-side status check after the
+  /// user returns from the hosted checkout (source of truth = backend).
+  Future<void> _checkPaymentStatus() async {
+    final checkout = _pendingCheckout;
+    if (checkout == null) return;
+    setState(() {
+      _paying = true;
+      _checkoutError = null;
+    });
+    try {
+      final transaction = await ref
+          .read(billingRepositoryProvider)
+          .getTransaction(checkout.transactionId);
+      if (!mounted) return;
+      if (transaction.status == 'PAID') {
+        setState(() {
+          _paying = false;
+          _paymentSuccess = true;
+          _pendingCheckout = null;
+        });
+        await ref.read(subscriptionProvider.notifier).refresh();
+        await ref.read(accessKeysProvider.notifier).refresh();
+        if (!mounted) return;
+        context.push('/access');
+      } else {
+        setState(() => _paying = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Payment is ${transaction.status.toLowerCase()} — '
+              'waiting for confirmation.',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _paying = false;
+        _checkoutError = 'Status check failed: $e';
+      });
+    }
+  }
+
   /// POST /billing/mock-pay — confirms the pending transaction.
   Future<void> _mockPay() async {
     final checkout = _pendingCheckout;
@@ -106,6 +153,15 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
         _checkoutError = 'Payment failed: $e';
       });
     }
+  }
+
+  SubscriptionPlan? _selectedPlan() {
+    final plans = ref.read(plansProvider).value ?? const <SubscriptionPlan>[];
+    if (plans.isEmpty) return null;
+    return plans.firstWhere(
+      (p) => p.id == _selectedPlanId,
+      orElse: () => plans.first,
+    );
   }
 
   @override
@@ -159,6 +215,20 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
               expiresAt: subscription?.expiresAt,
               onUpgrade: () => ref.read(plansProvider.notifier).refresh(),
             ),
+            if (!isPremium) _TrialCard(
+              trial: ref.watch(trialStatusProvider).value,
+              onStart: () async {
+                final ok = await ref.read(trialStatusProvider.notifier).activate();
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(ok
+                        ? 'Trial started — 3 days of access!'
+                        : 'Trial activation failed. Try again.'),
+                  ),
+                );
+              },
+            ),
             const SizedBox(height: 18),
             const SectionHeader(title: 'CHOOSE YOUR PLAN'),
             for (var i = 0; i < plans.length; i++)
@@ -174,12 +244,118 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     ),
               ),
             if (_checkoutError != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                _checkoutError!,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: AppColors.danger,
+              const SizedBox(height: 8),
+              GlassContainer(
+                borderRadius: BorderRadius.circular(16),
+                padding: const EdgeInsets.all(14),
+                color: AppColors.danger.withValues(alpha: 0.06),
+                borderColor: AppColors.danger.withValues(alpha: 0.3),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(
+                          Icons.error_outline_rounded,
+                          size: 18,
+                          color: AppColors.danger,
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Payment failed',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.danger,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _checkoutError!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              final pending = _pendingCheckout;
+                              setState(() => _checkoutError = null);
+                              if (pending != null) {
+                                _mockPay();
+                              } else {
+                                final plan = _selectedPlan();
+                                if (plan != null) _checkout(plan);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                gradient: AppColors.primaryGradient,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.refresh_rounded,
+                                      size: 15, color: Colors.white),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Retry',
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => context.push('/support'),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                ),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.support_agent_rounded,
+                                      size: 15, color: AppColors.textSecondary),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Support',
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -188,9 +364,11 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
               const SizedBox(height: 8),
               _MockPaymentCard(
                 transactionId: _pendingCheckout!.transactionId,
+                checkoutUrl: _pendingCheckout!.checkoutUrl,
                 paying: _paying,
                 success: _paymentSuccess,
-                onPay: _mockPay,
+                onMockPay: _mockPay,
+                onCheckStatus: _checkPaymentStatus,
               ),
             ],
             const SizedBox(height: 8),
@@ -227,20 +405,112 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
   }
 }
 
+// ── Trial card ────────────────────────────────────────────────────────────
+
+class _TrialCard extends StatelessWidget {
+  const _TrialCard({required this.trial, required this.onStart});
+
+  final TrialStatus? trial;
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final available = trial?.available ?? false;
+    if (!available) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: GlassContainer(
+        borderRadius: BorderRadius.circular(18),
+        padding: const EdgeInsets.all(14),
+        color: AppColors.success.withValues(alpha: 0.05),
+        borderColor: AppColors.success.withValues(alpha: 0.25),
+        child: Row(
+          children: [
+            const Icon(Icons.card_giftcard_rounded,
+                size: 22, color: AppColors.success),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '3-day free trial',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Full access, no card required. One trial per account.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            GestureDetector(
+              onTap: onStart,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                decoration: BoxDecoration(
+                  gradient: AppColors.connectedGradient,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Start trial',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Mock payment card ─────────────────────────────────────────────────────
 
 class _MockPaymentCard extends StatelessWidget {
   const _MockPaymentCard({
     required this.transactionId,
+    required this.checkoutUrl,
     required this.paying,
     required this.success,
-    required this.onPay,
+    required this.onMockPay,
+    required this.onCheckStatus,
   });
 
   final String transactionId;
+  final String? checkoutUrl;
   final bool paying;
   final bool success;
-  final VoidCallback onPay;
+  final VoidCallback onMockPay;
+  final VoidCallback onCheckStatus;
+
+  /// Real provider checkout (YooKassa etc.) vs the internal mock page.
+  bool get _isReal =>
+      checkoutUrl != null && !checkoutUrl!.contains('mock-pay.nexa.app');
+
+  Future<void> _openCheckout() async {
+    final url = checkoutUrl;
+    if (url == null) return;
+    final ok = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    if (!ok) {
+      // Fallback: copy the URL so the user can open it manually.
+      await Clipboard.setData(ClipboardData(text: url));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -268,7 +538,7 @@ class _MockPaymentCard extends StatelessWidget {
                 child: Text(
                   success
                       ? 'Payment successful — access activated'
-                      : 'Payment (demo)',
+                      : (_isReal ? 'Payment' : 'Payment (demo)'),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -282,7 +552,11 @@ class _MockPaymentCard extends StatelessWidget {
           Text(
             success
                 ? 'Your subscription and access key are now active.'
-                : 'Confirm the mock payment to activate your subscription and access key.',
+                : (_isReal
+                    ? 'Pay on the secure provider page, then check the '
+                        'status here.'
+                    : 'Confirm the mock payment to activate your '
+                        'subscription and access key.'),
             style: const TextStyle(
               fontSize: 12,
               color: AppColors.textSecondary,
@@ -290,14 +564,33 @@ class _MockPaymentCard extends StatelessWidget {
           ),
           if (!success) ...[
             const SizedBox(height: 12),
-            GlassButton(
-              label: 'Pay now (demo)',
-              icon: Icons.bolt_rounded,
-              loading: paying,
-              gradient: AppColors.premiumGradient,
-              foreground: Colors.black87,
-              onTap: onPay,
-            ),
+            if (_isReal) ...[
+              GlassButton(
+                label: 'Open payment page',
+                icon: Icons.open_in_new_rounded,
+                loading: paying,
+                gradient: AppColors.premiumGradient,
+                foreground: Colors.black87,
+                onTap: _openCheckout,
+              ),
+              const SizedBox(height: 8),
+              GlassButton(
+                label: 'I have paid — check status',
+                icon: Icons.verified_rounded,
+                loading: paying,
+                gradient: AppColors.primaryGradient,
+                foreground: Colors.white,
+                onTap: onCheckStatus,
+              ),
+            ] else
+              GlassButton(
+                label: 'Pay now (demo)',
+                icon: Icons.bolt_rounded,
+                loading: paying,
+                gradient: AppColors.premiumGradient,
+                foreground: Colors.black87,
+                onTap: onMockPay,
+              ),
             const SizedBox(height: 6),
             Text(
               'Tx: $transactionId',

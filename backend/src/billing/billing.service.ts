@@ -4,11 +4,12 @@ import { randomUUID } from 'crypto';
 
 import { SafeUser } from '../common/decorators/current-user.decorator';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { loadBillingConfig, BillingConfig } from './billing.config';
 import {
   CheckoutResult,
   PaymentProvider,
 } from './payment-provider.interface';
-import { MockPaymentProvider } from './providers/mock.payment-provider';
+import { PaymentProviderFactory } from './providers/payment-provider.factory';
 
 /**
  * Billing orchestration — subscription lifecycle + payment transactions.
@@ -27,11 +28,21 @@ import { MockPaymentProvider } from './providers/mock.payment-provider';
  */
 @Injectable()
 export class BillingService {
-  private readonly providers: Record<string, PaymentProvider> = {
-    mock: new MockPaymentProvider(),
-  };
+  private readonly config: BillingConfig;
+  private readonly providers: Record<string, PaymentProvider>;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {
+    this.config = loadBillingConfig();
+    // Provider selected via PAYMENT_PROVIDER env — swapping providers
+    // requires zero changes to the billing core.
+    this.providers = {
+      [this.config.provider]: PaymentProviderFactory.create(this.config.provider),
+    };
+    // Keep 'mock' resolvable for webhooks when the real provider is off.
+    if (this.config.provider !== 'mock') {
+      this.providers['mock'] = PaymentProviderFactory.create('mock');
+    }
+  }
 
   // ── Plans ──────────────────────────────────────────────────────────────
 
@@ -45,8 +56,19 @@ export class BillingService {
 
   // ── Checkout ───────────────────────────────────────────────────────────
 
-  /** POST /billing/checkout — creates a PENDING transaction (mock). */
-  async checkout(user: SafeUser, planId: string): Promise<CheckoutResult> {
+  /**
+   * POST /billing/checkout — creates a PENDING transaction (mock).
+   *
+   * Idempotency-Key (header): the first request creates the transaction;
+   * a repeated request with the SAME key returns the existing PENDING
+   * transaction without creating a duplicate. Different keys → separate
+   * payment attempts.
+   */
+  async checkout(
+    user: SafeUser,
+    planId: string,
+    idempotencyKey?: string,
+  ): Promise<CheckoutResult> {
     const plan = await this.prisma.subscriptionPlan.findUnique({
       where: { id: planId },
     });
@@ -54,26 +76,51 @@ export class BillingService {
       throw new BadRequestException('Plan not available');
     }
 
-    const provider = this.providers['mock'];
+    // Idempotency: return the existing transaction for this key (per user).
+    if (idempotencyKey) {
+      const existing = await this.prisma.paymentTransaction.findFirst({
+        where: { userId: user.id, idempotencyKey },
+      });
+      if (existing) {
+        return {
+          transactionId: existing.id,
+          status: 'PENDING',
+          checkoutUrl: `https://mock-pay.nexa.app/checkout/${existing.id}`,
+        };
+      }
+    }
+
+    const provider = this.providers[this.config.provider];
     const transaction = await this.prisma.paymentTransaction.create({
       data: {
         userId: user.id,
         planId: plan.id,
         provider: provider.name,
-        providerPaymentId: randomUUID(), // mock provider-side id
+        providerPaymentId: randomUUID(), // placeholder until checkout returns
         amount: plan.price,
         currency: plan.currency,
         status: PaymentStatus.PENDING,
+        idempotencyKey: idempotencyKey ?? null,
       },
     });
 
-    return provider.createCheckout({
+    const result = await provider.createPayment({
       plan,
       user,
       transactionId: transaction.id,
       amount: Number(plan.price),
       currency: plan.currency,
     });
+
+    // Record the real provider-side payment id for webhook correlation.
+    if (result.providerPaymentId) {
+      await this.prisma.paymentTransaction.update({
+        where: { id: transaction.id },
+        data: { providerPaymentId: result.providerPaymentId },
+      });
+    }
+
+    return result;
   }
 
 
@@ -134,6 +181,121 @@ export class BillingService {
     };
   }
 
+  // ── Trial (TASK #009-C) ────────────────────────────────────────────────
+
+  /** GET /billing/trial/status — trial availability for the user. */
+  async trialStatus(user: SafeUser) {
+    const account = await this.prisma.user.findUnique({ where: { id: user.id } });
+    const active = await this.prisma.subscription.findFirst({
+      where: {
+        userId: user.id,
+        status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] },
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+    });
+    return {
+      available: !account?.trialUsedAt && !active,
+      used: account?.trialUsedAt != null,
+      expiresAt: active?.status === SubscriptionStatus.TRIAL ? active.expiresAt : null,
+    };
+  }
+
+  /**
+   * POST /billing/trial/activate — one 3-day trial per account.
+   * Creates a TRIAL subscription, issues an ACTIVE access key (scoped to
+   * the trial window), marks trialUsedAt.
+   */
+  async activateTrial(user: SafeUser) {
+    const account = await this.prisma.user.findUnique({ where: { id: user.id } });
+    if (!account) throw new NotFoundException('Account not found');
+    if (account.trialUsedAt) {
+      throw new BadRequestException('Trial has already been used');
+    }
+
+    const active = await this.prisma.subscription.findFirst({
+      where: {
+        userId: user.id,
+        status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] },
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+    });
+    if (active) {
+      throw new BadRequestException('An active subscription already exists');
+    }
+
+    const plan = await this.prisma.subscriptionPlan.findFirst({
+      where: { isActive: true },
+      orderBy: { price: 'asc' },
+    });
+    if (!plan) throw new BadRequestException('No plans available');
+
+    const expiresAt = new Date(Date.now() + 3 * 86400000);
+    const subscription = await this.prisma.subscription.create({
+      data: {
+        userId: user.id,
+        planId: plan.id,
+        status: SubscriptionStatus.TRIAL,
+        startedAt: new Date(),
+        expiresAt,
+      },
+    });
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { trialUsedAt: new Date() },
+    });
+
+    // Trial entitlement: an ACTIVE access key scoped to the trial window.
+    const key = await this.prisma.accessKey.create({
+      data: {
+        userId: user.id,
+        name: 'Trial key',
+        protocol: 'VLESS',
+        uuid: randomUUID(),
+        status: 'ACTIVE',
+        expiresAt,
+      },
+    });
+
+    return {
+      status: 'TRIAL',
+      subscriptionId: subscription.id,
+      expiresAt,
+      accessKey: { id: key.id, status: key.status },
+    };
+  }
+
+  // ── Cleanup (TASK #009-C) ──────────────────────────────────────────────
+
+  /**
+   * Cancels stale PENDING transactions (default: older than 24h).
+   * Idempotent — safe to run repeatedly.
+   */
+  async cleanupPending(olderThanHours = 24) {
+    const cutoff = new Date(Date.now() - olderThanHours * 3600000);
+    const result = await this.prisma.paymentTransaction.updateMany({
+      where: { status: PaymentStatus.PENDING, createdAt: { lt: cutoff } },
+      data: { status: PaymentStatus.CANCELLED },
+    });
+    return { cancelled: result.count };
+  }
+
+  /** Expires overdue TRIAL subscriptions and their keys. */
+  async expireOverdueTrials() {
+    const now = new Date();
+    const expired = await this.prisma.subscription.updateMany({
+      where: {
+        status: SubscriptionStatus.TRIAL,
+        expiresAt: { lt: now },
+      },
+      data: { status: SubscriptionStatus.EXPIRED },
+    });
+    const keys = await this.prisma.accessKey.updateMany({
+      where: { status: 'ACTIVE', expiresAt: { lt: now } },
+      data: { status: 'EXPIRED' },
+    });
+    return { subscriptions: expired.count, keys: keys.count };
+  }
+
   // ── Webhook ────────────────────────────────────────────────────────────
 
   /**
@@ -143,6 +305,36 @@ export class BillingService {
   async handleWebhook(providerName: string, raw: unknown) {
     const provider = this.providers[providerName.toLowerCase()];
     if (!provider) throw new NotFoundException('Unknown payment provider');
+
+    // Replay protection: webhook timestamp must be within tolerance.
+    const rawObj = raw as Record<string, unknown>;
+    const rawTs = rawObj['timestamp'];
+    if (rawTs !== undefined) {
+      const ts = Number(rawTs);
+      if (Number.isNaN(ts) || Math.abs(Date.now() - ts) > this.config.webhookToleranceMs) {
+        throw new BadRequestException(
+          'Webhook timestamp out of tolerance (possible replay attack)',
+        );
+      }
+    } else if (this.config.provider === 'real') {
+      throw new BadRequestException('Webhook timestamp is required');
+    }
+
+    // Signature verification (mock implementation).
+    const verified = provider.verifyWebhook(raw);
+
+    // Audit journal — every webhook event is logged (verified or not).
+    await this.prisma.webhookLog.create({
+      data: {
+        provider: provider.name,
+        event: String(rawObj['event'] ?? 'unknown'),
+        verified,
+      },
+    });
+
+    if (!verified) {
+      throw new BadRequestException('Invalid webhook signature');
+    }
 
     const event = provider.parseWebhook(raw);
 
@@ -159,35 +351,72 @@ export class BillingService {
       throw new BadRequestException('Unknown transaction');
     }
 
-    // Idempotency: terminal states are never re-processed.
-    if (
-      transaction.status === PaymentStatus.PAID ||
-      transaction.status === PaymentStatus.REFUNDED
-    ) {
-      return { idempotent: true, status: transaction.status };
+    // Server-side amount verification: the provider-confirmed amount must
+    // match the plan price. A forged/different amount is rejected.
+    if (event.amount !== undefined) {
+      const expected = Number(transaction.amount);
+      if (Math.abs(event.amount - expected) > 0.01) {
+        throw new BadRequestException(
+          `Amount mismatch: provider ${event.amount} vs plan ${expected}`,
+        );
+      }
     }
+
+    // Idempotency: a repeated webhook for a terminal state is a no-op.
+    if (
+      (event.event === 'PAID' && transaction.status === PaymentStatus.PAID) ||
+      (event.event === 'REFUNDED' && transaction.status === PaymentStatus.REFUNDED)
+    ) {
+      return { idempotent: true, status: transaction.status, already_processed: true };
+    }
+
+    // Record the webhook event for observability (admin "webhook status").
+    const webhookStamp = {
+      webhookEvent: event.event,
+      webhookProcessedAt: new Date(),
+    };
 
     switch (event.event) {
       case 'PAID':
-        return this._onPaid(transaction.id);
-      case 'FAILED':
         await this.prisma.paymentTransaction.update({
           where: { id: transaction.id },
-          data: { status: PaymentStatus.FAILED },
+          data: webhookStamp,
+        });
+        return this._onPaid(transaction.id);
+      case 'FAILED': {
+        if (transaction.status !== PaymentStatus.PENDING) {
+          throw new BadRequestException(
+            `Cannot fail a transaction in status ${transaction.status}`,
+          );
+        }
+        await this.prisma.paymentTransaction.update({
+          where: { id: transaction.id },
+          data: { status: PaymentStatus.FAILED, ...webhookStamp },
         });
         return { status: 'FAILED' };
-      case 'REFUNDED':
+      }
+      case 'REFUNDED': {
+        if (transaction.status !== PaymentStatus.PAID) {
+          throw new BadRequestException('Only paid transactions can be refunded');
+        }
         await this.prisma.paymentTransaction.update({
           where: { id: transaction.id },
-          data: { status: PaymentStatus.REFUNDED },
+          data: { status: PaymentStatus.REFUNDED, ...webhookStamp },
         });
         return { status: 'REFUNDED' };
-      case 'CANCELLED':
+      }
+      case 'CANCELLED': {
+        if (transaction.status !== PaymentStatus.PENDING) {
+          throw new BadRequestException(
+            `Cannot cancel a transaction in status ${transaction.status}`,
+          );
+        }
         await this.prisma.paymentTransaction.update({
           where: { id: transaction.id },
-          data: { status: PaymentStatus.CANCELLED },
+          data: { status: PaymentStatus.CANCELLED, ...webhookStamp },
         });
         return { status: 'CANCELLED' };
+      }
     }
   }
 
@@ -201,6 +430,14 @@ export class BillingService {
       include: { plan: true },
     });
     if (!transaction?.plan) throw new BadRequestException('Transaction has no plan');
+
+    // Lifecycle guard: PAID → PAID is forbidden (idempotency safety net).
+    if (transaction.status === PaymentStatus.PAID) {
+      throw new BadRequestException('Transaction is already paid');
+    }
+    if (transaction.status === PaymentStatus.FAILED) {
+      throw new BadRequestException('A failed transaction cannot be paid');
+    }
 
     await this.prisma.paymentTransaction.update({
       where: { id: transactionId },
@@ -273,10 +510,16 @@ export class BillingService {
   // ── Transactions (user + admin) ────────────────────────────────────────
 
   async myTransactions(user: SafeUser) {
-    return this.prisma.paymentTransaction.findMany({
+    const rows = await this.prisma.paymentTransaction.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
+      include: { plan: { select: { id: true, name: true, code: true } } },
     });
+    // Idempotency keys are admin-only; never expose them to the user.
+    return rows.map(({ idempotencyKey, ...rest }) => ({
+      ...rest,
+      planName: rest.plan?.name ?? null,
+    }));
   }
 
   async transaction(user: SafeUser, id: string) {

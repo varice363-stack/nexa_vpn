@@ -31,6 +31,8 @@ export default function AccessKeysPage() {
               <th>Name</th>
               <th>Protocol</th>
               <th>Status</th>
+              <th>Assigned Server</th>
+              <th>Server Status</th>
               <th>Device</th>
               <th>Created</th>
               <th>Expires</th>
@@ -43,6 +45,8 @@ export default function AccessKeysPage() {
                 <td>{k.name}</td>
                 <td>{k.protocol}</td>
                 <td><Badge value={k.status} /></td>
+                <td>{k.server ? `${k.server.name} (${k.server.city})` : '—'}</td>
+                <td>{k.server ? <Badge value={k.server.status} /> : '—'}</td>
                 <td>{k.deviceId ? k.deviceId.slice(0, 8) : '—'}</td>
                 <td>{new Date(k.createdAt).toLocaleDateString()}</td>
                 <td>{k.expiresAt ? new Date(k.expiresAt).toLocaleDateString() : '—'}</td>

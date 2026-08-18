@@ -116,6 +116,10 @@ export interface BillingTransaction {
   amount: number;
   currency: string;
   status: PaymentStatus;
+  idempotencyKey: string | null;
+  webhookEvent: string | null;
+  webhookProcessedAt: string | null;
+  planName?: string | null;
   createdAt: string;
   user?: { id: string; email: string };
 }
@@ -124,6 +128,7 @@ export interface AdminAccessKey {
   id: string;
   userId: string;
   deviceId: string | null;
+  serverId: string | null;
   name: string;
   protocol: string;
   uuid: string;
@@ -132,4 +137,12 @@ export interface AdminAccessKey {
   expiresAt: string | null;
   lastUsedAt: string | null;
   user?: { id: string; email: string };
+  server?: {
+    id: string;
+    name: string;
+    country: string;
+    city: string;
+    ip: string;
+    status: string;
+  } | null;
 }

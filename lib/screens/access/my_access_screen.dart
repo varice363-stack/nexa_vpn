@@ -12,6 +12,7 @@ import '../../widgets/common/app_page.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/section_header.dart';
+import 'widgets/vless_config_panel.dart';
 
 /// "My Access" — the commercial core surface: subscription status,
 /// access keys, device usage.
@@ -122,6 +123,14 @@ class MyAccessScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
+                    ],
+                    // ── Active key configuration (VLESS) ──────────────
+                    if (keys.any((k) => k.isActive)) ...[
+                      for (final key in keys.where((k) => k.isActive))
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: VlessConfigPanel(key_: key),
+                        ),
                     ],
                     // ── Keys / empty ────────────────────────────────────
                     if (keys.isEmpty)

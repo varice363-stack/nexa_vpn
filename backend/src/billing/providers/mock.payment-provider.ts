@@ -5,14 +5,16 @@ import {
   CheckoutResult,
   NormalizedWebhook,
   PaymentProvider,
+  RefundRequest,
 } from '../payment-provider.interface';
 
 /**
  * Mock payment provider — for local development and tests only.
  *
- * `createCheckout` returns a fake URL; `parseWebhook` accepts the mock
- * payload shape:
- *   { event: 'payment.paid', transactionId: '...' }
+ * `createCheckout` returns a fake URL; `verifyWebhook` accepts the mock
+ * payload with the header signature `x-nexa-signature: mock-signature`;
+ * `parseWebhook` accepts the mock payload shape:
+ *   { event: 'payment.paid', transactionId: '...', providerPaymentId: '...' }
  */
 export class MockPaymentProvider implements PaymentProvider {
   readonly name = ProviderName.INTERNAL;
@@ -23,6 +25,17 @@ export class MockPaymentProvider implements PaymentProvider {
       status: 'PENDING',
       checkoutUrl: `https://mock-pay.nexa.app/checkout/${request.transactionId}`,
     };
+  }
+
+  async createPayment(request: CheckoutRequest): Promise<CheckoutResult> {
+    return this.createCheckout(request);
+  }
+
+  verifyWebhook(raw: unknown): boolean {
+    const payload = raw as Record<string, unknown>;
+    // Mock signature check: the payload must carry a matching signature
+    // value. Real providers verify HMAC with their secret.
+    return payload['signature'] === 'mock-signature';
   }
 
   parseWebhook(raw: unknown): NormalizedWebhook {
@@ -52,6 +65,22 @@ export class MockPaymentProvider implements PaymentProvider {
       default:
         throw new Error(`Unknown webhook event: ${event}`);
     }
-    return { event: normalized, providerPaymentId, transactionId };
+
+    // Forward an optional amount for server-side verification tests.
+    const amount = payload['amount'];
+    const currency = payload['currency'];
+
+    return {
+      event: normalized,
+      providerPaymentId,
+      transactionId,
+      amount: typeof amount === 'number' ? amount : undefined,
+      currency: typeof currency === 'string' ? currency : undefined,
+    };
+  }
+
+  async refundPayment(_request: RefundRequest): Promise<{ refunded: boolean }> {
+    // Refunds are not implemented for the mock provider (contract reserved).
+    return { refunded: false };
   }
 }

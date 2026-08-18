@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required: network access for the VPN client and backend API. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="nexa_vpn"
         android:name="${applicationName}"

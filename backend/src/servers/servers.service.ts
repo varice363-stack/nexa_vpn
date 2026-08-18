@@ -35,8 +35,12 @@ export class ServersService {
     return node ?? null;
   }
 
+  /** Admin: all servers with the count of assigned access keys. */
   async findAll() {
-    return this.prisma.vpnServer.findMany({ orderBy: { createdAt: 'desc' } });
+    return this.prisma.vpnServer.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { accessKeys: true } } },
+    });
   }
 
   async findOne(id: string) {

@@ -35,6 +35,15 @@ dependencies:
   # HTTP client
   http: ^1.2.0
 
+  # QR rendering (TASK #010 — VLESS config)
+  qr_flutter: ^4.1.0
+
+  # Share intent (TASK #010 — export config to external clients)
+  share_plus: ^10.0.0
+
+  # Open hosted payment page (TASK #015 — YooKassa checkout)
+  url_launcher: ^6.3.0
+
   # App metadata
   package_info_plus: ^8.0.0
 

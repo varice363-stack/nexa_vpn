@@ -26,9 +26,12 @@ export default function TransactionsPage() {
           <thead>
             <tr>
               <th>User</th>
+              <th>Plan</th>
               <th>Amount</th>
               <th>Provider</th>
               <th>Status</th>
+              <th>Webhook</th>
+              <th>Idempotency Key</th>
               <th>Created</th>
             </tr>
           </thead>
@@ -36,9 +39,18 @@ export default function TransactionsPage() {
             {txs.map((t) => (
               <tr key={t.id}>
                 <td className="text-text font-medium">{t.user?.email ?? t.userId}</td>
+                <td>{t.planName ?? '—'}</td>
                 <td>{t.currency} {Number(t.amount).toFixed(2)}</td>
                 <td>{t.provider}</td>
                 <td><Badge value={t.status} /></td>
+                <td>
+                  {t.webhookEvent ? (
+                    <Badge value={t.webhookEvent} />
+                  ) : (
+                    <span className="text-faint">—</span>
+                  )}
+                </td>
+                <td className="font-mono text-xs">{t.idempotencyKey ?? '—'}</td>
                 <td>{new Date(t.createdAt).toLocaleString()}</td>
               </tr>
             ))}

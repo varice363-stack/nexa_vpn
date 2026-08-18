@@ -32,6 +32,9 @@ enum ServerProtocol {
 
 enum ServerStatus {
   ACTIVE
+  INACTIVE
+  MAINTENANCE
+  UNAVAILABLE
   DISABLED
 }
 
@@ -62,6 +65,7 @@ enum PaymentStatus {
 /// Extensible payment provider registry (real integrations come later).
 enum PaymentProvider {
   INTERNAL
+  YOOKASSA
   SBP
   CARD
   APPLE
@@ -80,6 +84,7 @@ model User {
   status       UserStatus @default(ACTIVE)
   createdAt    DateTime @default(now())
   lastLogin    DateTime?
+  trialUsedAt  DateTime?
 
   subscriptions      Subscription[]
   connectionLogs     ConnectionLog[]
@@ -102,6 +107,13 @@ model VpnServer {
   city        String
   ip          String   @unique
   protocol    ServerProtocol @default(WIREGUARD)
+  port        Int?     // VLESS ingress port (null = default 443)
+  transport   String?  // VLESS transport: tcp | ws | grpc (null = tcp)
+  security    String?  // VLESS security: none | tls | reality (null = none)
+  sni         String?  // TLS/REALITY SNI for the ingress
+  flow        String?  // VLESS flow (e.g. xtls-rprx-vision) — public param
+  publicKey   String?  // REALITY public key (pbk) — public, NOT a secret
+  shortId     String?  // REALITY short id (sid) — public param
   load        Float    @default(0)
   ping        Int      @default(0)
   premium     Boolean  @default(false)
@@ -110,6 +122,7 @@ model VpnServer {
   updatedAt   DateTime @updatedAt
 
   connectionLogs ConnectionLog[]
+  accessKeys     AccessKey[]
 
   @@index([status])
   @@index([country])
@@ -173,12 +186,16 @@ model PaymentTransaction {
   amount            Decimal         @db.Decimal(10, 2)
   currency          String          @default("USD")
   status            PaymentStatus   @default(PENDING)
+  idempotencyKey    String?         // client-supplied key (checkout dedup)
+  webhookEvent      String?         // last webhook event received (payment.paid, ...)
+  webhookProcessedAt DateTime?      // last webhook processing timestamp
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
   @@unique([provider, providerPaymentId])
   @@index([userId])
   @@index([status])
+  @@index([idempotencyKey])
 }
 
 // ── Banner ───────────────────────────────────────────────────────────────
@@ -255,6 +272,8 @@ model AccessKey {
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   deviceId   String?
   device     Device?   @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  serverId   String?   // deterministic ingress assignment (TASK #011)
+  server     VpnServer? @relation(fields: [serverId], references: [id], onDelete: SetNull)
   name       String
   protocol   String    @default("VLESS")
   uuid       String    @unique
@@ -264,4 +283,19 @@ model AccessKey {
   lastUsedAt DateTime?
 
   @@index([userId, status])
+  @@index([serverId])
+}
+
+// ── Webhook Log ───────────────────────────────────────────────────────────
+// Audit journal of every webhook event (verified or not).
+
+model WebhookLog {
+  id            String   @id @default(uuid())
+  provider      String
+  event         String
+  transactionId String?
+  verified      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([provider, createdAt])
 }

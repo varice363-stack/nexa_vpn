@@ -3,6 +3,7 @@ import '../models/checkout_result.dart';
 import '../models/mock_pay_result.dart';
 import '../models/payment_transaction.dart';
 import '../models/subscription_plan.dart';
+import '../models/trial_status.dart';
 import '../services/api/api_client.dart';
 import '../services/api/api_exception.dart';
 
@@ -37,6 +38,23 @@ class BillingRepositoryImpl implements BillingRepository {
   Future<MockPayResult> mockPay(String transactionId) async {
     final data = await _api.post('/billing/mock-pay/$transactionId');
     return MockPayResult.fromJson(Map<String, Object?>.from(data as Map));
+  }
+
+  @override
+  Future<TrialStatus> getTrialStatus() async {
+    final data = await _api.get('/billing/trial/status');
+    return TrialStatus.fromJson(Map<String, Object?>.from(data as Map));
+  }
+
+  @override
+  Future<void> activateTrial() async {
+    await _api.post('/billing/trial/activate');
+  }
+
+  @override
+  Future<PaymentTransaction> getTransaction(String id) async {
+    final data = await _api.get('/billing/transactions/$id');
+    return PaymentTransaction.fromJson(Map<String, Object?>.from(data as Map));
   }
 
   @override
