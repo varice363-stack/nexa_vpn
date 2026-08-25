@@ -19,23 +19,23 @@ export default function AnalyticsPage() {
     api<PopularServer[]>('/analytics/popular-servers').then(setPopular).catch(() => undefined);
   }, []);
 
-  if (error) return <div className="glass-card text-rose-300">Cannot load analytics: {error}</div>;
-  if (!overview) return <div className="text-muted">Loading…</div>;
+  if (error) return <div className="glass-card text-rose-300">Не удалось загрузить аналитику: {error}</div>;
+  if (!overview) return <div className="text-muted">Загрузка…</div>;
 
   const maxConnections = Math.max(...daily.map((d) => d.connections), 1);
   const maxTraffic = Math.max(...daily.map((d) => d.trafficMb), 1);
 
   return (
     <div>
-      <PageHeader title="Analytics" subtitle="Last 7 days" />
+      <PageHeader title="Аналитика" subtitle="Последние 7 дней" />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Daily users" value={overview.totalUsers} accent="blue" />
-        <StatCard label="Connections" value={overview.onlineConnections} hint="currently online" accent="green" />
-        <StatCard label="Traffic" value={`${(overview.trafficMb / 1024).toFixed(1)} GB`} accent="yellow" />
-        <StatCard label="Revenue (est.)" value={`$${overview.revenueUsd.toFixed(2)}`} hint="active subscriptions" accent="purple" />
+        <StatCard label="Пользователей" value={overview.totalUsers} accent="blue" />
+        <StatCard label="Подключений" value={overview.onlineConnections} hint="сейчас онлайн" accent="green" />
+        <StatCard label="Трафик" value={`${(overview.trafficMb / 1024).toFixed(1)} ГБ`} accent="yellow" />
+        <StatCard label="Доход (оценка)" value={`₽${overview.revenueUsd.toFixed(2)}`} hint="активные подписки" accent="purple" />
       </div>
 
-      <h2 className="font-semibold text-sm text-faint uppercase tracking-wider mb-3">Daily connections</h2>
+      <h2 className="font-semibold text-sm text-faint uppercase tracking-wider mb-3">Подключения по дням</h2>
       <div className="glass p-5 mb-8">
         <div className="flex items-end gap-3 h-40">
           {daily.map((d) => (
@@ -51,23 +51,23 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      <h2 className="font-semibold text-sm text-faint uppercase tracking-wider mb-3">Popular servers</h2>
+      <h2 className="font-semibold text-sm text-faint uppercase tracking-wider mb-3">Популярные серверы</h2>
       <div className="glass p-4">
         <table className="table-base">
           <thead>
             <tr>
-              <th>Server</th>
-              <th>Connections</th>
-              <th>Traffic</th>
-              <th>Load</th>
+              <th>Сервер</th>
+              <th>Подключений</th>
+              <th>Трафик</th>
+              <th>Загрузка</th>
             </tr>
           </thead>
           <tbody>
             {popular.map((p) => (
               <tr key={p.server?.id ?? p.connections}>
-                <td className="text-text font-medium">{p.server?.name ?? 'unknown'}</td>
+                <td className="text-text font-medium">{p.server?.name ?? 'неизвестный'}</td>
                 <td>{p.connections}</td>
-                <td>{(p.trafficMb / 1024).toFixed(1)} GB</td>
+                <td>{(p.trafficMb / 1024).toFixed(1)} ГБ</td>
                 <td>
                   <div className="w-24 h-2 rounded-full bg-white/10">
                     <div
@@ -80,7 +80,7 @@ export default function AnalyticsPage() {
             ))}
           </tbody>
         </table>
-        {popular.length === 0 ? <div className="text-muted text-sm py-4">No connections yet.</div> : null}
+        {popular.length === 0 ? <div className="text-muted text-sm py-4">Подключений пока нет.</div> : null}
       </div>
     </div>
   );

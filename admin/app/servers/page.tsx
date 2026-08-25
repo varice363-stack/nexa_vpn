@@ -59,9 +59,9 @@ export default function ServersPage() {
   return (
     <div>
       <PageHeader
-        title="Servers"
-        subtitle={`${servers.length} locations`}
-        action={<button onClick={() => setModalOpen(true)} className="btn-primary">+ Add server</button>}
+        title="Серверы"
+        subtitle={`${servers.length} локаций`}
+        action={<button onClick={() => setModalOpen(true)} className="btn-primary">+ Добавить сервер</button>}
       />
 
       {error ? <div className="text-sm text-rose-400 mb-3">{error}</div> : null}
@@ -70,15 +70,15 @@ export default function ServersPage() {
         <table className="table-base">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Location</th>
+              <th>Название</th>
+              <th>Локация</th>
               <th>IP</th>
-              <th>Protocol</th>
-              <th>Ping</th>
-              <th>Load</th>
-              <th>Tier</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th>Протокол</th>
+              <th>Пинг</th>
+              <th>Загрузка</th>
+              <th>Тариф</th>
+              <th>Статус</th>
+              <th>Действия</th>
             </tr>
           </thead>
           <tbody>
@@ -88,9 +88,9 @@ export default function ServersPage() {
                 <td>{s.city}, {s.country}</td>
                 <td className="font-mono text-xs">{s.ip}</td>
                 <td>{s.protocol}</td>
-                <td>{s.ping} ms</td>
+                <td>{s.ping} мс</td>
                 <td>{Math.round(s.load * 100)}%</td>
-                <td>{s.premium ? <Badge value="PREMIUM" /> : 'Free'}</td>
+                <td>{s.premium ? <Badge value="PREMIUM" /> : 'Бесплатный'}</td>
                 <td><Badge value={s.status} /></td>
                 <td>
                   <button
@@ -101,7 +101,7 @@ export default function ServersPage() {
                         : 'border-emerald-400/40 text-emerald-300'
                     }`}
                   >
-                    {s.status === 'ACTIVE' ? 'Disable' : 'Enable'}
+                    {s.status === 'ACTIVE' ? 'Отключить' : 'Включить'}
                   </button>
                 </td>
               </tr>
@@ -111,18 +111,18 @@ export default function ServersPage() {
       </div>
 
       {modalOpen ? (
-        <Modal title="Add server" onClose={() => setModalOpen(false)}>
+        <Modal title="Добавить сервер" onClose={() => setModalOpen(false)}>
           <form onSubmit={createServer} className="space-y-3">
-            <input required placeholder="Name (e.g. Istanbul TR-01)" value={form.name}
+            <input required placeholder="Название (например: Istanbul TR-01)" value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-base w-full" />
             <div className="grid grid-cols-2 gap-3">
-              <input required placeholder="Country" value={form.country}
+              <input required placeholder="Страна" value={form.country}
                 onChange={(e) => setForm({ ...form, country: e.target.value })} className="input-base" />
-              <input required placeholder="Code (TR)" maxLength={2} value={form.countryCode}
+              <input required placeholder="Код (TR)" maxLength={2} value={form.countryCode}
                 onChange={(e) => setForm({ ...form, countryCode: e.target.value.toUpperCase() })} className="input-base" />
-              <input required placeholder="City" value={form.city}
+              <input required placeholder="Город" value={form.city}
                 onChange={(e) => setForm({ ...form, city: e.target.value })} className="input-base" />
-              <input required placeholder="IP address" value={form.ip}
+              <input required placeholder="IP адрес" value={form.ip}
                 onChange={(e) => setForm({ ...form, ip: e.target.value })} className="input-base" />
             </div>
             <select value={form.protocol}
@@ -135,9 +135,9 @@ export default function ServersPage() {
             <label className="flex items-center gap-2 text-sm text-muted">
               <input type="checkbox" checked={form.premium}
                 onChange={(e) => setForm({ ...form, premium: e.target.checked })} />
-              Premium-only server
+              Только для Premium-пользователей
             </label>
-            <button type="submit" className="btn-primary w-full">Create server</button>
+            <button type="submit" className="btn-primary w-full">Создать сервер</button>
           </form>
         </Modal>
       ) : null}

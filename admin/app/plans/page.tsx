@@ -19,18 +19,18 @@ export default function PlansPage() {
 
   return (
     <div>
-      <PageHeader title="Plans" subtitle="Subscription products (source of billing truth)" />
+      <PageHeader title="Тарифы" subtitle="Подписки и цены" />
       {error ? <div className="glass-card text-rose-300 mb-3">{error}</div> : null}
       <div className="glass p-4">
         <table className="table-base">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Code</th>
-              <th>Duration</th>
-              <th>Price</th>
-              <th>Currency</th>
-              <th>Status</th>
+              <th>Название</th>
+              <th>Код</th>
+              <th>Длительность</th>
+              <th>Цена</th>
+              <th>Валюта</th>
+              <th>Статус</th>
             </tr>
           </thead>
           <tbody>
@@ -38,8 +38,8 @@ export default function PlansPage() {
               <tr key={p.id}>
                 <td className="text-text font-medium">{p.name}</td>
                 <td>{p.code}</td>
-                <td>{p.durationDays} days</td>
-                <td>${p.price.toFixed(2)}</td>
+                <td>{p.durationDays} дней</td>
+                <td>{p.price.toFixed(2)}</td>
                 <td>{p.currency}</td>
                 <td><Badge value={p.isActive ? 'ACTIVE' : 'DISABLED'} /></td>
               </tr>
@@ -47,7 +47,7 @@ export default function PlansPage() {
           </tbody>
         </table>
         {plans.length === 0 && !error ? (
-          <div className="text-muted text-sm py-4">No plans yet. Run the seed.</div>
+          <div className="text-muted text-sm py-4">Тарифов пока нет. Запустите seed.</div>
         ) : null}
       </div>
     </div>

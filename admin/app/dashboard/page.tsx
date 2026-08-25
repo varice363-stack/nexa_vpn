@@ -25,36 +25,35 @@ export default function DashboardPage() {
   if (error) {
     return (
       <div className="glass-card text-rose-300">
-        Cannot load dashboard: {error}. Make sure the backend is running
-        (see backend/README).
+        Не удалось загрузить панель управления: {error}. Убедитесь что backend запущен.
       </div>
     );
   }
-  if (!data) return <div className="text-muted">Loading…</div>;
+  if (!data) return <div className="text-muted">Загрузка…</div>;
 
   return (
     <div>
-      <PageHeader title="Dashboard" subtitle="Service overview" />
+      <PageHeader title="Панель управления" subtitle="Обзор сервиса" />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total users" value={data.users.total} hint={`+${data.users.newToday} today`} accent="blue" />
-        <StatCard label="Online connections" value={data.connections.online} accent="green" />
-        <StatCard label="Traffic" value={`${(data.trafficMb / 1024).toFixed(1)} GB`} hint="all time" accent="yellow" />
-        <StatCard label="Premium users" value={data.users.activePremium} accent="purple" />
+        <StatCard label="Пользователей" value={data.users.total} hint={`+${data.users.newToday} сегодня`} accent="blue" />
+        <StatCard label="Подключений онлайн" value={data.connections.online} accent="green" />
+        <StatCard label="Трафик" value={`${(data.trafficMb / 1024).toFixed(1)} ГБ`} hint="за всё время" accent="yellow" />
+        <StatCard label="Premium пользователей" value={data.users.activePremium} accent="purple" />
       </div>
 
       <h2 className="font-semibold text-sm text-faint uppercase tracking-wider mb-3">
-        Servers status ({data.servers.active} active · {data.servers.disabled} disabled)
+        Статус серверов ({data.servers.active} активных · {data.servers.disabled} отключено)
       </h2>
       <div className="glass p-4">
         <table className="table-base">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Location</th>
-              <th>Ping</th>
-              <th>Load</th>
-              <th>Protocol</th>
-              <th>Status</th>
+              <th>Название</th>
+              <th>Локация</th>
+              <th>Пинг</th>
+              <th>Загрузка</th>
+              <th>Протокол</th>
+              <th>Статус</th>
             </tr>
           </thead>
           <tbody>
@@ -62,7 +61,7 @@ export default function DashboardPage() {
               <tr key={s.id}>
                 <td className="text-text font-medium">{s.name}</td>
                 <td>{s.city}, {s.country}</td>
-                <td>{s.ping} ms</td>
+                <td>{s.ping} мс</td>
                 <td>{Math.round(s.load * 100)}%</td>
                 <td>{s.protocol}</td>
                 <td><Badge value={s.status} /></td>

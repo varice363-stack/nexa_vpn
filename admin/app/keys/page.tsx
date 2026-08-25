@@ -19,7 +19,7 @@ export default function AccessKeysPage() {
 
   return (
     <div>
-      <PageHeader title="Access Keys" subtitle="All issued keys (provisioning)" />
+      <PageHeader title="Ключи доступа" subtitle="Все выпущенные ключи" />
       {error ? (
         <div className="glass-card text-rose-300 mb-3">{error}</div>
       ) : null}
@@ -27,15 +27,15 @@ export default function AccessKeysPage() {
         <table className="table-base">
           <thead>
             <tr>
-              <th>User</th>
-              <th>Name</th>
-              <th>Protocol</th>
-              <th>Status</th>
-              <th>Assigned Server</th>
-              <th>Server Status</th>
-              <th>Device</th>
-              <th>Created</th>
-              <th>Expires</th>
+              <th>Пользователь</th>
+              <th>Название</th>
+              <th>Протокол</th>
+              <th>Статус</th>
+              <th>Назначенный сервер</th>
+              <th>Статус сервера</th>
+              <th>Устройство</th>
+              <th>Создан</th>
+              <th>Истекает</th>
             </tr>
           </thead>
           <tbody>
@@ -55,7 +55,7 @@ export default function AccessKeysPage() {
           </tbody>
         </table>
         {keys.length === 0 && !error ? (
-          <div className="text-muted text-sm py-4">No access keys yet.</div>
+          <div className="text-muted text-sm py-4">Ключей доступа пока нет.</div>
         ) : null}
       </div>
     </div>

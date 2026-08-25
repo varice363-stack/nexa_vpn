@@ -6,18 +6,18 @@ import { usePathname, useRouter } from 'next/navigation';
 import { clearToken } from '@/lib/api';
 
 const NAV = [
-  { href: '/dashboard', label: 'Dashboard', icon: '◈' },
-  { href: '/users', label: 'Users', icon: '👥' },
-  { href: '/servers', label: 'Servers', icon: '🖥' },
-  { href: '/banners', label: 'Banners', icon: '🪧' },
-  { href: '/analytics', label: 'Analytics', icon: '📈' },
+  { href: '/dashboard', label: 'Панель управления', icon: '◈' },
+  { href: '/users', label: 'Пользователи', icon: '👥' },
+  { href: '/servers', label: 'Серверы', icon: '🖥' },
+  { href: '/banners', label: 'Баннеры', icon: '🪧' },
+  { href: '/analytics', label: 'Аналитика', icon: '📈' },
 ];
 
 const BILLING_NAV = [
-  { href: '/plans', label: 'Plans', icon: '💎' },
-  { href: '/subscriptions', label: 'Subscriptions', icon: '🔁' },
-  { href: '/transactions', label: 'Transactions', icon: '💳' },
-  { href: '/keys', label: 'Access Keys', icon: '🔑' },
+  { href: '/plans', label: 'Тарифы', icon: '💎' },
+  { href: '/subscriptions', label: 'Подписки', icon: '🔁' },
+  { href: '/transactions', label: 'Платежи', icon: '💳' },
+  { href: '/keys', label: 'Ключи доступа', icon: '🔑' },
 ];
 
 export default function Sidebar() {
@@ -32,7 +32,7 @@ export default function Sidebar() {
         </div>
         <div>
           <div className="font-bold text-sm">Nexa VPN</div>
-          <div className="text-[11px] text-faint">Admin Panel</div>
+          <div className="text-[11px] text-faint">Админ-панель</div>
         </div>
       </div>
 
@@ -58,7 +58,7 @@ export default function Sidebar() {
 
       <nav className="px-3 pb-4">
         <div className="text-[10px] uppercase tracking-wider text-faint px-3 pb-2">
-          Billing
+          Биллинг
         </div>
         {BILLING_NAV.map((item) => {
           const active = pathname === item.href;
@@ -87,7 +87,7 @@ export default function Sidebar() {
           }}
           className="w-full btn-ghost text-center"
         >
-          Log out
+          Выйти
         </button>
       </div>
     </aside>

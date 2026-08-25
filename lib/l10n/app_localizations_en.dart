@@ -45,6 +45,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonCopy => 'Copy';
 
   @override
+  String get commonCopied => 'Copied';
+
+  @override
   String get commonShare => 'Share';
 
   @override
@@ -488,6 +491,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get vlessCompatible =>
       'Works with v2rayNG, Shadowrocket, sing-box and other clients.';
+
+  @override
+  String get vlessCopied => 'VLESS configuration copied';
 
   @override
   String get vlessNeverExpires => 'Never (lifetime)';

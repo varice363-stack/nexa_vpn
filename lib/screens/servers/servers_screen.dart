@@ -63,7 +63,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(
-        SnackBar(content: Text('Could not switch: $e')),
+        SnackBar(content: Text('Не удалось переключиться: $e')),
       );
     } finally {
       if (mounted) setState(() => _switching = false);

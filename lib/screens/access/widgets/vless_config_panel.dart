@@ -23,7 +23,7 @@ class VlessConfigPanel extends StatelessWidget {
     await Clipboard.setData(ClipboardData(text: uri));
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('VLESS configuration copied')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.vlessCopied)),
     );
   }
 

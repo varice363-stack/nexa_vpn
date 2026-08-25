@@ -19,17 +19,17 @@ export default function SubscriptionsPage() {
 
   return (
     <div>
-      <PageHeader title="Subscriptions" subtitle="All subscription records" />
+      <PageHeader title="Подписки" subtitle="Все активные подписки" />
       {error ? <div className="glass-card text-rose-300 mb-3">{error}</div> : null}
       <div className="glass p-4">
         <table className="table-base">
           <thead>
             <tr>
-              <th>User</th>
-              <th>Plan</th>
-              <th>Status</th>
-              <th>Started</th>
-              <th>Expires</th>
+              <th>Пользователь</th>
+              <th>Тариф</th>
+              <th>Статус</th>
+              <th>Начало</th>
+              <th>Истекает</th>
             </tr>
           </thead>
           <tbody>
@@ -45,7 +45,7 @@ export default function SubscriptionsPage() {
           </tbody>
         </table>
         {subs.length === 0 && !error ? (
-          <div className="text-muted text-sm py-4">No subscriptions yet.</div>
+          <div className="text-muted text-sm py-4">Подписок пока нет.</div>
         ) : null}
       </div>
     </div>

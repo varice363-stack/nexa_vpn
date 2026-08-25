@@ -49,7 +49,7 @@ export default function UsersPage() {
 
   return (
     <div>
-      <PageHeader title="Users" subtitle={`${total} registered`} />
+      <PageHeader title="Пользователи" subtitle={`${total} зарегистрировано`} />
       <form
         className="flex gap-3 mb-4"
         onSubmit={(e) => {
@@ -61,10 +61,10 @@ export default function UsersPage() {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by email…"
+          placeholder="Поиск по email…"
           className="input-base flex-1"
         />
-        <button type="submit" className="btn-primary">Search</button>
+        <button type="submit" className="btn-primary">Найти</button>
       </form>
 
       {error ? <div className="text-sm text-rose-400 mb-3">{error}</div> : null}
@@ -74,11 +74,11 @@ export default function UsersPage() {
           <thead>
             <tr>
               <th>Email</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Country</th>
-              <th>Last login</th>
-              <th>Actions</th>
+              <th>Роль</th>
+              <th>Статус</th>
+              <th>Страна</th>
+              <th>Последний вход</th>
+              <th>Действия</th>
             </tr>
           </thead>
           <tbody>
@@ -98,7 +98,7 @@ export default function UsersPage() {
                         : 'border-rose-400/40 text-rose-300'
                     }`}
                   >
-                    {u.status === 'BLOCKED' ? 'Unblock' : 'Block'}
+                    {u.status === 'BLOCKED' ? 'Разблокировать' : 'Заблокировать'}
                   </button>
                   <select
                     defaultValue=""
@@ -110,10 +110,10 @@ export default function UsersPage() {
                     }}
                     className="input-base text-xs py-1"
                   >
-                    <option value="" disabled>Assign premium…</option>
-                    <option value="MONTHLY">Monthly</option>
-                    <option value="YEARLY">Yearly</option>
-                    <option value="LIFETIME">Lifetime</option>
+                    <option value="" disabled>Выдать Premium…</option>
+                    <option value="MONTHLY">Месяц</option>
+                    <option value="YEARLY">Год</option>
+                    <option value="LIFETIME">Навсегда</option>
                   </select>
                 </td>
               </tr>
@@ -128,15 +128,15 @@ export default function UsersPage() {
           onClick={() => setPage(page - 1)}
           className="btn-ghost disabled:opacity-40"
         >
-          ← Prev
+          ← Назад
         </button>
-        <span className="text-sm text-muted">Page {page}</span>
+        <span className="text-sm text-muted">Страница {page}</span>
         <button
           disabled={page * 20 >= total}
           onClick={() => setPage(page + 1)}
           className="btn-ghost disabled:opacity-40"
         >
-          Next →
+          Вперёд →
         </button>
       </div>
     </div>

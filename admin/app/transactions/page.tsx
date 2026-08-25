@@ -19,20 +19,20 @@ export default function TransactionsPage() {
 
   return (
     <div>
-      <PageHeader title="Transactions" subtitle="Payment transactions (mock provider today)" />
+      <PageHeader title="Платежи" subtitle="История транзакций" />
       {error ? <div className="glass-card text-rose-300 mb-3">{error}</div> : null}
       <div className="glass p-4">
         <table className="table-base">
           <thead>
             <tr>
-              <th>User</th>
-              <th>Plan</th>
-              <th>Amount</th>
-              <th>Provider</th>
-              <th>Status</th>
+              <th>Пользователь</th>
+              <th>Тариф</th>
+              <th>Сумма</th>
+              <th>Провайдер</th>
+              <th>Статус</th>
               <th>Webhook</th>
-              <th>Idempotency Key</th>
-              <th>Created</th>
+              <th>Ключ идемпотентности</th>
+              <th>Дата</th>
             </tr>
           </thead>
           <tbody>
@@ -57,7 +57,7 @@ export default function TransactionsPage() {
           </tbody>
         </table>
         {txs.length === 0 && !error ? (
-          <div className="text-muted text-sm py-4">No transactions yet.</div>
+          <div className="text-muted text-sm py-4">Платежей пока нет.</div>
         ) : null}
       </div>
     </div>

@@ -170,6 +170,12 @@ abstract class AppLocalizations {
   /// **'Copy'**
   String get commonCopy;
 
+  /// No description provided for @commonCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get commonCopied;
+
   /// No description provided for @commonShare.
   ///
   /// In en, this message translates to:
@@ -1027,6 +1033,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Works with v2rayNG, Shadowrocket, sing-box and other clients.'**
   String get vlessCompatible;
+
+  /// No description provided for @vlessCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'VLESS configuration copied'**
+  String get vlessCopied;
 
   /// No description provided for @vlessNeverExpires.
   ///
