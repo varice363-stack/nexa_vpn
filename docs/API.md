@@ -14,6 +14,49 @@ Error format (NestJS default):
 
 Validation errors return `message` as an array of constraint strings.
 
+## Security
+
+### CORS
+
+Backend restricts origins via `CORS_ORIGINS` environment variable (comma-separated whitelist).
+
+**Development:** `CORS_ORIGINS=http://localhost:3000,http://localhost:3001`
+
+**Production:** `CORS_ORIGINS=https://yourdomain.com,https://admin.yourdomain.com`
+
+Requests from non-whitelisted origins are rejected with `403 Forbidden`.
+
+### Rate Limiting
+
+- **General API:** 100 requests per 15 minutes per IP (configurable: `RATE_LIMIT_MAX`)
+- **Auth endpoints** (`/auth/login`, `/auth/register`): 10 requests per 15 minutes per IP (configurable: `AUTH_RATE_LIMIT_MAX`)
+
+Exceeding limits returns `429 Too Many Requests`.
+
+### Security Headers (Helmet)
+
+All responses include security headers:
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: SAMEORIGIN`
+- `X-XSS-Protection: 0` (modern browsers use CSP instead)
+- `Strict-Transport-Security` (if HTTPS)
+- Content Security Policy (CSP)
+
+### Environment Variables
+
+**Required:**
+- `DATABASE_URL` — PostgreSQL connection string
+- `JWT_SECRET` — Secret key for JWT signing (min 32 chars, use `openssl rand -base64 48`)
+
+**Optional:**
+- `CORS_ORIGINS` — Comma-separated allowed origins (default: `http://localhost:3000,http://localhost:3001`)
+- `RATE_LIMIT_MAX` — General rate limit (default: `100`)
+- `AUTH_RATE_LIMIT_MAX` — Auth rate limit (default: `10`)
+- `NODE_ENV` — Set to `production` to disable Swagger and static file serving
+- `JWT_EXPIRES_IN` — JWT token expiry (default: `7d`)
+
+See `.env.example` for full template.
+
 ---
 
 ## Auth (`/auth`)
