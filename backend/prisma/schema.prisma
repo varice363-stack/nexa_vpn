@@ -295,21 +295,6 @@ model AccessKey {
   @@index([code])
 }
 
-// ── Master Code (Bootstrap) ───────────────────────────────────────────────
-// One-time admin bootstrap code. Generated on first call to GET /auth/bootstrap
-// (when no ADMIN exists). The first user who registers with this code becomes
-// ADMIN. After use, the code is marked as consumed and can no longer grant
-// admin access. The owner must save the code — it is shown only once.
-
-model MasterCode {
-  id        String   @id @default(uuid())
-  code      String   @unique
-  used      Boolean  @default(false)
-  usedBy    String?  // userId of the admin who consumed it
-  usedAt    DateTime?
-  createdAt DateTime @default(now())
-}
-
 // ── Webhook Log ───────────────────────────────────────────────────────────
 // Audit journal of every webhook event (verified or not).
 

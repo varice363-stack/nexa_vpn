@@ -36,13 +36,11 @@ class AuthNotifier extends AsyncNotifier<AuthUser?> {
     required String email,
     required String password,
     String? country,
-    String? masterCode,
   }) async {
     final result = await ref.read(authRepositoryProvider).register(
           email: email,
           password: password,
           country: country,
-          masterCode: masterCode,
         );
     await ref.read(tokenStorageProvider).write(result.accessToken);
     state = AsyncData(result.user);

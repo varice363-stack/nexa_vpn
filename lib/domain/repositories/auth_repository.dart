@@ -10,7 +10,6 @@ abstract class AuthRepository {
     required String email,
     required String password,
     String? country,
-    String? masterCode,
   });
 
   /// GET /auth/me — current user. Throws [ApiException] on failure.

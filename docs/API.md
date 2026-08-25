@@ -63,38 +63,14 @@ See `.env.example` for full template.
 
 | Method | Path | Auth | Body | Response |
 |---|---|---|---|---|
-| POST | `/auth/register` | PUBLIC | `{ email, password, country?, masterCode? }` | `{ accessToken, user }` |
+| POST | `/auth/register` | PUBLIC | `{ email, password, country? }` | `{ accessToken, user }` |
 | POST | `/auth/login` | PUBLIC | `{ email, password }` | `{ accessToken, user }` |
 | GET | `/auth/me` | user | — | `user` (без passwordHash) |
-| GET | `/auth/bootstrap` | PUBLIC | — | `{ adminExists, code?, warning? }` |
 
 `user` object: `{ id, email, role, country, status, createdAt, lastLogin }`.
 `role ∈ { USER, PREMIUM, ADMIN }`, `status ∈ { ACTIVE, BLOCKED }`.
 
 Password rules: 8–72 chars, at least one letter and one digit.
-
-### Master Code (Admin Bootstrap)
-
-`GET /auth/bootstrap` — returns the master admin code **only while no ADMIN exists** in the database.
-
-Response while no admin exists:
-```json
-{
-  "adminExists": false,
-  "code": "NEXA-A1B2C3D4",
-  "warning": "Save this code now! It will not be shown again after an admin registers."
-}
-```
-
-Response after admin exists:
-```json
-{
-  "adminExists": true,
-  "code": null
-}
-```
-
-Registration with master code: if `masterCode` matches the unused code in DB, the user is created with `role: ADMIN` and the code is marked as consumed. Subsequent registrations with the same code are rejected (`400: Master code already consumed`).
 
 ---
 
