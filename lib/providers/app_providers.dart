@@ -9,6 +9,7 @@ import '../data/repositories/server_repository_impl.dart';
 import '../data/repositories/session_manager_impl.dart';
 import '../domain/repositories/auth_repository.dart';
 import '../domain/repositories/access_repository.dart';
+import '../domain/repositories/account_repository.dart';
 import '../domain/repositories/banner_repository.dart';
 import '../domain/repositories/billing_repository.dart';
 import '../domain/repositories/config_repository.dart';
@@ -19,6 +20,7 @@ import '../domain/repositories/session_manager.dart';
 import '../domain/repositories/subscription_repository.dart';
 import '../repositories/access_repository_impl.dart';
 import '../repositories/auth_repository_impl.dart';
+import '../repositories/account_repository_impl.dart';
 import '../repositories/banner_repository_impl.dart';
 import '../repositories/billing_repository_impl.dart';
 import '../repositories/notification_repository_impl.dart';
@@ -90,6 +92,11 @@ final serverRepositoryProvider = Provider<ServerRepository>(
     fallback: ServerRepositoryImpl(),
     logger: ref.watch(loggerProvider),
   ),
+);
+
+/// Account self-service (password change).
+final accountRepositoryProvider = Provider<AccountRepository>(
+  (ref) => AccountRepositoryImpl(api: ref.watch(apiClientProvider)),
 );
 
 /// Promotional banners.

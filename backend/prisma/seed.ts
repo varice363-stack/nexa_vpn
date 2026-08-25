@@ -6,18 +6,31 @@ const prisma = new PrismaClient();
 async function main() {
   // Subscription plans (the sellable product).
   const plans = [
-    { code: PlanCode.MONTHLY, name: 'Nexa 30 Days', description: 'One month of protected access', durationDays: 30, price: 11.99 },
-    { code: PlanCode.QUARTERLY, name: 'Nexa 90 Days', description: 'Three months — save 20%', durationDays: 90, price: 28.99 },
-    { code: PlanCode.YEARLY, name: 'Nexa 365 Days', description: 'A full year — best value', durationDays: 365, price: 71.88 },
-    { code: PlanCode.LIFETIME, name: 'Nexa Lifetime', description: 'Pay once, protect forever', durationDays: 36500, price: 149.0 },
+    { code: PlanCode.MONTHLY, name: 'Nexa 30 дней', description: 'Помесячно, без автопродления', durationDays: 30, price: 199, currency: 'RUB' },
+    { code: PlanCode.QUARTERLY, name: 'Nexa 90 дней', description: 'Три месяца — выгоднее на 98 ₽', durationDays: 90, price: 499, currency: 'RUB' },
+    { code: PlanCode.YEARLY, name: 'Nexa 365 дней', description: 'Год — выгоднее на 898 ₽', durationDays: 365, price: 1490, currency: 'RUB' },
   ];
   for (const plan of plans) {
     await prisma.subscriptionPlan.upsert({
       where: { code: plan.code },
-      update: { price: plan.price, durationDays: plan.durationDays },
+      update: {
+        price: plan.price,
+        durationDays: plan.durationDays,
+        currency: plan.currency,
+        name: plan.name,
+        description: plan.description,
+        isActive: true,
+      },
       create: plan,
     });
   }
+
+  // Тарифы, снятые с продажи, остаются в базе ради истории платежей,
+  // но не должны показываться в приложении.
+  await prisma.subscriptionPlan.updateMany({
+    where: { code: PlanCode.LIFETIME },
+    data: { isActive: false },
+  });
 
   // Admin account: admin@nexavpn.app / admin1234
   const adminHash = await bcrypt.hash('admin1234', 10);

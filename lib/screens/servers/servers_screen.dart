@@ -1,22 +1,22 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../models/server.dart';
-import '../../providers/server_providers.dart';
+import '../../l10n/app_localizations.dart';
+import '../../models/connection_source.dart';
+import '../../models/vpn_status.dart';
+import '../../providers/connection_source_providers.dart';
+import '../../providers/vpn_providers.dart';
 import '../../theme/app_colors.dart';
-import '../../widgets/background/animated_background.dart';
-import '../../widgets/cards/server_card.dart';
+import '../../widgets/common/app_page.dart';
 import '../../widgets/common/glass_container.dart';
-import 'widgets/server_filter_bar.dart';
-import 'widgets/server_search_field.dart';
-import 'widgets/server_tile.dart';
 
-/// Full server catalog screen: search, All / Fastest / Premium / Saved modes,
-/// grouping by country, selection persisted via [selectedServerProvider].
+/// Servers the user can actually connect to.
+///
+/// This screen used to render a marketing catalog of countries that was not
+/// wired to the tunnel at all: tapping a row changed a label and nothing else.
+/// It now lists the real endpoints from the user's key or subscription, marks
+/// the one in use, and switching rows genuinely moves the tunnel.
 class ServersScreen extends ConsumerStatefulWidget {
   const ServersScreen({super.key});
 
@@ -26,8 +26,8 @@ class ServersScreen extends ConsumerStatefulWidget {
 
 class _ServersScreenState extends ConsumerState<ServersScreen> {
   final TextEditingController _searchController = TextEditingController();
-  ServersViewMode _mode = ServersViewMode.all;
   String _query = '';
+  bool _switching = false;
 
   @override
   void dispose() {
@@ -35,428 +35,277 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     super.dispose();
   }
 
-  void _onSearchChanged(String value) =>
-      setState(() => _query = value.trim().toLowerCase());
+  /// Switching while connected must not leave the tunnel on the old server:
+  /// drop it first, then bring it back up on the chosen one.
+  Future<void> _select(ConnectionSource source) async {
+    final wasConnected = ref.read(connectionStateProvider) == VpnStatus.connected;
+    final messenger = ScaffoldMessenger.of(context);
 
-  void _onModeChanged(ServersViewMode mode) => setState(() => _mode = mode);
+    setState(() => _switching = true);
+    try {
+      await ref.read(activeSourceProvider.notifier).select(source);
 
-  void _onServerSelected(Server server) {
-    ref.read(selectedServerProvider.notifier).select(server);
-    context.go('/');
-  }
-
-  void _resetFilters() {
-    _searchController.clear();
-    setState(() {
-      _query = '';
-      _mode = ServersViewMode.all;
-    });
-  }
-
-  List<Server> _filterServers(List<Server> all, List<String> favoriteIds) {
-    final servers = all
-        .where(
-          (server) =>
-              _mode != ServersViewMode.premium || server.premium,
-        )
-        .where(
-          (server) =>
-              _mode != ServersViewMode.favorites ||
-              favoriteIds.contains(server.id),
-        )
-        .where((server) => server.matches(_query))
-        .toList();
-
-    if (_mode == ServersViewMode.fastest) {
-      servers.sort((a, b) => a.ping.compareTo(b.ping));
-    }
-    return servers;
-  }
-
-  /// Flat list of children for the scroll view: country headers +
-  /// server tiles (grouped) or plain tiles (fastest / search mode).
-  List<Widget> _buildItems(List<Server> servers) {
-    final children = <Widget>[];
-    final grouped =
-        _mode != ServersViewMode.fastest && _query.isEmpty;
-
-    if (grouped) {
-      final byCountry = <String, List<Server>>{};
-      for (final server in servers) {
-        byCountry.putIfAbsent(server.country, () => []).add(server);
+      if (wasConnected) {
+        final notifier = ref.read(connectionStateProvider.notifier);
+        await notifier.disconnect();
+        await notifier.connect(source);
       }
-
-      final countries = byCountry.keys.toList()..sort();
-      var index = 0;
-      for (final country in countries) {
-        final group = byCountry[country]!;
-        children.add(
-          _CountryHeader(
-            country: country,
-            countryCode: group.first.countryCode,
-            count: group.length,
-            index: index,
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            wasConnected
+                ? 'Reconnected via ${source.label}'
+                : 'Selected ${source.label}',
           ),
-        );
-        index += 1;
-        for (final server in group) {
-          children.add(
-            _AnimatedServerTile(
-              index: index,
-              server: server,
-              onTap: () => _onServerSelected(server),
-            ),
-          );
-          index += 1;
-        }
-      }
-    } else {
-      for (var i = 0; i < servers.length; i++) {
-        final server = servers[i];
-        children.add(
-          _AnimatedServerTile(
-            index: i,
-            server: server,
-            onTap: () => _onServerSelected(server),
-          ),
-        );
-      }
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not switch: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _switching = false);
     }
-    return children;
   }
 
   @override
   Widget build(BuildContext context) {
-    final serversAsync = ref.watch(serversProvider);
-    final favoritesAsync = ref.watch(favoritesProvider);
-    final favoriteIds = favoritesAsync.value ?? const <String>[];
-    final servers = serversAsync.value ?? const <Server>[];
-    final filtered = _filterServers(servers, favoriteIds);
-    final selected = ref.watch(selectedServerProvider);
-    final countryCount = servers.map((s) => s.country).toSet().length;
+    final l10n = AppLocalizations.of(context);
+    final sources = ref.watch(connectionSourcesProvider);
+    final active = ref.watch(activeSourceProvider);
+    final status = ref.watch(connectionStateProvider);
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) context.go('/');
-      },
-      child: Scaffold(
-        body: AnimatedBackground(
-          child: SafeArea(
-            child: Column(
+    final visible = _query.isEmpty
+        ? sources
+        : sources
+            .where((s) =>
+                s.label.toLowerCase().contains(_query) ||
+                s.host.toLowerCase().contains(_query))
+            .toList();
+
+    return AppPage(
+      title: l10n.navServers,
+      subtitle: sources.isEmpty
+          ? 'No servers yet'
+          : '${sources.length} available from your key',
+      child: sources.isEmpty
+          ? _empty(context)
+          : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _Header(
-                  onBack: () => context.go('/'),
-                  onFavorites: () => context.push('/favorites'),
-                  subtitle: servers.isEmpty
-                      ? 'Loading locations…'
-                      : '${servers.length} locations • '
-                          '$countryCount countries',
-                ),
-                const SizedBox(height: 4),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: ServerSearchField(
+                if (active != null) _activeCard(active, status),
+                const SizedBox(height: 18),
+                if (sources.length > 6) ...[
+                  TextField(
                     controller: _searchController,
-                    onChanged: _onSearchChanged,
+                    onChanged: (v) =>
+                        setState(() => _query = v.trim().toLowerCase()),
+                    style: const TextStyle(color: AppColors.textPrimary),
+                    decoration: const InputDecoration(
+                      hintText: 'Search by name or host',
+                      hintStyle: TextStyle(color: AppColors.textTertiary),
+                      prefixIcon: Icon(Icons.search_rounded, size: 18),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+                const Text(
+                  'ALL SERVERS',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.1,
+                    color: AppColors.textTertiary,
                   ),
                 ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: ServerFilterBar(
-                    mode: _mode,
-                    onChanged: _onModeChanged,
+                const SizedBox(height: 10),
+                for (final source in visible)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _row(source, active?.id == source.id),
                   ),
-                ),
-                if (selected != null) _buildCurrentServer(selected),
-                Expanded(
-                  child: KeyedSubtree(
-                    key: ValueKey('server-list-${_mode.name}-$_query'),
-                    child: serversAsync.isLoading && servers.isEmpty
-                        ? const _LoadingState()
-                        : filtered.isEmpty
-                            ? _EmptyState(onReset: _resetFilters)
-                            : ListView(
-                                physics: const BouncingScrollPhysics(
-                                  parent: AlwaysScrollableScrollPhysics(),
-                                ),
-                                padding: const EdgeInsets.fromLTRB(
-                                  16, 8, 16, 110,
-                                ),
-                                children: _buildItems(filtered),
-                              ),
+                if (visible.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      'Nothing matches that search.',
+                      style: TextStyle(
+                          color: AppColors.textSecondary, fontSize: 12.5),
+                    ),
                   ),
-                ),
               ],
             ),
-          ),
-        ),
-      ),
     );
   }
 
-  Widget _buildCurrentServer(Server selected) {
+  Widget _empty(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      padding: const EdgeInsets.only(top: 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 8),
-            child: Text(
-              'Current server',
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textTertiary,
-                letterSpacing: 0.3,
-              ),
+          const Icon(Icons.dns_rounded, size: 34, color: AppColors.textTertiary),
+          const SizedBox(height: 14),
+          const Text(
+            'No servers yet',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
             ),
           ),
-          ServerCard(
-            server: selected,
-            onTap: () => context.go('/'),
+          const SizedBox(height: 6),
+          const Text(
+            'Servers appear here once you add a key or a provider '
+            'subscription. Nothing is shown that you cannot connect to.',
+            style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 18),
+          GestureDetector(
+            onTap: () => context.push('/key'),
+            child: GlassContainer(
+              borderRadius: BorderRadius.circular(14),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: const Row(
+                children: [
+                  Icon(Icons.vpn_key_rounded,
+                      size: 17, color: AppColors.primaryBright),
+                  SizedBox(width: 10),
+                  Text(
+                    'Add a key',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
     );
   }
-}
 
-// ── Private building blocks ────────────────────────────────────────────────
+  /// Answers "what am I connected to right now" — the question the old
+  /// catalog could not answer.
+  Widget _activeCard(ConnectionSource active, VpnStatus status) {
+    final connected = status == VpnStatus.connected;
+    final color = connected ? AppColors.success : AppColors.textTertiary;
 
-class _Header extends StatelessWidget {
-  const _Header({
-    required this.onBack,
-    required this.onFavorites,
-    required this.subtitle,
-  });
-
-  final VoidCallback onBack;
-  final VoidCallback onFavorites;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+    return GlassContainer(
+      borderRadius: BorderRadius.circular(18),
+      padding: const EdgeInsets.all(16),
+      color: color.withValues(alpha: 0.06),
+      borderColor: color.withValues(alpha: 0.3),
       child: Row(
         children: [
-          GlassContainer(
-            borderRadius: BorderRadius.circular(14),
-            padding: const EdgeInsets.all(11),
-            child: GestureDetector(
-              onTap: onBack,
-              behavior: HitTestBehavior.opaque,
-              child: const Icon(
-                Icons.arrow_back_rounded,
-                size: 20,
-                color: AppColors.textPrimary,
-              ),
-            ),
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(shape: BoxShape.circle, color: color),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Servers',
+                Text(
+                  connected ? 'Connected' : 'Selected',
                   style: TextStyle(
-                    fontSize: 19,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  active.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
-                    letterSpacing: 0.2,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  subtitle,
+                  active.host,
                   style: const TextStyle(
-                    fontSize: 12.5,
+                    fontSize: 11.5,
                     color: AppColors.textSecondary,
                   ),
                 ),
               ],
             ),
           ),
-          GlassContainer(
-            borderRadius: BorderRadius.circular(14),
-            padding: const EdgeInsets.all(11),
-            child: GestureDetector(
-              onTap: onFavorites,
-              behavior: HitTestBehavior.opaque,
-              child: const Icon(
-                Icons.star_rounded,
-                size: 20,
-                color: AppColors.premium,
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
-}
 
-class _CountryHeader extends StatelessWidget {
-  const _CountryHeader({
-    required this.country,
-    required this.countryCode,
-    required this.count,
-    required this.index,
-  });
-
-  final String country;
-  final String countryCode;
-  final int count;
-  final int index;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 18, 4, 8),
-      child: Row(
-        children: [
-          Text(
-            Server.flagEmojiFor(countryCode),
-            style: const TextStyle(fontSize: 15),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              country,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-                letterSpacing: 0.2,
-              ),
-            ),
-          ),
-          Text(
-            '$count ${count == 1 ? 'server' : 'servers'}',
-            style: const TextStyle(
-              fontSize: 11.5,
-              color: AppColors.textTertiary,
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(
-          begin: 0,
-          delay: (140 + index * 35).ms,
-          duration: 250.ms,
-        );
-  }
-}
-
-class _AnimatedServerTile extends StatelessWidget {
-  const _AnimatedServerTile({
-    required this.index,
-    required this.server,
-    required this.onTap,
-  });
-
-  final int index;
-  final Server server;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final delay = Duration(milliseconds: 120 + math.min(index, 14) * 35);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: ServerTile(server: server, onTap: onTap)
-          .animate()
-          .fadeIn(begin: 0, delay: delay, duration: 320.ms)
-          .slideY(
-            begin: 0.06,
-            delay: delay,
-            duration: 320.ms,
-            curve: Curves.easeOutCubic,
-          ),
-    );
-  }
-}
-
-class _LoadingState extends StatelessWidget {
-  const _LoadingState();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircularProgressIndicator(strokeWidth: 2.5),
-          SizedBox(height: 14),
-          Text(
-            'Fetching servers…',
-            style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.onReset});
-
-  final VoidCallback onReset;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
+  Widget _row(ConnectionSource source, bool isActive) {
+    return GestureDetector(
+      onTap: _switching || isActive ? null : () => _select(source),
       child: GlassContainer(
-        borderRadius: BorderRadius.circular(24),
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        borderRadius: BorderRadius.circular(14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        color: isActive ? AppColors.primary.withValues(alpha: 0.07) : null,
+        borderColor:
+            isActive ? AppColors.primary.withValues(alpha: 0.35) : null,
+        child: Row(
           children: [
-            const Icon(
-              Icons.search_off_rounded,
-              size: 40,
-              color: AppColors.textTertiary,
+            Icon(
+              source.isNexa
+                  ? Icons.workspace_premium_rounded
+                  : Icons.public_rounded,
+              size: 17,
+              color: source.isNexa
+                  ? AppColors.premium
+                  : AppColors.primaryBright,
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'No servers found',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Try a different query or reset the filters',
-              style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 14),
-            GestureDetector(
-              onTap: onReset,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Text(
-                  'Reset filters',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    source.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 2),
+                  Text(
+                    source.host,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ],
               ),
             ),
+            if (isActive)
+              const Icon(Icons.check_circle_rounded,
+                  size: 18, color: AppColors.primary)
+            else if (_switching)
+              const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
           ],
         ),
       ),

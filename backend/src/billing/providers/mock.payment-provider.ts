@@ -11,7 +11,7 @@ import {
 /**
  * Mock payment provider — for local development and tests only.
  *
- * `createCheckout` returns a fake URL; `verifyWebhook` accepts the mock
+ * `createCheckout` returns no URL (null); `verifyWebhook` accepts the mock
  * payload with the header signature `x-nexa-signature: mock-signature`;
  * `parseWebhook` accepts the mock payload shape:
  *   { event: 'payment.paid', transactionId: '...', providerPaymentId: '...' }
@@ -23,7 +23,10 @@ export class MockPaymentProvider implements PaymentProvider {
     return {
       transactionId: request.transactionId,
       status: 'PENDING',
-      checkoutUrl: `https://mock-pay.nexa.app/checkout/${request.transactionId}`,
+      // Реального платёжного шлюза ещё нет. Возвращаем null вместо
+      // вымышленного адреса, чтобы клиент не открыл несуществующую
+      // страницу оплаты, если этот провайдер случайно окажется в проде.
+      checkoutUrl: null,
     };
   }
 

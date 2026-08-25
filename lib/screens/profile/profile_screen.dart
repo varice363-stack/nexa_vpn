@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../models/user_profile.dart';
-import '../../providers/auth_providers.dart';
+import '../../providers/admin_providers.dart';
+import '../../providers/identity_providers.dart';
 import '../../providers/notifications_providers.dart';
 import '../../providers/subscription_providers.dart';
-import '../../providers/profile_providers.dart';
 import '../../providers/session_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/app_page.dart';
@@ -20,8 +19,6 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authUser = ref.watch(authProvider).value;
-    final profile = ref.watch(profileProvider).value ?? const UserProfile();
     final subscription = ref.watch(subscriptionProvider).value;
     final isPremium = subscription?.isPremium ?? false;
     final sessions = ref.watch(sessionsProvider).value ?? const [];
@@ -29,21 +26,12 @@ class ProfileScreen extends ConsumerWidget {
 
     return AppPage(
       title: 'Profile',
-      subtitle: authUser == null
-          ? 'Guest mode'
-          : (isPremium ? 'Premium member' : 'Free plan'),
+      subtitle: isPremium ? 'Premium member' : 'Free plan',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Identity card.
-          if (authUser == null)
-            _GuestCard(onSignIn: () => context.push('/login'))
-          else
-            _IdentityCard(
-              profile: profile,
-              email: authUser.email,
-              onEdit: () => _editProfile(context, ref),
-            ),
+          // Код устройства вместо аккаунта: почты и пароля больше нет.
+          _IdentityCodeCard(onTap: () => context.push('/identity')),
           const SizedBox(height: 16),
           // Plan card.
           _PlanCard(
@@ -108,12 +96,6 @@ class ProfileScreen extends ConsumerWidget {
             subtitle: 'Diagnostic event log',
             onTap: () => context.push('/logs'),
           ),
-          GlassListTile(
-            icon: Icons.health_and_safety_rounded,
-            title: 'Diagnostics',
-            subtitle: 'Run connection checks',
-            onTap: () => context.push('/diagnostics'),
-          ),
           const SizedBox(height: 20),
           const SectionHeader(title: 'SUPPORT'),
           GlassListTile(
@@ -128,240 +110,91 @@ class ProfileScreen extends ConsumerWidget {
             subtitle: 'Version and legal',
             onTap: () => context.push('/about'),
           ),
-          const SizedBox(height: 16),
-          if (authUser != null)
-            Center(
-              child: TextButton(
-                onPressed: () => _signOut(context, ref),
-                child: const Text(
-                  'Sign out',
-                  style: TextStyle(fontSize: 13, color: AppColors.danger),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _editProfile(BuildContext context, WidgetRef ref) async {
-    final profile = ref.read(profileProvider).value ?? const UserProfile();
-    final nameController = TextEditingController(text: profile.name);
-    final emailController = TextEditingController(text: profile.email);
-
-    await showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceElevated,
-        title: const Text('Edit profile'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-              keyboardType: TextInputType.emailAddress,
+          // Раздел владельца. Виден, только если код этого устройства
+          // совпадает с кодом, заданным при сборке (--dart-define=OWNER_CODE).
+          // Обычный человек не должен даже знать, что выпуск ключей есть.
+          if (ref.watch(adminUnlockedProvider)) ...[
+            const SizedBox(height: 20),
+            const SectionHeader(title: 'ВЛАДЕЛЕЦ'),
+            GlassListTile(
+              icon: Icons.vpn_key_rounded,
+              title: 'Выпуск ключей',
+              subtitle: 'Создать коды на продажу и посмотреть все ключи',
+              onTap: () => context.push('/admin/keys'),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              ref.read(profileProvider.notifier).save(
-                    name: nameController.text,
-                    email: emailController.text,
-                  );
-              Navigator.of(context).pop();
-            },
-            child: const Text('Save'),
-          ),
         ],
       ),
     );
   }
 
-  Future<void> _signOut(BuildContext context, WidgetRef ref) async {
-    await ref.read(authProvider.notifier).logout();
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Signed out. Welcome back anytime.')),
-    );
-  }
 }
 
 /// Guest identity card with a sign-in CTA.
-class _GuestCard extends StatelessWidget {
-  const _GuestCard({required this.onSignIn});
+/// Карточка кода устройства — то, что заменило блок аккаунта.
+///
+/// Показывает не сам код целиком, а лишь первую группу: полный код живёт
+/// на отдельном экране, чтобы его нельзя было подсмотреть мельком через
+/// плечо.
+class _IdentityCodeCard extends ConsumerWidget {
+  const _IdentityCodeCard({required this.onTap});
 
-  final VoidCallback onSignIn;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    return GlassContainer(
-      blur: true,
-      borderRadius: BorderRadius.circular(24),
-      padding: const EdgeInsets.all(18),
-      child: Row(
-        children: [
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppColors.primaryGradient,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.35),
-                  blurRadius: 18,
-                ),
-              ],
-            ),
-            child: const Center(
-              child: Text(
-                'N',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Guest',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Sign in to sync devices, keys and subscriptions',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: onSignIn,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final code = ref.watch(identityProvider).value;
+    final masked = code == null
+        ? '…'
+        : '${code.split('-').take(2).join('-')}-••••-••••-••••';
+
+    return GestureDetector(
+      onTap: onTap,
+      child: GlassContainer(
+        borderRadius: BorderRadius.circular(20),
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
               decoration: BoxDecoration(
                 gradient: AppColors.primaryGradient,
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Text(
-                'Sign in',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
+              child: const Icon(Icons.vpn_key_rounded,
+                  size: 22, color: Colors.white),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Мой код',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    masked,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontFamily: 'monospace',
+                      letterSpacing: 0.8,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _IdentityCard extends StatelessWidget {
-  const _IdentityCard({
-    required this.profile,
-    required this.email,
-    required this.onEdit,
-  });
-
-  final UserProfile profile;
-  final String email;
-  final VoidCallback onEdit;
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassContainer(
-      blur: true,
-      borderRadius: BorderRadius.circular(24),
-      padding: const EdgeInsets.all(18),
-      child: Row(
-        children: [
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppColors.primaryGradient,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.35),
-                  blurRadius: 18,
-                ),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                profile.initials,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  profile.name,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  email,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: onEdit,
-            child: const Icon(
-              Icons.edit_rounded,
-              size: 18,
-              color: AppColors.primaryBright,
-            ),
-          ),
-        ],
+            const Icon(Icons.chevron_right_rounded,
+                size: 20, color: AppColors.textTertiary),
+          ],
+        ),
       ),
     );
   }

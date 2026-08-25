@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/app_localizations.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,6 +25,7 @@ class MyAccessScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final subscriptionAsync = ref.watch(subscriptionProvider);
     final keysAsync = ref.watch(accessKeysProvider);
     final subscription = subscriptionAsync.value;
@@ -39,8 +42,8 @@ class MyAccessScreen extends ConsumerWidget {
             subscriptionAsync.hasError && subscription == null;
 
     return AppPage(
-      title: 'My Access',
-      subtitle: isPremium ? 'Premium access' : 'No active plan',
+      title: l10n.accessTitle,
+      subtitle: isPremium ? l10n.accessPremiumAccess : l10n.accessNoActivePlan,
       child: offline
           ? _OfflineState(
               onRetry: () {
@@ -68,21 +71,21 @@ class MyAccessScreen extends ConsumerWidget {
                           icon: Icons.vpn_key_rounded,
                           accent: AppColors.primaryBright,
                           value: '${keys.length}',
-                          label: 'Keys',
+                          label: l10n.accessKeys,
                         ),
                         const SizedBox(width: 10),
                         _StatTile(
                           icon: Icons.devices_rounded,
                           accent: AppColors.cyan,
                           value: '$deviceCount',
-                          label: 'Devices',
+                          label: l10n.commonDevices,
                         ),
                         const SizedBox(width: 10),
                         _StatTile(
                           icon: Icons.workspace_premium_rounded,
                           accent: AppColors.premium,
                           value: isPremium ? 'ON' : 'OFF',
-                          label: 'Premium',
+                          label: l10n.commonPremium,
                         ),
                       ],
                     ),
@@ -136,11 +139,11 @@ class MyAccessScreen extends ConsumerWidget {
                     if (keys.isEmpty)
                       EmptyState(
                         icon: Icons.vpn_key_off_rounded,
-                        title: 'No access keys yet',
+                        title: l10n.accessNoKeys,
                         message:
                             'Get access to generate your personal key — '
                             'usable in the Nexa app and any compatible client.',
-                        actionLabel: 'Get access',
+                        actionLabel: l10n.accessGetAccess,
                         onAction: () => context.push('/premium'),
                       )
                     else
@@ -176,6 +179,7 @@ class _SubscriptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final daysLeft = expiresAt?.difference(DateTime.now()).inDays;
 
     return GlassContainer(
@@ -214,7 +218,7 @@ class _SubscriptionCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isPremium ? 'Premium active' : 'Free plan',
+                      isPremium ? l10n.accessPremiumActive : l10n.commonFreePlan,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -224,8 +228,8 @@ class _SubscriptionCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       isPremium
-                          ? _expiryLabel(plan, expiresAt, daysLeft)
-                          : 'Subscribe to generate access keys',
+                          ? _expiryLabel(l10n, plan, expiresAt, daysLeft)
+                          : l10n.accessSubscribeHint,
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
@@ -246,9 +250,9 @@ class _SubscriptionCard extends StatelessWidget {
                       gradient: AppColors.premiumGradient,
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Text(
-                      'Upgrade',
-                      style: TextStyle(
+                    child: Text(
+                      l10n.commonUpgrade,
+                      style: const TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700,
                         color: Colors.black87,
@@ -272,7 +276,7 @@ class _SubscriptionCard extends StatelessWidget {
               ),
               child: Text(
                 daysLeft <= 0
-                    ? 'Your subscription has expired — renew to keep access.'
+                    ? l10n.accessExpired
                     : 'Subscription expires in $daysLeft '
                         '${daysLeft == 1 ? 'day' : 'days'} — renew soon.',
                 style: const TextStyle(
@@ -288,8 +292,8 @@ class _SubscriptionCard extends StatelessWidget {
     );
   }
 
-  String _expiryLabel(String? plan, DateTime? expiresAt, int? daysLeft) {
-    final planLabel = plan == null ? 'Premium' : '${plan[0]}${plan.substring(1).toLowerCase()}';
+  String _expiryLabel(AppLocalizations l10n, String? plan, DateTime? expiresAt, int? daysLeft) {
+    final planLabel = plan == null ? l10n.commonPremium : '${plan[0]}${plan.substring(1).toLowerCase()}';
     if (expiresAt == null) return '$planLabel · Lifetime';
     return '$planLabel · expires ${Formatters.shortDate(expiresAt)}'
         '${daysLeft != null ? ' ($daysLeft d)' : ''}';
@@ -475,15 +479,16 @@ class _LoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final l10n = AppLocalizations.of(context);
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CircularProgressIndicator(strokeWidth: 2.5),
-          SizedBox(height: 14),
+          const CircularProgressIndicator(strokeWidth: 2.5),
+          const SizedBox(height: 14),
           Text(
-            'Loading your access…',
-            style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+            l10n.accessLoading,
+            style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -498,13 +503,14 @@ class _OfflineState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return EmptyState(
       icon: Icons.cloud_off_rounded,
-      title: 'Offline',
+      title: l10n.commonOffline,
       message:
           'Cannot reach the server. Your access data will appear once the '
           'connection is back.',
-      actionLabel: 'Retry',
+      actionLabel: l10n.commonRetry,
       onAction: onRetry,
     );
   }

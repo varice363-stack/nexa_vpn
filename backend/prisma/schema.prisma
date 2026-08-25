@@ -77,8 +77,11 @@ enum PaymentProvider {
 
 model User {
   id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
+  /// Optional: accounts are opt-in. Access is normally tied to a
+  /// recovery code, so most buyers never hand over an address.
+  email        String?  @unique
+  /// Null for code-only accounts that never set a password.
+  passwordHash String?
   role         Role     @default(USER)
   country      String?
   status       UserStatus @default(ACTIVE)
@@ -87,7 +90,6 @@ model User {
   trialUsedAt  DateTime?
 
   subscriptions      Subscription[]
-  connectionLogs     ConnectionLog[]
   notifications      Notification[]
   devices            Device[]
   accessKeys         AccessKey[]
@@ -121,7 +123,6 @@ model VpnServer {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  connectionLogs ConnectionLog[]
   accessKeys     AccessKey[]
 
   @@index([status])
@@ -138,7 +139,7 @@ model SubscriptionPlan {
   description String?
   durationDays Int
   price       Decimal   @db.Decimal(10, 2)
-  currency    String    @default("USD")
+  currency    String    @default("RUB")
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -184,7 +185,7 @@ model PaymentTransaction {
   provider          PaymentProvider
   providerPaymentId String?
   amount            Decimal         @db.Decimal(10, 2)
-  currency          String          @default("USD")
+  currency          String          @default("RUB")
   status            PaymentStatus   @default(PENDING)
   idempotencyKey    String?         // client-supplied key (checkout dedup)
   webhookEvent      String?         // last webhook event received (payment.paid, ...)
@@ -206,30 +207,26 @@ model Banner {
   description String
   imageUrl    String?
   buttonText  String?
+  /// External destination opened when the banner CTA is tapped.
+  /// Null keeps the legacy behaviour (in-app navigation to Premium).
+  targetUrl   String?
+  /// Placement slot: "home" (default) or "premium".
+  placement   String   @default("home")
+  /// Display order within a slot — lower comes first.
+  sortOrder   Int      @default(0)
+  /// Ad performance counters (TASK #020).
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([active])
+  @@index([placement, active])
 }
 
 // ── Connection Log ───────────────────────────────────────────────────────
 
-model ConnectionLog {
-  id             String    @id @default(uuid())
-  userId         String
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  serverId       String
-  server         VpnServer @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  connectedAt    DateTime  @default(now())
-  disconnectedAt DateTime?
-  durationSec    Int?
-  trafficMb      Int?
-  createdAt      DateTime  @default(now())
-
-  @@index([userId, connectedAt])
-  @@index([serverId, connectedAt])
-}
 
 // ── Notification ─────────────────────────────────────────────────────────
 
@@ -268,8 +265,19 @@ model Device {
 
 model AccessKey {
   id         String    @id @default(uuid())
-  userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Nullable: a key can be sold and activated without an account
+  // (TASK #021 — hybrid auth). It is bound to a user only when the
+  // owner later registers and claims it.
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Human-readable redemption code handed to the buyer, e.g.
+  // NEXA-7QK2-M4XP. Null for keys generated inside an account.
+  code       String?   @unique
+  activatedAt DateTime?
+  // Raw device fingerprint sent by the client when redeeming a code.
+  // Distinct from `deviceId`, which is a FK into the Device table and only
+  // exists for registered accounts.
+  boundDevice String?
   deviceId   String?
   device     Device?   @relation(fields: [deviceId], references: [id], onDelete: SetNull)
   serverId   String?   // deterministic ingress assignment (TASK #011)
@@ -284,6 +292,7 @@ model AccessKey {
 
   @@index([userId, status])
   @@index([serverId])
+  @@index([code])
 }
 
 // ── Master Code (Bootstrap) ───────────────────────────────────────────────

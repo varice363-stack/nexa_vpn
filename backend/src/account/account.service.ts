@@ -51,6 +51,11 @@ export class AccountService {
         where: { id: user.id },
       });
       if (!current) throw new NotFoundException('Account not found');
+      if (!current.passwordHash) {
+        throw new BadRequestException(
+          'This account has no password. It is accessed with a recovery code.',
+        );
+      }
       const valid = await bcrypt.compare(
         dto.currentPassword,
         current.passwordHash,

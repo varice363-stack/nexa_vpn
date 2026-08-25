@@ -1,33 +1,24 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 
 import { Public } from '../common/decorators/public.decorator';
-import { CurrentUser, SafeUser } from '../common/decorators/current-user.decorator';
 import { VpnService } from './vpn.service';
-import { ConnectDto, DisconnectDto } from './dto/connect.dto';
 
+/**
+ * VPN catalog.
+ *
+ * `connect` / `disconnect` / `logs` were removed together with ConnectionLog:
+ * they existed only to record who connected where and when, which is the one
+ * thing a VPN must not keep. The tunnel is established entirely on the device
+ * (Xray via flutter_vless), so the backend never needs to know about it.
+ */
 @Controller('vpn')
 export class VpnController {
   constructor(private readonly vpn: VpnService) {}
 
-  /** Public active-server catalog for the client (replaces static list). */
+  /** Public active-server catalog for the client. */
   @Public()
   @Get('servers')
   servers() {
     return this.vpn.servers();
-  }
-
-  @Post('connect')
-  connect(@CurrentUser() user: SafeUser, @Body() dto: ConnectDto) {
-    return this.vpn.connect(user, dto);
-  }
-
-  @Post('disconnect')
-  disconnect(@CurrentUser() user: SafeUser, @Body() dto: DisconnectDto) {
-    return this.vpn.disconnect(user, dto);
-  }
-
-  @Get('logs')
-  logs(@CurrentUser() user: SafeUser) {
-    return this.vpn.myLogs(user);
   }
 }

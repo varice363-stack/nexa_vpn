@@ -1,29 +1,32 @@
 import 'package:flutter/material.dart';
+
+import '../../../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../models/access_key.dart';
 import '../../../providers/access_providers.dart';
-import '../../../providers/auth_providers.dart';
 import '../../../providers/subscription_providers.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/common/glass_container.dart';
 
-/// Home status strip for the access state (authenticated users only):
+/// Home status strip for the access state:
 ///
 ///  * loading → compact spinner card;
 ///  * active key → "Premium · key active · N devices";
 ///  * no keys → "Get access" CTA.
 ///
-/// Hidden entirely for guests.
+/// The account card is shown to authenticated users only, but the
+/// "I have a key" entry point is ALWAYS visible: redeeming a key does not
+/// require an account (hybrid auth), so guests must be able to reach it.
 class HomeAccessSection extends ConsumerWidget {
   const HomeAccessSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authUser = ref.watch(authProvider).value;
-    if (authUser == null) return const SizedBox.shrink();
-
+    final l10n = AppLocalizations.of(context);
+    // Аккаунтов больше нет: ключи привязаны к устройству, а не к почте.
+    // Список запрашивается всегда; если он пуст — покажем вход для ключа.
     final keysAsync = ref.watch(accessKeysProvider);
     final subscription = ref.watch(subscriptionProvider).value;
     final keys = keysAsync.value ?? const <AccessKey>[];
@@ -39,9 +42,70 @@ class HomeAccessSection extends ConsumerWidget {
       }
     }
 
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () => context.push('/access'),
+          child: _card(context, l10n, activeKey, keys, deviceCount,
+              isPremium, loading),
+        ),
+        // Primary entry point of the product: paste a key and connect.
+        // Always available while no key is active.
+        if (!loading && activeKey == null) ...[
+          const SizedBox(height: 8),
+          _keyEntryTile(context, l10n),
+        ],
+      ],
+    );
+  }
+
+  /// "I have a key" row — the way into `/key`. Deliberately reachable both
+  /// for guests and for signed-in users without an active key.
+  Widget _keyEntryTile(BuildContext context, AppLocalizations l10n) {
     return GestureDetector(
-      onTap: () => context.push('/access'),
+      onTap: () => context.push('/key'),
       child: GlassContainer(
+        borderRadius: BorderRadius.circular(16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.vpn_key_rounded,
+              size: 17,
+              color: AppColors.primaryBright,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                l10n.keyEntryOpen,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: AppColors.textTertiary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _card(
+    BuildContext context,
+    AppLocalizations l10n,
+    AccessKey? activeKey,
+    List<AccessKey> keys,
+    int deviceCount,
+    bool isPremium,
+    bool loading,
+  ) {
+    return GlassContainer(
         blur: true,
         borderRadius: BorderRadius.circular(18),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -71,17 +135,17 @@ class HomeAccessSection extends ConsumerWidget {
             const SizedBox(width: 12),
             Expanded(
               child: loading
-                  ? const Row(
+                  ? Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                        SizedBox(width: 10),
+                        const SizedBox(width: 10),
                         Text(
-                          'Checking access…',
-                          style: TextStyle(
+                          l10n.accessChecking,
+                          style: const TextStyle(
                             fontSize: 12.5,
                             color: AppColors.textSecondary,
                           ),
@@ -93,10 +157,10 @@ class HomeAccessSection extends ConsumerWidget {
                       children: [
                         Text(
                           activeKey != null
-                              ? 'Access active'
+                              ? l10n.accessActive
                               : (keys.isNotEmpty
-                                  ? 'No active key'
-                                  : 'No access key yet'),
+                                  ? l10n.accessNoActiveKey
+                                  : l10n.accessNoKeyYet),
                           style: const TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
@@ -105,7 +169,7 @@ class HomeAccessSection extends ConsumerWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          _subtitle(activeKey, keys.length, deviceCount),
+                          _subtitle(l10n, activeKey, keys.length, deviceCount),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -125,9 +189,9 @@ class HomeAccessSection extends ConsumerWidget {
                   gradient: AppColors.premiumGradient,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  'Get access',
-                  style: TextStyle(
+                child: Text(
+                  l10n.accessGetAccess,
+                  style: const TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                     color: Colors.black87,
@@ -142,17 +206,16 @@ class HomeAccessSection extends ConsumerWidget {
               ),
           ],
         ),
-      ),
     );
   }
 
-  String _subtitle(AccessKey? activeKey, int keys, int devices) {
+  String _subtitle(AppLocalizations l10n, AccessKey? activeKey, int keys, int devices) {
     if (activeKey != null) {
       return '${activeKey.name} · $devices ${devices == 1 ? 'device' : 'devices'}';
     }
     if (keys > 0) {
       return '$keys ${keys == 1 ? 'key' : 'keys'} — no active key';
     }
-    return 'Generate a key to use Nexa on any device';
+    return l10n.accessGenerateHint;
   }
 }

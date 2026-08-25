@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -14,8 +16,9 @@ class AboutScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     return AppPage(
-      title: 'About',
+      title: l10n.aboutTitle,
       subtitle: AppConstants.appName,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,9 +55,9 @@ class AboutScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Private • Secure • Fast',
-                  style: TextStyle(
+                Text(
+                  l10n.appTagline,
+                  style: const TextStyle(
                     fontSize: 12.5,
                     color: AppColors.textSecondary,
                     letterSpacing: 2,
@@ -78,33 +81,21 @@ class AboutScreen extends ConsumerWidget {
           const SizedBox(height: 26),
           GlassListTile(
             icon: Icons.privacy_tip_rounded,
-            title: 'Privacy Policy',
-            subtitle: 'How we protect your data',
+            title: l10n.aboutPrivacyPolicy,
+            subtitle: l10n.aboutPrivacyHint,
             onTap: () => context.push('/privacy'),
-          ),
-          GlassListTile(
-            icon: Icons.history_rounded,
-            title: 'Changelog',
-            subtitle: 'What is new in this release',
-            onTap: () => context.push('/changelog'),
           ),
           GlassListTile(
             icon: Icons.help_center_rounded,
             title: 'FAQ',
-            subtitle: 'Frequently asked questions',
+            subtitle: l10n.aboutFaqHint,
             onTap: () => context.push('/faq'),
           ),
           GlassListTile(
             icon: Icons.support_agent_rounded,
-            title: 'Support',
-            subtitle: 'Get help from the team',
+            title: l10n.profileSupport,
+            subtitle: l10n.aboutSupportHint,
             onTap: () => context.push('/support'),
-          ),
-          GlassListTile(
-            icon: Icons.feedback_rounded,
-            title: 'Send feedback',
-            subtitle: 'Help us improve Nexa VPN',
-            onTap: () => context.push('/feedback'),
           ),
           const SizedBox(height: 20),
           const Center(

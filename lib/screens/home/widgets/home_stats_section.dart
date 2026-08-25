@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+
+import '../../../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/vpn_status.dart';
-import '../../../providers/server_providers.dart';
 import '../../../providers/vpn_providers.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/common/glass_container.dart';
@@ -13,7 +14,7 @@ class HomeStatsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final server = ref.watch(selectedServerProvider);
+    final l10n = AppLocalizations.of(context);
     final stats = ref.watch(connectionStatsProvider).value;
     final connected =
         ref.watch(connectionStateProvider) == VpnStatus.connected;
@@ -22,7 +23,11 @@ class HomeStatsSection extends ConsumerWidget {
         connected && stats != null ? '${stats.speedDown.round()} Mbps' : '—';
     final upload =
         connected && stats != null ? '${stats.speedUp.round()} Mbps' : '—';
-    final ping = server == null ? '—' : '${server.ping} ms';
+    // Живой замер через поднятый туннель (Xray probe до generate_204).
+    // Пока туннель не поднят или замер не удался — прочерк, а не число
+    // из демо-каталога, как было раньше.
+    final pingMs = ref.watch(livePingProvider).value;
+    final ping = pingMs == null ? '—' : '$pingMs ms';
 
     return Row(
       children: [
@@ -31,7 +36,7 @@ class HomeStatsSection extends ConsumerWidget {
             icon: Icons.download_rounded,
             accent: AppColors.primaryBright,
             value: download,
-            label: 'Download',
+            label: l10n.statsDownload,
           ),
         ),
         const SizedBox(width: 10),
@@ -40,7 +45,7 @@ class HomeStatsSection extends ConsumerWidget {
             icon: Icons.upload_rounded,
             accent: AppColors.cyan,
             value: upload,
-            label: 'Upload',
+            label: l10n.statsUpload,
           ),
         ),
         const SizedBox(width: 10),
@@ -49,7 +54,7 @@ class HomeStatsSection extends ConsumerWidget {
             icon: Icons.bolt_rounded,
             accent: AppColors.success,
             value: ping,
-            label: 'Ping',
+            label: l10n.statsPing,
           ),
         ),
       ],

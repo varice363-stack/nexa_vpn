@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../theme/app_colors.dart';
@@ -13,14 +15,24 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      body: navigationShell,
-      bottomNavigationBar: NexaBottomNav(
-        currentIndex: navigationShell.currentIndex,
-        onDestinationSelected: (index) => navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
+    // Android back on a secondary tab returns to the Home branch instead of
+    // leaving the app. On Home the pop is not intercepted, so the system
+    // performs its normal behaviour (pop a pushed route, otherwise exit).
+    return PopScope(
+      canPop: navigationShell.currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        navigationShell.goBranch(0);
+      },
+      child: Scaffold(
+        extendBody: true,
+        body: navigationShell,
+        bottomNavigationBar: NexaBottomNav(
+          currentIndex: navigationShell.currentIndex,
+          onDestinationSelected: (index) => navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          ),
         ),
       ),
     );
@@ -34,12 +46,15 @@ class _NavItemData {
   final String label;
 }
 
-const List<_NavItemData> _navItems = [
-  _NavItemData(Icons.home_rounded, 'Home'),
-  _NavItemData(Icons.public_rounded, 'Servers'),
-  _NavItemData(Icons.insights_rounded, 'Stats'),
-  _NavItemData(Icons.person_rounded, 'Profile'),
-];
+/// Labels are resolved per build so a language switch updates the bar.
+List<_NavItemData> _navItemsOf(BuildContext context) {
+  final l10n = AppLocalizations.of(context);
+  return [
+    _NavItemData(Icons.home_rounded, l10n.navHome),
+    _NavItemData(Icons.public_rounded, l10n.navServers),
+    _NavItemData(Icons.person_rounded, l10n.navProfile),
+  ];
+}
 
 class NexaBottomNav extends StatelessWidget {
   const NexaBottomNav({
@@ -53,6 +68,7 @@ class NexaBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final navItems = _navItemsOf(context);
     return SafeArea(
       top: false,
       child: Padding(
@@ -63,12 +79,12 @@ class NexaBottomNav extends StatelessWidget {
           padding: const EdgeInsets.all(6),
           child: Row(
             children: [
-              for (var i = 0; i < _navItems.length; i++) ...[
+              for (var i = 0; i < navItems.length; i++) ...[
                 if (i > 0) const SizedBox(width: 6),
                 Expanded(
                   child: _NavItem(
-                    icon: _navItems[i].icon,
-                    label: _navItems[i].label,
+                    icon: navItems[i].icon,
+                    label: navItems[i].label,
                     selected: currentIndex == i,
                     onTap: () => onDestinationSelected(i),
                   ),

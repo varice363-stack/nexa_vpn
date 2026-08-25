@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 import '../../../theme/app_colors.dart';
 import '../../../widgets/common/glass_container.dart';
 
@@ -31,6 +33,7 @@ class ServerFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return GlassContainer(
       blur: true,
       borderRadius: BorderRadius.circular(18),
@@ -39,13 +42,13 @@ class ServerFilterBar extends StatelessWidget {
         children: [
           _FilterOption(
             icon: Icons.grid_view_rounded,
-            label: 'All',
+            label: l10n.serversFilterAll,
             selected: mode == ServersViewMode.all,
             onTap: () => onChanged(ServersViewMode.all),
           ),
           _FilterOption(
             icon: Icons.bolt_rounded,
-            label: 'Fastest',
+            label: l10n.serversFilterFastest,
             selected: mode == ServersViewMode.fastest,
             onTap: () => onChanged(ServersViewMode.fastest),
           ),
@@ -58,7 +61,7 @@ class ServerFilterBar extends StatelessWidget {
           ),
           _FilterOption(
             icon: Icons.star_rounded,
-            label: 'Saved',
+            label: l10n.serversFilterSaved,
             selected: mode == ServersViewMode.favorites,
             onTap: () => onChanged(ServersViewMode.favorites),
           ),

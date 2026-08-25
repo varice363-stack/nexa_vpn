@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
+
 import '../../../theme/app_colors.dart';
 import '../../../widgets/common/glass_container.dart';
 
@@ -8,6 +10,7 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Container(
@@ -30,11 +33,11 @@ class HomeHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Nexa VPN',
                 style: TextStyle(
                   fontSize: 19,
@@ -43,10 +46,10 @@ class HomeHeader extends StatelessWidget {
                   letterSpacing: 0.2,
                 ),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
-                'Your connection is protected',
-                style: TextStyle(
+                l10n.homeGreeting,
+                style: const TextStyle(
                   fontSize: 12.5,
                   color: AppColors.textSecondary,
                 ),
@@ -60,7 +63,7 @@ class HomeHeader extends StatelessWidget {
           child: GestureDetector(
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notifications are coming soon')),
+                SnackBar(content: Text(l10n.homeNotificationsSoon)),
               );
             },
             child: const Icon(

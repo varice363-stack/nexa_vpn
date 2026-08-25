@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +13,6 @@ import '../../models/subscription_plan.dart';
 import '../../models/trial_status.dart';
 import '../../providers/access_providers.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/auth_providers.dart';
 import '../../providers/billing_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../theme/app_colors.dart';
@@ -20,8 +21,9 @@ import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/glass_button.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/section_header.dart';
+import 'widgets/premium_banner_section.dart';
 
-/// Premium — plans from the backend, mock checkout, current subscription.
+/// Premium — тарифы с backend, оформление подписки, текущая подписка.
 ///
 /// States: Loading / Loaded / Empty / Error / Offline (static fallback).
 /// Guests are prompted to sign in before checkout.
@@ -43,11 +45,8 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
   bool _paymentSuccess = false;
 
   Future<void> _checkout(SubscriptionPlan plan) async {
-    final authUser = ref.read(authProvider).value;
-    if (authUser == null) {
-      context.push('/login');
-      return;
-    }
+    // Аккаунт для покупки больше не нужен: доступ выдаётся на код
+    // устройства, а не на почту с паролем.
     setState(() {
       _checkingOut = true;
       _checkoutError = null;
@@ -119,40 +118,12 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
     }
   }
 
-  /// POST /billing/mock-pay — confirms the pending transaction.
-  Future<void> _mockPay() async {
-    final checkout = _pendingCheckout;
-    if (checkout == null) return;
-    setState(() {
-      _paying = true;
-      _checkoutError = null;
-    });
-    try {
-      final result =
-          await ref.read(billingRepositoryProvider).mockPay(checkout.transactionId);
-      ref.read(loggerProvider).info(
-            'Mock payment: ${result.status} (sub=${result.subscription}, key=${result.accessKey})',
-            source: 'billing',
-          );
-      if (!mounted) return;
-      setState(() {
-        _paying = false;
-        _paymentSuccess = true;
-        _pendingCheckout = null;
-      });
-      // Refresh the server truth (subscription + access keys).
-      await ref.read(subscriptionProvider.notifier).refresh();
-      await ref.read(accessKeysProvider.notifier).refresh();
-      if (!mounted) return;
-      // Deliver the user to their access.
-      context.push('/access');
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _paying = false;
-        _checkoutError = 'Payment failed: $e';
-      });
+  /// Месячный тариф — база для расчёта экономии на длинных планах.
+  static SubscriptionPlan? _monthlyPlan(List<SubscriptionPlan> plans) {
+    for (final p in plans) {
+      if (p.durationDays > 0 && p.durationDays <= 31) return p;
     }
+    return null;
   }
 
   SubscriptionPlan? _selectedPlan() {
@@ -166,8 +137,9 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authUser = ref.watch(authProvider).value;
+    final l10n = AppLocalizations.of(context);
     final plansAsync = ref.watch(plansProvider);
+    final paymentsEnabled = ref.watch(paymentsEnabledProvider);
     final subscriptionAsync = ref.watch(subscriptionProvider);
     final subscription = subscriptionAsync.value;
 
@@ -189,7 +161,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
           );
 
     return AppPage(
-      title: 'Premium',
+      title: l10n.premiumTitle,
       subtitle: isPremium
           ? 'Active · ${subscription?.planId ?? 'premium'}'
           : 'Unlock the full Nexa experience',
@@ -203,10 +175,10 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
               onRetry: () => ref.read(plansProvider.notifier).refresh(),
             )
           else if (plans.isEmpty)
-            const EmptyState(
+            EmptyState(
               icon: Icons.workspace_premium_rounded,
-              title: 'No plans available',
-              message: 'Check back soon — plans are being prepared.',
+              title: l10n.premiumNoPlans,
+              message: l10n.premiumNoPlansHint,
             )
           else ...[
             _CurrentSubscriptionCard(
@@ -237,6 +209,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                 child: _PlanCard(
                   plan: plans[i],
                   selected: selected?.id == plans[i].id,
+                  monthlyPlan: _monthlyPlan(plans),
                   onTap: () => setState(() => _selectedPlanId = plans[i].id),
                 ).animate().fadeIn(
                       delay: Duration(milliseconds: 120 + i * 90),
@@ -253,18 +226,18 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.error_outline_rounded,
                           size: 18,
                           color: AppColors.danger,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Payment failed',
-                            style: TextStyle(
+                            l10n.premiumPaymentFailed,
+                            style: const TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w700,
                               color: AppColors.danger,
@@ -290,7 +263,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                               final pending = _pendingCheckout;
                               setState(() => _checkoutError = null);
                               if (pending != null) {
-                                _mockPay();
+                                _checkPaymentStatus();
                               } else {
                                 final plan = _selectedPlan();
                                 if (plan != null) _checkout(plan);
@@ -302,15 +275,15 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                                 gradient: AppColors.primaryGradient,
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.refresh_rounded,
+                                  const Icon(Icons.refresh_rounded,
                                       size: 15, color: Colors.white),
-                                  SizedBox(width: 6),
+                                  const SizedBox(width: 6),
                                   Text(
-                                    'Retry',
-                                    style: TextStyle(
+                                    l10n.commonRetry,
+                                    style: const TextStyle(
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.w700,
                                       color: Colors.white,
@@ -359,46 +332,46 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                 ),
               ),
             ],
-            // ── Mock payment stage ──────────────────────────────────────
+            // ── Оплата: ожидание подтверждения от провайдера ────────────
             if (_pendingCheckout != null) ...[
               const SizedBox(height: 8),
-              _MockPaymentCard(
+              _PendingPaymentCard(
                 transactionId: _pendingCheckout!.transactionId,
                 checkoutUrl: _pendingCheckout!.checkoutUrl,
                 paying: _paying,
                 success: _paymentSuccess,
-                onMockPay: _mockPay,
                 onCheckStatus: _checkPaymentStatus,
               ),
             ],
             const SizedBox(height: 8),
-            if (authUser == null)
+            if (selected != null &&
+                _pendingCheckout == null &&
+                paymentsEnabled)
               GlassButton(
-                label: 'Sign in to subscribe',
-                icon: Icons.login_rounded,
-                gradient: AppColors.premiumGradient,
-                foreground: Colors.black87,
-                onTap: () => context.push('/login'),
-              )
-            else if (selected != null && _pendingCheckout == null)
-              GlassButton(
-                label:
-                    'Get Premium — ${selected.priceLabel}${selected.durationDays > 0 ? ' / ${selected.durationLabel}' : ''}',
+                label: l10n.premiumGetFor(selected.priceLabel),
                 icon: Icons.workspace_premium_rounded,
                 loading: _checkingOut,
                 gradient: AppColors.premiumGradient,
                 foreground: Colors.black87,
                 onTap: () => _checkout(selected),
-              ),
+              )
+            else if (selected != null && _pendingCheckout == null)
+              // Реального платёжного провайдера ещё нет. Показываем цену
+              // честно и не притворяемся, что покупка возможна.
+              const _PaymentsComingSoonCard(),
             const SizedBox(height: 10),
-            const Center(
+            Center(
               child: Text(
-                'Payments are simulated in this build. Store integration planned.',
+                paymentsEnabled
+                    ? l10n.premiumSecurePaymentNote
+                    : l10n.premiumPaymentsComingSoonNote,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 10.5, color: AppColors.textTertiary),
+                style: const TextStyle(fontSize: 10.5, color: AppColors.textTertiary),
               ),
             ),
           ],
+          // ── Ad slot #2 (placement: premium) ─────────────────────────────
+          const PremiumBannerSection(),
         ],
       ),
     );
@@ -415,6 +388,7 @@ class _TrialCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final available = trial?.available ?? false;
     if (!available) return const SizedBox.shrink();
 
@@ -430,11 +404,11 @@ class _TrialCard extends StatelessWidget {
             const Icon(Icons.card_giftcard_rounded,
                 size: 22, color: AppColors.success),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     '3-day free trial',
                     style: TextStyle(
                       fontSize: 14,
@@ -442,10 +416,10 @@ class _TrialCard extends StatelessWidget {
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    'Full access, no card required. One trial per account.',
-                    style: TextStyle(
+                    l10n.premiumTrialHint,
+                    style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,
                     ),
@@ -481,13 +455,12 @@ class _TrialCard extends StatelessWidget {
 
 // ── Mock payment card ─────────────────────────────────────────────────────
 
-class _MockPaymentCard extends StatelessWidget {
-  const _MockPaymentCard({
+class _PendingPaymentCard extends StatelessWidget {
+  const _PendingPaymentCard({
     required this.transactionId,
     required this.checkoutUrl,
     required this.paying,
     required this.success,
-    required this.onMockPay,
     required this.onCheckStatus,
   });
 
@@ -495,12 +468,12 @@ class _MockPaymentCard extends StatelessWidget {
   final String? checkoutUrl;
   final bool paying;
   final bool success;
-  final VoidCallback onMockPay;
   final VoidCallback onCheckStatus;
 
-  /// Real provider checkout (YooKassa etc.) vs the internal mock page.
-  bool get _isReal =>
-      checkoutUrl != null && !checkoutUrl!.contains('mock-pay.nexa.app');
+  /// Провайдер вернул страницу оплаты. Если её нет, платёж подтвердить
+  /// нечем — показываем только проверку статуса, но НЕ имитируем успех.
+  bool get _hasCheckoutPage =>
+      checkoutUrl != null && checkoutUrl!.startsWith('http');
 
   Future<void> _openCheckout() async {
     final url = checkoutUrl;
@@ -514,6 +487,7 @@ class _MockPaymentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return GlassContainer(
       borderRadius: BorderRadius.circular(18),
       padding: const EdgeInsets.all(16),
@@ -537,8 +511,8 @@ class _MockPaymentCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   success
-                      ? 'Payment successful — access activated'
-                      : (_isReal ? 'Payment' : 'Payment (demo)'),
+                      ? l10n.premiumPaymentSuccess
+                      : l10n.premiumPaymentTitle,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -552,11 +526,10 @@ class _MockPaymentCard extends StatelessWidget {
           Text(
             success
                 ? 'Your subscription and access key are now active.'
-                : (_isReal
+                : (_hasCheckoutPage
                     ? 'Pay on the secure provider page, then check the '
                         'status here.'
-                    : 'Confirm the mock payment to activate your '
-                        'subscription and access key.'),
+                    : 'Waiting for payment confirmation from the provider.'),
             style: const TextStyle(
               fontSize: 12,
               color: AppColors.textSecondary,
@@ -564,9 +537,9 @@ class _MockPaymentCard extends StatelessWidget {
           ),
           if (!success) ...[
             const SizedBox(height: 12),
-            if (_isReal) ...[
+            if (_hasCheckoutPage) ...[
               GlassButton(
-                label: 'Open payment page',
+                label: l10n.premiumOpenPaymentPage,
                 icon: Icons.open_in_new_rounded,
                 loading: paying,
                 gradient: AppColors.premiumGradient,
@@ -574,23 +547,15 @@ class _MockPaymentCard extends StatelessWidget {
                 onTap: _openCheckout,
               ),
               const SizedBox(height: 8),
-              GlassButton(
-                label: 'I have paid — check status',
-                icon: Icons.verified_rounded,
-                loading: paying,
-                gradient: AppColors.primaryGradient,
-                foreground: Colors.white,
-                onTap: onCheckStatus,
-              ),
-            ] else
-              GlassButton(
-                label: 'Pay now (demo)',
-                icon: Icons.bolt_rounded,
-                loading: paying,
-                gradient: AppColors.premiumGradient,
-                foreground: Colors.black87,
-                onTap: onMockPay,
-              ),
+            ],
+            GlassButton(
+              label: l10n.premiumCheckPaymentStatus,
+              icon: Icons.verified_rounded,
+              loading: paying,
+              gradient: AppColors.primaryGradient,
+              foreground: Colors.white,
+              onTap: onCheckStatus,
+            ),
             const SizedBox(height: 6),
             Text(
               'Tx: $transactionId',
@@ -623,6 +588,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final daysLeft = expiresAt?.difference(DateTime.now()).inDays;
 
     return GlassContainer(
@@ -660,7 +626,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isPremium ? 'Premium active' : 'Free plan',
+                      isPremium ? l10n.premiumActive : l10n.commonFreePlan,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -670,7 +636,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       isPremium
-                          ? _expiryText(planName, expiresAt)
+                          ? _expiryText(AppLocalizations.of(context), planName, expiresAt)
                           : 'Subscribe to generate access keys',
                       style: const TextStyle(
                         fontSize: 12,
@@ -733,11 +699,76 @@ class _CurrentSubscriptionCard extends StatelessWidget {
     );
   }
 
-  String _expiryText(String? plan, DateTime? expiresAt) {
+  String _expiryText(AppLocalizations l10n, String? plan, DateTime? expiresAt) {
     final planLabel =
-        plan == null ? 'Premium' : '${plan[0]}${plan.substring(1).toLowerCase()}';
+        plan == null ? l10n.premiumTitle : '${plan[0]}${plan.substring(1).toLowerCase()}';
     if (expiresAt == null) return '$planLabel · Lifetime';
     return '$planLabel · expires ${Formatters.shortDate(expiresAt)}';
+  }
+}
+
+// ── Оплата скоро ──────────────────────────────────────────────────────────
+
+/// Заглушка на месте кнопки покупки, пока не подключён платёжный
+/// провайдер.
+///
+/// Показывается вместо кнопки «Купить» и НЕ имитирует оплату: раньше
+/// здесь была кнопка «Оплатить (демо)», которая выдавала подписку без
+/// денег. Такое в релизе означало бы бесплатный премиум для всех.
+///
+/// Взамен даём рабочий путь: у кого есть код доступа — активирует его
+/// прямо сейчас.
+class _PaymentsComingSoonCard extends StatelessWidget {
+  const _PaymentsComingSoonCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return GlassContainer(
+      borderRadius: BorderRadius.circular(18),
+      padding: const EdgeInsets.all(16),
+      color: AppColors.premium.withValues(alpha: 0.05),
+      borderColor: AppColors.premium.withValues(alpha: 0.22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.schedule_rounded,
+                  size: 20, color: AppColors.premium),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.premiumPaymentsComingSoonTitle,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.premiumPaymentsComingSoonBody,
+            style: const TextStyle(
+              fontSize: 12,
+              height: 1.35,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          GlassButton(
+            label: l10n.premiumIHaveCode,
+            icon: Icons.vpn_key_rounded,
+            gradient: AppColors.primaryGradient,
+            foreground: Colors.white,
+            onTap: () => context.push('/access'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -748,15 +779,24 @@ class _PlanCard extends StatelessWidget {
     required this.plan,
     required this.selected,
     required this.onTap,
+    this.monthlyPlan,
   });
 
   final SubscriptionPlan plan;
   final bool selected;
   final VoidCallback onTap;
 
+  /// Месячный тариф — база для расчёта экономии. Может отсутствовать,
+  /// если backend его не отдал.
+  final SubscriptionPlan? monthlyPlan;
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isBest = plan.code == 'YEARLY';
+    final perMonth = plan.monthlyEquivalent;
+    final monthly = monthlyPlan;
+    final savings = monthly == null ? null : plan.savingsAgainst(monthly);
 
     return GestureDetector(
       onTap: onTap,
@@ -824,13 +864,25 @@ class _PlanCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    '${plan.durationDays} days of access',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textTertiary,
+                  if (savings != null)
+                    Text(
+                      l10n.premiumSavings(
+                        formatMoney(savings.toDouble(), plan.currency),
+                      ),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.success,
+                      ),
+                    )
+                  else
+                    Text(
+                      l10n.premiumDaysOfAccess(plan.durationDays),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textTertiary,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -853,6 +905,17 @@ class _PlanCard extends StatelessWidget {
                     color: AppColors.textTertiary,
                   ),
                 ),
+                if (perMonth != null)
+                  Text(
+                    l10n.premiumPerMonth(
+                      formatMoney(perMonth.toDouble(), plan.currency),
+                    ),
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
               ],
             ),
             const SizedBox(width: 8),
@@ -887,15 +950,16 @@ class _LoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final l10n = AppLocalizations.of(context);
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CircularProgressIndicator(strokeWidth: 2.5),
-          SizedBox(height: 14),
+          const CircularProgressIndicator(strokeWidth: 2.5),
+          const SizedBox(height: 14),
           Text(
-            'Loading plans…',
-            style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+            l10n.premiumLoadingPlans,
+            style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -910,13 +974,14 @@ class _OfflineState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return EmptyState(
       icon: Icons.cloud_off_rounded,
-      title: 'Offline',
+      title: l10n.commonOffline,
       message:
           'Cannot reach the server. Plans will appear once the connection '
           'is back.',
-      actionLabel: 'Retry',
+      actionLabel: l10n.commonRetry,
       onAction: onRetry,
     );
   }

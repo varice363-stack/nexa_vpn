@@ -16,7 +16,6 @@ import { AdminModule } from './admin/admin.module';
 import { AccountModule } from './account/account.module';
 import { DevicesModule } from './devices/devices.module';
 import { ProvisioningModule } from './provisioning/provisioning.module';
-import { SessionsModule } from './sessions/sessions.module';
 import { BillingModule } from './billing/billing.module';
 import { HealthModule } from './health/health.module';
 
@@ -35,7 +34,6 @@ import { HealthModule } from './health/health.module';
     AccountModule,
     DevicesModule,
     ProvisioningModule,
-    SessionsModule,
     BillingModule,
     HealthModule,
   ],

@@ -1,4 +1,17 @@
-import { IsBoolean, IsOptional, IsString, Length } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Length,
+  Min,
+} from 'class-validator';
+
+/** Slots a banner can be rendered in. */
+export const BANNER_PLACEMENTS = ['home', 'premium'] as const;
+export type BannerPlacement = (typeof BANNER_PLACEMENTS)[number];
 
 export class CreateBannerDto {
   @IsString()
@@ -16,6 +29,23 @@ export class CreateBannerDto {
   @IsOptional()
   @IsString()
   buttonText?: string;
+
+  /**
+   * External URL opened when the CTA is tapped. Only http(s) is accepted —
+   * custom schemes could be abused to launch arbitrary intents on device.
+   */
+  @IsOptional()
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+  targetUrl?: string;
+
+  @IsOptional()
+  @IsIn(BANNER_PLACEMENTS)
+  placement?: BannerPlacement;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  sortOrder?: number;
 
   @IsOptional()
   @IsBoolean()

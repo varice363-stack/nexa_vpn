@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,15 +16,16 @@ class SupportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AppPage(
-      title: 'Support',
-      subtitle: 'We usually reply within 24 hours',
+      title: l10n.supportTitle,
+      subtitle: l10n.supportReplyTime,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GlassListTile(
             icon: Icons.email_rounded,
-            title: 'Email support',
+            title: l10n.supportEmail,
             subtitle: StaticContent.supportEmail,
             trailing: const Icon(
               Icons.copy_rounded,
@@ -35,13 +38,13 @@ class SupportScreen extends StatelessWidget {
               );
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Email address copied')),
+                SnackBar(content: Text(l10n.supportEmailCopied)),
               );
             },
           ),
           GlassListTile(
             icon: Icons.send_rounded,
-            title: 'Telegram',
+            title: l10n.supportTelegram,
             subtitle: StaticContent.supportTelegram,
             trailing: const Icon(
               Icons.copy_rounded,
@@ -54,45 +57,39 @@ class SupportScreen extends StatelessWidget {
               );
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Telegram handle copied')),
+                SnackBar(content: Text(l10n.supportTelegramCopied)),
               );
             },
           ),
           GlassListTile(
             icon: Icons.help_center_rounded,
             title: 'FAQ',
-            subtitle: 'Answers to common questions',
+            subtitle: l10n.aboutFaqHint,
             onTap: () => context.push('/faq'),
-          ),
-          GlassListTile(
-            icon: Icons.feedback_rounded,
-            title: 'Leave feedback',
-            subtitle: 'Share your experience',
-            onTap: () => context.push('/feedback'),
           ),
           const SizedBox(height: 16),
           GlassContainer(
             borderRadius: BorderRadius.circular(18),
             padding: const EdgeInsets.all(16),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Service status',
-                  style: TextStyle(
+                  l10n.supportStatus,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.circle, size: 10, color: AppColors.success),
-                    SizedBox(width: 8),
+                    const Icon(Icons.circle, size: 10, color: AppColors.success),
+                    const SizedBox(width: 8),
                     Text(
-                      'All systems operational',
-                      style: TextStyle(
+                      l10n.supportOperational,
+                      style: const TextStyle(
                         fontSize: 13,
                         color: AppColors.textSecondary,
                       ),

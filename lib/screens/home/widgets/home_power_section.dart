@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+
+import '../../../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/vpn_status.dart';
-import '../../../providers/auth_providers.dart';
-import '../../../providers/server_providers.dart';
+import '../../../providers/connection_source_providers.dart';
 import '../../../providers/vpn_providers.dart';
 import '../../../theme/app_colors.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +17,7 @@ class HomePowerSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final status = ref.watch(connectionStateProvider);
     final stats = ref.watch(connectionStatsProvider).value;
 
@@ -28,14 +30,14 @@ class HomePowerSection extends ConsumerWidget {
     };
 
     final (statusColor, statusText) = switch (status) {
-      VpnStatus.disconnected => (AppColors.textSecondary, 'Not connected'),
-      VpnStatus.connecting => (AppColors.warning, 'Connecting…'),
+      VpnStatus.disconnected => (AppColors.textSecondary, l10n.powerNotConnected),
+      VpnStatus.connecting => (AppColors.warning, l10n.powerConnecting),
       VpnStatus.connected => (
           AppColors.success,
           'Connected • ${Formatters.duration(stats?.duration ?? Duration.zero)}',
         ),
-      VpnStatus.disconnecting => (AppColors.warning, 'Disconnecting…'),
-      VpnStatus.error => (AppColors.danger, 'Connection error'),
+      VpnStatus.disconnecting => (AppColors.warning, l10n.powerDisconnecting),
+      VpnStatus.error => (AppColors.danger, l10n.powerConnectionError),
     };
 
     return Column(
@@ -43,14 +45,16 @@ class HomePowerSection extends ConsumerWidget {
         PowerButton(
           state: buttonState,
           onTap: () {
-            // Guest Mode: connecting requires an account.
-            if (ref.read(authProvider).value == null) {
-              context.go('/login');
+            // No account gate here on purpose: a key the user already owns
+            // must work on first launch, before any sign-up. Requiring an
+            // account to connect would close the door the product depends on.
+            final source = ref.read(activeSourceProvider);
+            if (source == null) {
+              // Nothing to connect with yet — send them where keys are added.
+              context.push('/key');
               return;
             }
-            final server = ref.read(selectedServerProvider);
-            if (server == null) return;
-            ref.read(connectionStateProvider.notifier).toggle(server);
+            ref.read(connectionStateProvider.notifier).toggle(source);
           },
         ),
         const SizedBox(height: 18),
@@ -64,7 +68,7 @@ class HomePowerSection extends ConsumerWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          status == VpnStatus.connected ? 'Tap to disconnect' : 'Tap to connect',
+          status == VpnStatus.connected ? l10n.powerTapToDisconnect : l10n.powerTapToConnect,
           style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
         ),
       ],

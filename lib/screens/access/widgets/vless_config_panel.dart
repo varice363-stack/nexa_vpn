@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../../l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
@@ -32,6 +34,7 @@ class VlessConfigPanel extends StatelessWidget {
   }
 
   void _showQr(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final payload = key_.qrPayload ?? key_.configUri;
     if (payload == null) return;
     showDialog<void>(
@@ -44,9 +47,9 @@ class VlessConfigPanel extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Scan with any VLESS client',
-                style: TextStyle(
+              Text(
+                l10n.vlessScanHint,
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -85,10 +88,10 @@ class VlessConfigPanel extends StatelessWidget {
                     gradient: AppColors.primaryGradient,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Text(
-                    'Close',
+                  child: Text(
+                    l10n.commonClose,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
@@ -105,6 +108,7 @@ class VlessConfigPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final server = key_.server;
     final hasConfig = key_.hasConfig;
 
@@ -116,24 +120,24 @@ class VlessConfigPanel extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         color: AppColors.warning.withValues(alpha: 0.06),
         borderColor: AppColors.warning.withValues(alpha: 0.3),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.cloud_off_rounded, size: 18, color: AppColors.warning),
-            SizedBox(width: 10),
+            const Icon(Icons.cloud_off_rounded, size: 18, color: AppColors.warning),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Configuration unavailable',
-                    style: TextStyle(
+                    l10n.vlessUnavailable,
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  SizedBox(height: 2),
-                  Text(
+                  const SizedBox(height: 2),
+                  const Text(
                     'The assigned server is not ready yet. Please check back '
                     'shortly.',
                     style: TextStyle(
@@ -157,13 +161,13 @@ class VlessConfigPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.vpn_key_rounded, size: 18, color: AppColors.success),
-              SizedBox(width: 8),
+              const Icon(Icons.vpn_key_rounded, size: 18, color: AppColors.success),
+              const SizedBox(width: 8),
               Text(
-                'Active VLESS configuration',
-                style: TextStyle(
+                l10n.vlessActiveConfig,
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -174,16 +178,16 @@ class VlessConfigPanel extends StatelessWidget {
           const SizedBox(height: 12),
           if (server != null) ...[
             _InfoRow(
-              label: 'Server',
+              label: l10n.commonServer,
               value: '${server.flagEmoji}  ${server.name} — ${server.location}',
             ),
-            _InfoRow(label: 'Address', value: server.ip),
+            _InfoRow(label: l10n.commonAddress, value: server.ip),
           ],
-          _InfoRow(label: 'Protocol', value: key_.protocol.toUpperCase()),
+          _InfoRow(label: l10n.commonProtocol, value: key_.protocol.toUpperCase()),
           _InfoRow(
-            label: 'Expires',
+            label: l10n.commonExpires,
             value: key_.expiresAt == null
-                ? 'Never (lifetime)'
+                ? l10n.vlessNeverExpires
                 : '${Formatters.shortDate(key_.expiresAt!)}'
                     '${key_.daysLeft != null ? ' (${key_.daysLeft} d left)' : ''}',
           ),
@@ -213,7 +217,7 @@ class VlessConfigPanel extends StatelessWidget {
                 Expanded(
                   child: _ActionButton(
                     icon: Icons.copy_rounded,
-                    label: 'Copy VLESS',
+                    label: l10n.vlessCopy,
                     onTap: () => _copy(context),
                   ),
                 ),
@@ -221,7 +225,7 @@ class VlessConfigPanel extends StatelessWidget {
                 Expanded(
                   child: _ActionButton(
                     icon: Icons.qr_code_rounded,
-                    label: 'Show QR',
+                    label: l10n.vlessShowQr,
                     onTap: () => _showQr(context),
                   ),
                 ),
@@ -229,7 +233,7 @@ class VlessConfigPanel extends StatelessWidget {
                 Expanded(
                   child: _ActionButton(
                     icon: Icons.share_rounded,
-                    label: 'Share',
+                    label: l10n.commonShare,
                     onTap: _share,
                   ),
                 ),

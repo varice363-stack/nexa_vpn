@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/formatters.dart';
@@ -16,14 +18,15 @@ class PaymentHistoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final transactionsAsync = ref.watch(transactionsProvider);
     final transactions =
         transactionsAsync.value ?? const <PaymentTransaction>[];
 
     return AppPage(
-      title: 'Payment History',
+      title: l10n.paymentsTitle,
       subtitle: transactions.isEmpty
-          ? 'No payments yet'
+          ? l10n.paymentsEmpty
           : '${transactions.length} '
               '${transactions.length == 1 ? 'payment' : 'payments'}',
       actions: [
@@ -44,9 +47,9 @@ class PaymentHistoryScreen extends ConsumerWidget {
       child: transactionsAsync.isLoading && transactions.isEmpty
           ? const _LoadingState()
           : transactions.isEmpty
-              ? const EmptyState(
+              ? EmptyState(
                   icon: Icons.receipt_long_rounded,
-                  title: 'No payments yet',
+                  title: l10n.paymentsEmpty,
                   message:
                       'Your payment history will appear here after the '
                       'first checkout.',
@@ -168,15 +171,16 @@ class _LoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final l10n = AppLocalizations.of(context);
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CircularProgressIndicator(strokeWidth: 2.5),
-          SizedBox(height: 14),
+          const CircularProgressIndicator(strokeWidth: 2.5),
+          const SizedBox(height: 14),
           Text(
-            'Loading payments…',
-            style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+            l10n.paymentsLoading,
+            style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
           ),
         ],
       ),

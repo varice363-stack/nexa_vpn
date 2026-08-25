@@ -4,7 +4,7 @@ import '../../core/errors/app_exception.dart';
 import '../../core/utils/app_logger.dart';
 import '../../domain/services/tunnel_manager.dart';
 import '../../domain/services/vpn_service.dart';
-import '../../models/server.dart';
+import '../../models/connection_source.dart';
 import '../../models/vpn_config.dart';
 import '../../models/vpn_status.dart';
 
@@ -29,7 +29,7 @@ class VpnServiceImpl implements VpnService {
       StreamController<VpnStatus>.broadcast();
 
   StreamSubscription<TunnelPhase>? _phaseSub;
-  Server? _activeServer;
+  ConnectionSource? _activeSource;
   VpnStatus _status = VpnStatus.disconnected;
   bool _pendingDisconnect = false;
 
@@ -37,7 +37,7 @@ class VpnServiceImpl implements VpnService {
   VpnStatus get status => _status;
 
   @override
-  Server? get activeServer => _activeServer;
+  ConnectionSource? get activeSource => _activeSource;
 
   @override
   Stream<VpnStatus> get statuses async* {
@@ -70,8 +70,8 @@ class VpnServiceImpl implements VpnService {
   }
 
   @override
-  Future<void> connect(Server server) async {
-    if (_status == VpnStatus.connected && _activeServer?.id == server.id) {
+  Future<void> connect(ConnectionSource source) async {
+    if (_status == VpnStatus.connected && _activeSource?.id == source.id) {
       return;
     }
     if (_status == VpnStatus.connecting ||
@@ -79,15 +79,14 @@ class VpnServiceImpl implements VpnService {
       return;
     }
     _logger.info(
-      'Connecting to ${server.country} · ${server.city} '
-      '(${_configProvider().protocol.label})',
+      'Connecting to ${source.label} · ${source.host}',
       source: 'vpn',
     );
-    _activeServer = server;
+    _activeSource = source;
     _pendingDisconnect = false;
     try {
-      await _tunnel.startTunnel(server, _configProvider());
-      _logger.info('Connected to ${server.displayName}', source: 'vpn');
+      await _tunnel.startTunnel(source, _configProvider());
+      _logger.info('Connected to ${source.label}', source: 'vpn');
     } on AppException catch (e) {
       _logger.error('Tunnel failed: $e', source: 'vpn');
       rethrow;
@@ -103,7 +102,7 @@ class VpnServiceImpl implements VpnService {
     _pendingDisconnect = true;
     _logger.info('Disconnecting…', source: 'vpn');
     await _tunnel.stopTunnel();
-    _activeServer = null;
+    _activeSource = null;
     _logger.info('Disconnected', source: 'vpn');
   }
 

@@ -24,8 +24,8 @@ const plan = {
   name: 'Nexa 30 Days',
   description: null,
   durationDays: 30,
-  price: 11.99,
-  currency: 'USD',
+  price: 199,
+  currency: 'RUB',
   isActive: true,
 };
 
@@ -35,8 +35,8 @@ const transaction = {
   planId: 'p1',
   provider: 'INTERNAL',
   providerPaymentId: 'pay_1',
-  amount: 11.99,
-  currency: 'USD',
+  amount: 199,
+  currency: 'RUB',
   status: PaymentStatus.PENDING,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -142,10 +142,12 @@ describe('BillingService', () => {
 
       expect(result.status).toBe('PENDING');
       expect(result.transactionId).toBeTruthy();
-      expect(result.checkoutUrl).toContain('mock-pay.nexa.app');
+      // Пока нет реального шлюза, ссылки на оплату быть не должно:
+      // клиент не имеет права вести пользователя на выдуманный адрес.
+      expect(result.checkoutUrl).toBeNull();
       // The amount stored is the plan price, never a client-provided value.
       const created = (prisma.paymentTransaction.create as jest.Mock).mock.calls[0][0].data;
-      expect(Number(created.amount)).toBe(11.99);
+      expect(Number(created.amount)).toBe(199);
     });
 
     it('rejects an unknown or inactive plan', async () => {
@@ -288,76 +290,6 @@ describe('BillingService', () => {
       });
       // No key was issued on a failed payment:
       expect((prisma.accessKey.create as jest.Mock).mock.calls.length).toBe(0);
-    });
-  });
-
-  describe('mockPay (TASK #009-A — monetization loop)', () => {
-    const pendingTx = { ...transaction, status: PaymentStatus.PENDING };
-
-    it('PENDING → PAID, creates an ACTIVE subscription and an ACTIVE key', async () => {
-      const prisma = makePrisma({
-        paymentTransaction: { findFirst: jest.fn(async () => ({ ...pendingTx, plan })) },
-      });
-      const service = new BillingService(prisma);
-
-      const result = await service.mockPay(user, 'tx1');
-
-      expect(result.status).toBe('PAID');
-      expect(result.subscription).toBe('ACTIVE');
-      expect(result.accessKey).toBe('ACTIVE');
-      // transaction marked PAID
-      const txUpdate = (prisma.paymentTransaction.update as jest.Mock).mock.calls[0][0];
-      expect(txUpdate.data.status).toBe(PaymentStatus.PAID);
-      // subscription created ACTIVE
-      const sub = (prisma.subscription.create as jest.Mock).mock.calls[0][0].data;
-      expect(sub.status).toBe(SubscriptionStatus.ACTIVE);
-      expect(sub.planId).toBe('p1');
-      // access key created ACTIVE
-      const key = (prisma.accessKey.create as jest.Mock).mock.calls[0][0].data;
-      expect(key.status).toBe('ACTIVE');
-    });
-
-    it('is idempotent — repeated call returns already_paid, no duplicate key', async () => {
-      const paidTx = { ...transaction, status: PaymentStatus.PAID, plan };
-      const prisma = makePrisma({
-        paymentTransaction: { findFirst: jest.fn(async () => paidTx) },
-        subscription: {
-          findFirst: jest.fn(async () => ({ id: 'sub1', status: SubscriptionStatus.ACTIVE })),
-        },
-        accessKey: {
-          findFirst: jest.fn(async () => ({ id: 'key1', status: 'ACTIVE' })),
-        },
-      });
-      const service = new BillingService(prisma);
-
-      const result = await service.mockPay(user, 'tx1');
-
-      expect(result.status).toBe('already_paid');
-      expect(result.subscription).toBe('ACTIVE');
-      expect(result.accessKey).toBe('ACTIVE');
-      expect((prisma.accessKey.create as jest.Mock).mock.calls.length).toBe(0);
-      expect((prisma.subscription.create as jest.Mock).mock.calls.length).toBe(0);
-      expect((prisma.paymentTransaction.update as jest.Mock).mock.calls.length).toBe(0);
-    });
-
-    it('rejects a foreign transaction', async () => {
-      const prisma = makePrisma(); // findFirst → null → not found
-      const service = new BillingService(prisma);
-
-      await expect(
-        service.mockPay({ id: 'other-user', email: 'x@y.dev' } as never, 'tx1'),
-      ).rejects.toThrow('Transaction not found');
-    });
-
-    it('rejects paying a FAILED transaction', async () => {
-      const prisma = makePrisma({
-        paymentTransaction: {
-          findFirst: jest.fn(async () => ({ ...transaction, status: PaymentStatus.FAILED, plan })),
-        },
-      });
-      const service = new BillingService(prisma);
-
-      await expect(service.mockPay(user, 'tx1')).rejects.toThrow('Cannot pay');
     });
   });
 
@@ -659,7 +591,7 @@ describe('BillingService', () => {
         transactionId: 'tx1',
         signature: 'mock-signature',
         timestamp: Date.now(),
-        amount: 11.99,
+        amount: 199,
       });
 
       expect(result.status).toBe('PAID');

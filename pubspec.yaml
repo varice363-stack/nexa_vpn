@@ -11,6 +11,11 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Localization (TASK #027 — RU/EN)
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
   # State management
   flutter_riverpod: ^3.0.0
 
@@ -48,6 +53,7 @@ dependencies:
   package_info_plus: ^8.0.0
 
   cupertino_icons: ^1.0.8
+  flutter_vless: ^1.1.5
 
 dev_dependencies:
   flutter_test:
@@ -56,3 +62,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Generates AppLocalizations from lib/l10n/*.arb (see l10n.yaml)
+  generate: true

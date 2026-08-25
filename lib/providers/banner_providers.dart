@@ -31,3 +31,49 @@ class BannerNotifier extends AsyncNotifier<List<PromoBanner>> {
     );
   }
 }
+
+/// Banners for a single placement slot, derived from [bannerProvider] so
+/// one network call feeds every slot.
+final bannersForPlacementProvider =
+    Provider.family<List<PromoBanner>, BannerPlacement>((ref, placement) {
+  final banners = ref.watch(bannerProvider).value ?? const <PromoBanner>[];
+  return banners.where((b) => b.placement == placement).toList();
+});
+
+/// Ad analytics: impressions and clicks.
+///
+/// Impressions are de-duplicated per app session — a banner scrolling in
+/// and out of view repeatedly must not inflate the counter.
+final bannerTrackerProvider = Provider<BannerTracker>((ref) {
+  return BannerTracker(ref);
+});
+
+class BannerTracker {
+  BannerTracker(this._ref);
+
+  final Ref _ref;
+  final Set<String> _seen = <String>{};
+
+  /// Records the first view of [bannerId] in this session.
+  void impression(String bannerId) {
+    if (!_seen.add(bannerId)) return;
+    _send(() => _ref.read(bannerRepositoryProvider).trackImpression(bannerId));
+  }
+
+  /// Records a CTA tap. Clicks are always counted — repeat taps are
+  /// meaningful signal, unlike repeat impressions.
+  void click(String bannerId) {
+    _send(() => _ref.read(bannerRepositoryProvider).trackClick(bannerId));
+  }
+
+  /// Swallows every failure, sync or async. Callers are UI callbacks with
+  /// nowhere to report an error to, and a lost ad counter must never become
+  /// an unhandled exception or a broken frame.
+  void _send(Future<void> Function() call) {
+    try {
+      call().catchError((_) {});
+    } catch (_) {
+      // Repository threw synchronously.
+    }
+  }
+}

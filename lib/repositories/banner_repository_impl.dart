@@ -10,8 +10,12 @@ class BannerRepositoryImpl implements BannerRepository {
   final ApiClient _api;
 
   @override
-  Future<List<PromoBanner>> getActiveBanners() async {
-    final data = await _api.get('/banners');
+  Future<List<PromoBanner>> getActiveBanners({
+    BannerPlacement? placement,
+  }) async {
+    final query =
+        placement == null ? '' : '?placement=${placement.wireValue}';
+    final data = await _api.get('/banners$query');
     if (data is! List) {
       throw const ApiException('Unexpected banners response',
           code: 'BAD_RESPONSE');
@@ -23,5 +27,23 @@ class BannerRepositoryImpl implements BannerRepository {
           ),
         )
         .toList();
+  }
+
+  /// Analytics calls are deliberately silent. A failed counter write is
+  /// never worth an error toast or a broken banner.
+  @override
+  Future<void> trackImpression(String bannerId) =>
+      _fireAndForget('/banners/$bannerId/impression');
+
+  @override
+  Future<void> trackClick(String bannerId) =>
+      _fireAndForget('/banners/$bannerId/click');
+
+  Future<void> _fireAndForget(String path) async {
+    try {
+      await _api.post(path);
+    } catch (_) {
+      // Offline, server down, banner removed — tracking is best-effort.
+    }
   }
 }

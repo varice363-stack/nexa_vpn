@@ -1,4 +1,4 @@
-import '../../models/server.dart';
+import '../../models/connection_source.dart';
 import '../../models/vpn_status.dart';
 
 /// High-level VPN control surface used by the UI layer.
@@ -8,11 +8,14 @@ abstract class VpnService {
 
   VpnStatus get status;
 
-  /// Server the tunnel is connected to (or connecting), if any.
-  Server? get activeServer;
+  /// Endpoint the tunnel is connected to (or connecting), if any.
+  ConnectionSource? get activeSource;
 
-  /// Connects to [server]. No-op if already connected to it.
-  Future<void> connect(Server server);
+  /// Connects to [source]. No-op if already connected to it.
+  ///
+  /// [source] may be a key we issued or one the user imported — the service
+  /// draws no distinction.
+  Future<void> connect(ConnectionSource source);
 
   /// Disconnects. No-op if already disconnected.
   Future<void> disconnect();

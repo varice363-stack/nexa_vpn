@@ -15,6 +15,7 @@ class AccessKey {
     this.server,
     this.configUri,
     this.qrPayload,
+    this.code,
   });
 
   final String id;
@@ -40,6 +41,10 @@ class AccessKey {
 
   /// QR payload (equals configUri; client renders the QR).
   final String? qrPayload;
+
+  /// Redemption code (NEXA-XXXX-XXXX) for standalone keys sold to customers.
+  /// Only returned to the issuing admin and to the redeemer.
+  final String? code;
 
   bool get isActive => status == 'ACTIVE';
   bool get isExpired => status == 'EXPIRED';
@@ -69,6 +74,7 @@ class AccessKey {
       createdAt: parse(json['createdAt'] as String?),
       expiresAt: parse(json['expiresAt'] as String?),
       lastUsedAt: parse(json['lastUsedAt'] as String?),
+      code: json['code'] as String?,
       deviceId: json['deviceId'] as String?,
       deviceCount: (json['deviceCount'] as num?)?.toInt() ?? 0,
       server: serverJson == null

@@ -10,11 +10,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nexa_vpn/domain/repositories/key_storage.dart';
 import 'package:nexa_vpn/models/auth_user.dart';
 import 'package:nexa_vpn/providers/auth_providers.dart';
+import 'package:nexa_vpn/l10n/app_localizations.dart';
 import 'package:nexa_vpn/providers/app_providers.dart';
+import 'package:nexa_vpn/providers/billing_providers.dart';
 import 'package:nexa_vpn/repositories/billing_repository_impl.dart';
 import 'package:nexa_vpn/screens/premium/premium_screen.dart';
 import 'package:nexa_vpn/services/api/api_client.dart';
 import 'package:nexa_vpn/services/api/token_storage.dart';
+import 'package:nexa_vpn/services/billing/billing_config.dart';
 
 class _MemoryKeyStorage implements KeyStorage {
   final Map<String, String> _values = {};
@@ -30,10 +33,12 @@ class _MemoryKeyStorage implements KeyStorage {
 
 const _plansJson = '''
 [
-  {"id":"p1","code":"MONTHLY","name":"Nexa 30 Days","description":null,
-   "durationDays":30,"price":11.99,"currency":"USD","isActive":true},
-  {"id":"p2","code":"YEARLY","name":"Nexa 365 Days","description":null,
-   "durationDays":365,"price":71.88,"currency":"USD","isActive":true}
+  {"id":"p1","code":"MONTHLY","name":"Nexa 30 дней","description":null,
+   "durationDays":30,"price":199,"currency":"RUB","isActive":true},
+  {"id":"p2","code":"QUARTERLY","name":"Nexa 90 дней","description":null,
+   "durationDays":90,"price":499,"currency":"RUB","isActive":true},
+  {"id":"p3","code":"YEARLY","name":"Nexa 365 дней","description":null,
+   "durationDays":365,"price":1490,"currency":"RUB","isActive":true}
 ]
 ''';
 
@@ -56,7 +61,11 @@ Future<ProviderScope> _boot(
         ),
       ),
     ],
-    child: const MaterialApp(home: PremiumScreen()),
+    child: const MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: PremiumScreen(),
+    ),
   );
   await tester.pumpWidget(scope);
   return scope;
@@ -72,6 +81,7 @@ class _AuthedAuthNotifier extends AuthNotifier {
 Future<void> _bootAuthed(
   WidgetTester tester, {
   required MockClient client,
+  bool paymentsEnabled = true,
 }) async {
   GoogleFonts.config.allowRuntimeFetching = false;
   SharedPreferences.resetStatic();
@@ -112,8 +122,13 @@ Future<void> _bootAuthed(
           ),
         ),
         authProvider.overrideWith(() => _AuthedAuthNotifier()),
+        paymentsEnabledProvider.overrideWithValue(paymentsEnabled),
       ],
-      child: MaterialApp.router(routerConfig: router),
+      child: MaterialApp.router(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
+      ),
     ),
   );
 }
@@ -125,7 +140,7 @@ Future<void> _pumpSettle(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('plans loading → loaded (guest sees sign-in CTA)', (tester) async {
+  testWidgets('plans loading → loaded (no sign-in prompt)', (tester) async {
     final client = MockClient((request) async {
       if (request.url.path.endsWith('/plans')) {
         await Future<void>.delayed(const Duration(milliseconds: 60));
@@ -142,11 +157,16 @@ void main() {
 
     // Loaded state.
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('Nexa 30 Days'), findsOneWidget);
-    expect(find.text('Nexa 365 Days'), findsOneWidget);
-    expect(find.text('USD 11.99'), findsOneWidget);
-    // Guest → sign-in CTA instead of checkout.
-    expect(find.text('Sign in to subscribe'), findsOneWidget);
+    expect(find.text('Nexa 30 дней'), findsOneWidget);
+    expect(find.text('Nexa 365 дней'), findsOneWidget);
+    // Цена показывается человеку в рублях, без «RUB 199.00».
+    expect(find.text('199 \u20BD'), findsOneWidget);
+    expect(find.text('1490 \u20BD'), findsOneWidget);
+    // Регистрации больше нет: экран цен не должен звать «войти».
+    // Раньше здесь стояла кнопка «Sign in to subscribe» — она вела
+    // на удалённый экран входа.
+    expect(find.text('Sign in to subscribe'), findsNothing);
+    expect(find.textContaining('Sign in'), findsNothing);
 
     // Drain any pending timers before teardown.
     await tester.pump(const Duration(seconds: 1));
@@ -172,7 +192,7 @@ void main() {
       expect(body, contains('planId'));
       return http.Response(
         '{"transactionId":"tx1","status":"PENDING",'
-        '"checkoutUrl":"https://mock-pay.nexa.app/checkout/tx1"}',
+        '"checkoutUrl":"https://yoomoney.ru/checkout/tx1"}',
         201,
         headers: {'content-type': 'application/json'},
       );
@@ -188,7 +208,7 @@ void main() {
 
     expect(result.transactionId, 'tx1');
     expect(result.status, 'PENDING');
-    expect(result.checkoutUrl, contains('mock-pay.nexa.app'));
+    expect(result.checkoutUrl, contains('yoomoney.ru'));
   });
 
   test('checkout failure — BillingRepository throws ApiException', () async {
@@ -206,7 +226,67 @@ void main() {
   });
 
 
-  testWidgets('payment success — checkout → mock-pay → access activated',
+  testWidgets('payments disabled — no purchase button, prices still shown',
+      (tester) async {
+    final client = MockClient((request) async {
+      final path = request.url.path;
+      if (path.endsWith('/plans')) {
+        return http.Response(_plansJson, 200,
+            headers: {'content-type': 'application/json'});
+      }
+      return http.Response('{}', 404);
+    });
+
+    // Реальный провайдер не подключён — так собирается релиз сегодня.
+    await _bootAuthed(tester, client: client, paymentsEnabled: false);
+    await _pumpSettle(tester);
+
+    // Цены видны и окончательны.
+    expect(find.text('199 \u20BD'), findsOneWidget);
+    expect(find.text('1490 \u20BD'), findsOneWidget);
+
+    // Купить нельзя, и приложение честно об этом говорит.
+    expect(find.textContaining('Get Premium'), findsNothing);
+    expect(find.text('Payment is coming soon'), findsOneWidget);
+
+    // Взамен предложен рабочий путь — активация кода.
+    expect(find.text('I have an access code'), findsOneWidget);
+  });
+
+  testWidgets('payments disabled — tapping a plan never starts a checkout',
+      (tester) async {
+    var checkoutCalls = 0;
+    final client = MockClient((request) async {
+      final path = request.url.path;
+      if (path.endsWith('/plans')) {
+        return http.Response(_plansJson, 200,
+            headers: {'content-type': 'application/json'});
+      }
+      if (path.endsWith('/billing/checkout')) {
+        checkoutCalls++;
+        return http.Response(
+          '{"transactionId":"tx1","status":"PENDING","checkoutUrl":null}',
+          201,
+          headers: {'content-type': 'application/json'},
+        );
+      }
+      return http.Response('{}', 404);
+    });
+
+    await _bootAuthed(tester, client: client, paymentsEnabled: false);
+    await _pumpSettle(tester);
+
+    // Выбираем годовой тариф и жмём всё, что похоже на покупку.
+    await tester.tap(find.text('Nexa 365 дней'));
+    await _pumpSettle(tester);
+    await tester.tap(find.text('I have an access code'));
+    await _pumpSettle(tester);
+
+    // Ни одного обращения к оплате: заглушка не выдаёт подписку даром.
+    expect(checkoutCalls, 0);
+  });
+
+  testWidgets('payments enabled — checkout opens the provider stage',
       (tester) async {
     final client = MockClient((request) async {
       final path = request.url.path;
@@ -217,20 +297,54 @@ void main() {
       if (path.endsWith('/billing/checkout')) {
         return http.Response(
           '{"transactionId":"tx1","status":"PENDING",'
-          '"checkoutUrl":"https://mock-pay.nexa.app/checkout/tx1"}',
+          '"checkoutUrl":"https://yoomoney.ru/checkout/tx1"}',
           201,
           headers: {'content-type': 'application/json'},
         );
       }
-      if (path.contains('/billing/mock-pay/')) {
+      return http.Response('{}', 404);
+    });
+
+    await _bootAuthed(tester, client: client, paymentsEnabled: true);
+    await _pumpSettle(tester);
+
+    // Цена стоит прямо на кнопке — человек видит, за что платит.
+    expect(find.textContaining('Get Premium — 199 \u20BD'), findsOneWidget);
+
+    await tester.tap(find.textContaining('Get Premium'));
+    await _pumpSettle(tester);
+
+    // Стадия оплаты у провайдера, без «демо» и без выдачи доступа.
+    expect(find.text('Open payment page'), findsOneWidget);
+    expect(find.text('I have paid — check status'), findsOneWidget);
+    expect(find.text('My Access'), findsNothing);
+  });
+
+  testWidgets('payments enabled — access is granted only after the backend '
+      'confirms PAID', (tester) async {
+    var status = 'PENDING';
+    final client = MockClient((request) async {
+      final path = request.url.path;
+      if (path.endsWith('/plans')) {
+        return http.Response(_plansJson, 200,
+            headers: {'content-type': 'application/json'});
+      }
+      if (path.endsWith('/billing/checkout')) {
         return http.Response(
-          '{"status":"PAID","subscription":"ACTIVE","accessKey":"ACTIVE",'
-          '"subscriptionId":"sub1"}',
+          '{"transactionId":"tx1","status":"PENDING",'
+          '"checkoutUrl":"https://yoomoney.ru/checkout/tx1"}',
           201,
           headers: {'content-type': 'application/json'},
         );
       }
-      // Subscription + keys refresh after payment.
+      if (path.contains('/billing/transactions/tx1')) {
+        return http.Response(
+          '{"id":"tx1","status":"$status","amount":199,"currency":"RUB",'
+          '"provider":"YOOKASSA","createdAt":"2026-08-24T10:00:00.000Z"}',
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }
       if (path.endsWith('/subscriptions/me')) {
         return http.Response('[]', 200,
             headers: {'content-type': 'application/json'});
@@ -242,64 +356,21 @@ void main() {
       return http.Response('{}', 404);
     });
 
-    await _bootAuthed(tester, client: client);
+    await _bootAuthed(tester, client: client, paymentsEnabled: true);
     await _pumpSettle(tester);
-
-    // Plans are loaded; the first plan is pre-selected.
-    expect(find.text('Nexa 30 Days'), findsOneWidget);
-    expect(find.textContaining('Get Premium'), findsOneWidget);
-
-    // Step 1: checkout.
     await tester.tap(find.textContaining('Get Premium'));
     await _pumpSettle(tester);
 
-    // Step 2: mock payment card appears.
-    expect(find.text('Payment (demo)'), findsOneWidget);
-    expect(find.text('Pay now (demo)'), findsOneWidget);
-
-    // Step 3: confirm the mock payment.
-    await tester.tap(find.text('Pay now (demo)'));
+    // Пока backend не подтвердил оплату — доступа нет.
+    await tester.tap(find.text('I have paid — check status'));
     await _pumpSettle(tester);
-
-    // Step 4: navigated to My Access.
-    expect(find.text('My Access'), findsOneWidget);
-  });
-
-  testWidgets('payment failure — shows an error, stays on Premium',
-      (tester) async {
-    final client = MockClient((request) async {
-      final path = request.url.path;
-      if (path.endsWith('/plans')) {
-        return http.Response(_plansJson, 200,
-            headers: {'content-type': 'application/json'});
-      }
-      if (path.endsWith('/billing/checkout')) {
-        return http.Response(
-          '{"transactionId":"tx1","status":"PENDING","checkoutUrl":null}',
-          201,
-          headers: {'content-type': 'application/json'},
-        );
-      }
-      if (path.contains('/billing/mock-pay/')) {
-        return http.Response('{"message":"payment provider down"}', 500,
-            headers: {'content-type': 'application/json'});
-      }
-      return http.Response('{}', 404);
-    });
-
-    await _bootAuthed(tester, client: client);
-    await _pumpSettle(tester);
-
-    await tester.tap(find.textContaining('Get Premium'));
-    await _pumpSettle(tester);
-
-    await tester.tap(find.text('Pay now (demo)'));
-    await _pumpSettle(tester);
-
-    // Error shown, still on the Premium screen.
-    expect(find.textContaining('Payment failed'), findsWidgets);
     expect(find.text('My Access'), findsNothing);
-    expect(find.text('Pay now (demo)'), findsOneWidget);
+
+    // Backend подтвердил платёж — только теперь доступ открывается.
+    status = 'PAID';
+    await tester.tap(find.text('I have paid — check status'));
+    await _pumpSettle(tester);
+    expect(find.text('My Access'), findsOneWidget);
   });
 
   testWidgets('trial — card visible when available, activation succeeds',
@@ -371,7 +442,7 @@ void main() {
     await _pumpSettle(tester);
 
     expect(find.text('3-day free trial'), findsNothing);
-    expect(find.text('Nexa 30 Days'), findsOneWidget);
+    expect(find.text('Nexa 30 дней'), findsOneWidget);
   });
 
   testWidgets('real checkout — open payment page + check status (success)',
@@ -420,7 +491,8 @@ void main() {
     expect(find.text('Payment'), findsOneWidget);
     expect(find.text('Open payment page'), findsOneWidget);
     expect(find.text('I have paid — check status'), findsOneWidget);
-    expect(find.text('Pay now (demo)'), findsNothing);
+    // Кнопки «оплатить демо» больше не существует ни в каком виде.
+    expect(find.textContaining('demo'), findsNothing);
 
     // Simulate: user paid on the provider page → check status → success.
     await tester.scrollUntilVisible(
@@ -478,4 +550,20 @@ void main() {
     expect(find.text('My Access'), findsNothing);
     expect(find.textContaining('waiting for confirmation'), findsOneWidget);
   });
+
+  // ── Значение по умолчанию ────────────────────────────────────────────
+  //
+  // Тесты выше подменяют paymentsEnabledProvider, поэтому они НЕ видят
+  // настоящее значение флага. Эта проверка стоит отдельно: сборка без
+  // --dart-define не должна продавать подписки, иначе релиз начнёт
+  // брать деньги при неготовом провайдере.
+  test('payments are disabled unless PAYMENTS_ENABLED is set at build time',
+      () {
+    expect(BillingConfig.paymentsEnabled, isFalse);
+  });
+
+  test('default price currency is roubles', () {
+    expect(BillingConfig.defaultCurrency, 'RUB');
+  });
+
 }

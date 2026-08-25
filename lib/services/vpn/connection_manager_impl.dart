@@ -101,8 +101,8 @@ class ConnectionManagerImpl implements ConnectionManager {
     if (startedAt == null || service == null) return;
 
     final session = ConnectionSession(
-      serverId: service.activeServer?.id ?? 'unknown',
-      serverName: service.activeServer?.displayName ?? 'Unknown',
+      serverId: service.activeSource?.id ?? 'unknown',
+      serverName: service.activeSource?.label ?? 'Unknown',
       startedAt: startedAt,
       endedAt: DateTime.now(),
       bytesDown: _bytesDown,

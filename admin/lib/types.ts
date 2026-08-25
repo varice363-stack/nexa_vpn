@@ -44,14 +44,35 @@ export interface Subscription {
   user?: { id: string; email: string };
 }
 
+export type BannerPlacement = 'home' | 'premium';
+
 export interface Banner {
   id: string;
   title: string;
   description: string;
   imageUrl: string | null;
   buttonText: string | null;
+  targetUrl: string | null;
+  placement: BannerPlacement;
+  sortOrder: number;
+  impressions: number;
+  clicks: number;
   active: boolean;
   createdAt: string;
+}
+
+/** GET /banners/stats — ad performance for advertisers. */
+export interface BannerStats {
+  totals: { impressions: number; clicks: number; ctr: number };
+  banners: Array<{
+    id: string;
+    title: string;
+    placement: BannerPlacement;
+    active: boolean;
+    impressions: number;
+    clicks: number;
+    ctr: number;
+  }>;
 }
 
 export interface DashboardData {

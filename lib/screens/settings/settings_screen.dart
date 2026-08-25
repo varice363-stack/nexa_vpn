@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../l10n/app_localizations.dart';
+
 import '../../models/app_settings.dart';
 import '../../models/vpn_config.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/locale_providers.dart';
 import '../../providers/settings_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/app_page.dart';
@@ -17,19 +20,27 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final settings = ref.watch(settingsProvider).value ??
         const AppSettings();
 
     return AppPage(
-      title: 'Settings',
-      subtitle: 'Tunnel and privacy preferences',
+      title: l10n.settingsTitle,
+      subtitle: l10n.settingsSubtitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader(title: 'CONNECTION'),
+          SectionHeader(title: l10n.settingsSectionConnection),
+          // Always-available way to add a key, even when one is already
+          // active (home hides its CTA in that case).
+          _ActionRow(
+            title: l10n.keyEntryOpen,
+            subtitle: l10n.keyEntrySubtitle,
+            onTap: () => context.push('/key'),
+          ),
           _SegmentedSetting<AppSettings, VpnProtocol>(
-            title: 'Protocol',
-            subtitle: 'Tunnel transport protocol',
+            title: l10n.settingsProtocol,
+            subtitle: l10n.settingsProtocolHint,
             values: VpnProtocol.values,
             labelOf: (p) => p.label,
             selected: settings.protocol,
@@ -37,51 +48,57 @@ class SettingsScreen extends ConsumerWidget {
                 ref.read(settingsProvider.notifier).setProtocol(p),
           ),
           _SegmentedSetting<AppSettings, DnsPreference>(
-            title: 'DNS',
-            subtitle: 'DNS resolution mode',
+            title: l10n.settingsDns,
+            subtitle: l10n.settingsDnsHint,
             values: DnsPreference.values,
             labelOf: (d) => d.label,
             selected: settings.dns,
             onChanged: (d) => ref.read(settingsProvider.notifier).setDns(d),
           ),
-          const SectionHeader(title: 'PRIVACY & SECURITY'),
+          SectionHeader(title: l10n.settingsSectionPrivacy),
           _ToggleRow(
-            title: 'Kill switch',
-            subtitle: 'Block all traffic if the tunnel drops',
+            title: l10n.settingsKillSwitch,
+            subtitle: l10n.settingsKillSwitchHint,
             value: settings.killSwitch,
             onChanged: (v) =>
                 ref.read(settingsProvider.notifier).setKillSwitch(v),
           ),
           _ToggleRow(
-            title: 'Notifications',
-            subtitle: 'Connection events and app alerts',
+            title: l10n.settingsNotifications,
+            subtitle: l10n.settingsNotificationsHint,
             value: settings.notificationsEnabled,
             onChanged: (v) =>
                 ref.read(settingsProvider.notifier).setNotificationsEnabled(v),
           ),
-          const SectionHeader(title: 'BEHAVIOR'),
+          SectionHeader(title: l10n.settingsSectionBehavior),
           _ToggleRow(
-            title: 'Auto-connect',
-            subtitle: 'Connect to the fastest server on app launch',
+            title: l10n.settingsAutoConnect,
+            subtitle: l10n.settingsAutoConnectHint,
             value: settings.autoConnect,
             onChanged: (v) =>
                 ref.read(settingsProvider.notifier).setAutoConnect(v),
           ),
-          const SectionHeader(title: 'DATA'),
+          SectionHeader(title: l10n.settingsSectionData),
           _ActionRow(
-            title: 'Clear diagnostic logs',
-            subtitle: 'Erase the in-app event buffer',
+            title: l10n.settingsClearLogs,
+            subtitle: l10n.settingsClearLogsHint,
             onTap: () {
               ref.read(loggerProvider).clear();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logs cleared')),
+                SnackBar(content: Text(l10n.settingsLogsCleared)),
               );
             },
           ),
-          const SectionHeader(title: 'APP'),
+          SectionHeader(title: l10n.settingsSectionApp),
+          _LanguageRow(
+            title: l10n.settingsLanguage,
+            subtitle: l10n.settingsLanguageHint,
+            current: ref.watch(localeProvider),
+            onChanged: (v) => ref.read(localeProvider.notifier).set(v),
+          ),
           _ActionRow(
-            title: 'About Nexa VPN',
-            subtitle: 'Version, privacy policy, changelog',
+            title: l10n.settingsAbout,
+            subtitle: l10n.settingsAboutHint,
             onTap: () => context.push('/about'),
           ),
         ],
@@ -282,6 +299,87 @@ class _ActionRow extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Interface language picker. "System" follows the device language, so a
+/// Russian phone shows Russian without the user touching anything.
+class _LanguageRow extends StatelessWidget {
+  const _LanguageRow({
+    required this.title,
+    required this.subtitle,
+    required this.current,
+    required this.onChanged,
+  });
+
+  final String title;
+  final String subtitle;
+  final AppLocale current;
+  final ValueChanged<AppLocale> onChanged;
+
+  String _labelFor(AppLocalizations l10n, AppLocale locale) {
+    return switch (locale) {
+      AppLocale.system => l10n.settingsLanguageSystem,
+      AppLocale.en => l10n.settingsLanguageEnglish,
+      AppLocale.ru => l10n.settingsLanguageRussian,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: GlassContainer(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            DropdownButton<AppLocale>(
+              value: current,
+              underline: const SizedBox.shrink(),
+              dropdownColor: AppColors.surface,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+              ),
+              items: [
+                for (final locale in AppLocale.values)
+                  DropdownMenuItem(
+                    value: locale,
+                    child: Text(_labelFor(l10n, locale)),
+                  ),
+              ],
+              onChanged: (v) {
+                if (v != null) onChanged(v);
+              },
+            ),
+          ],
         ),
       ),
     );

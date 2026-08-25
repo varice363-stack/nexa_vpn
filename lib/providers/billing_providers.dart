@@ -5,9 +5,20 @@ import '../models/trial_status.dart';
 import '../models/premium_plan.dart';
 import '../models/subscription_plan.dart';
 import '../services/api/api_exception.dart';
+import '../services/billing/billing_config.dart';
 import 'access_providers.dart';
 import 'app_providers.dart';
 import 'subscription_providers.dart';
+
+/// Включены ли продажи внутри приложения.
+///
+/// Значение берётся из флага сборки `PAYMENTS_ENABLED` (см.
+/// [BillingConfig]). Отдельный провайдер нужен, чтобы тесты могли
+/// проверить оба состояния экрана — с оплатой и без неё, — не собирая
+/// приложение заново.
+final paymentsEnabledProvider = Provider<bool>(
+  (ref) => BillingConfig.paymentsEnabled,
+);
 
 /// Active subscription plans from the backend (`GET /plans`).
 ///
@@ -40,20 +51,28 @@ class PlansNotifier extends AsyncNotifier<List<SubscriptionPlan>> {
     }
   }
 
-  /// Offline fallback — mirrors the local catalog until the API is reachable.
+  /// Запасной каталог, пока API недоступен.
+  ///
+  /// Сроки берутся из id тарифа, а не из отдельного списка: раньше здесь
+  /// стоял массив [30, 365, 36500], и добавление квартального тарифа
+  /// молча сдвинуло бы сроки у всех остальных.
   static List<SubscriptionPlan> _staticPlans() {
     const local = PremiumPlan.available;
-    const days = [30, 365, 36500];
+    const daysById = {'monthly': 30, 'quarterly': 90, 'yearly': 365};
+
     return [
-      for (var i = 0; i < local.length; i++)
+      for (final plan in local)
         SubscriptionPlan(
-          id: 'local-${local[i].id}',
-          code: local[i].id.toUpperCase(),
-          name: 'Nexa ${local[i].name}',
-          durationDays: days[i],
-          price: double.tryParse(local[i].price.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0,
-          currency: 'USD',
-          description: local[i].description,
+          id: 'local-${plan.id}',
+          code: plan.id.toUpperCase(),
+          name: 'Nexa ${plan.name}',
+          durationDays: daysById[plan.id] ?? 30,
+          // Из «199 ₽» достаём число, символ валюты отбрасываем.
+          price:
+              double.tryParse(plan.price.replaceAll(RegExp(r'[^\d.]'), '')) ??
+                  0,
+          currency: BillingConfig.defaultCurrency,
+          description: plan.description,
         ),
     ];
   }

@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/bootstrap_providers.dart';
 import '../../theme/app_colors.dart';
@@ -24,29 +25,24 @@ class _Slide {
   final Color accent;
 }
 
-const List<_Slide> _slides = [
+/// Slides are built per-frame so the copy follows the selected language.
+List<_Slide> _slidesOf(AppLocalizations l10n) => [
   _Slide(
     icon: Icons.shield_rounded,
-    title: 'Military-grade encryption',
-    description:
-        'Your traffic is protected with WireGuard and OpenVPN protocols. '
-        'A strict no-logs policy keeps your activity private — always.',
+    title: l10n.onboardingTitle2,
+    description: l10n.onboardingBody2,
     accent: AppColors.primaryBright,
   ),
   _Slide(
     icon: Icons.bolt_rounded,
-    title: 'Blazing fast speeds',
-    description:
-        'Thousands of servers in 60+ countries. The Fastest filter connects '
-        'you to the best location automatically for streaming and gaming.',
+    title: l10n.onboardingTitle3,
+    description: l10n.onboardingBody3,
     accent: AppColors.success,
   ),
   _Slide(
     icon: Icons.touch_app_rounded,
-    title: 'One-tap protection',
-    description:
-        'Connect with a single tap. Nexa VPN works silently in the '
-        'background while you browse, stream and download.',
+    title: l10n.onboardingTitle1,
+    description: l10n.onboardingBody1,
     accent: AppColors.cyan,
   ),
 ];
@@ -79,7 +75,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isLast = _page == _slides.length - 1;
+    final l10n = AppLocalizations.of(context);
+    final slides = _slidesOf(l10n);
+    final isLast = _page == slides.length - 1;
 
     return Scaffold(
       body: AnimatedBackground(
@@ -92,9 +90,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   padding: const EdgeInsets.fromLTRB(0, 8, 20, 0),
                   child: TextButton(
                     onPressed: _finish,
-                    child: const Text(
-                      'Skip',
-                      style: TextStyle(
+                    child: Text(
+                      l10n.commonSkip,
+                      style: const TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textSecondary,
@@ -106,16 +104,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               Expanded(
                 child: PageView.builder(
                   controller: _controller,
-                  itemCount: _slides.length,
+                  itemCount: slides.length,
                   onPageChanged: (index) => setState(() => _page = index),
-                  itemBuilder: (context, index) => _SlideView(slide: _slides[index]),
+                  itemBuilder: (context, index) => _SlideView(slide: slides[index]),
                 ),
               ),
-              _Dots(count: _slides.length, current: _page),
+              _Dots(count: slides.length, current: _page),
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
                 child: GlassButton(
-                  label: isLast ? 'Get Started' : 'Continue',
+                  label: isLast ? l10n.onboardingGetStarted : l10n.commonContinue,
                   icon: isLast ? Icons.rocket_launch_rounded : null,
                   onTap: isLast
                       ? _finish

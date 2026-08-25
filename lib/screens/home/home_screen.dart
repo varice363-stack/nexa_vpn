@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../widgets/background/animated_background.dart';
 import 'widgets/home_access_section.dart';
 import 'widgets/home_banner_section.dart';
-import 'widgets/home_connection_card.dart';
 import 'widgets/home_header.dart';
 import 'widgets/home_power_section.dart';
 import 'widgets/home_stats_section.dart';
@@ -25,8 +24,6 @@ class HomeScreen extends StatelessWidget {
             children: [
               _staggered(0, const HomeHeader()),
               const SizedBox(height: 18),
-              _staggered(1, const HomeConnectionCard()),
-              const SizedBox(height: 12),
               _staggered(2, const HomeAccessSection()),
               const SizedBox(height: 24),
               _staggered(3, const HomePowerSection()),

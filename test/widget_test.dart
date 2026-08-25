@@ -73,7 +73,18 @@ Future<void> _settle(WidgetTester tester) async {
   }
 }
 
+/// Walks the real first-run flow: Skip onboarding, then accept the
+/// mandatory VpnService disclosure. Both gates are enforced by the router,
+/// so every test that expects Home must pass through them.
+Future<void> passFirstRun(WidgetTester tester) async {
+  await tester.tap(find.text('Skip'));
+  await _settle(tester);
+  await tester.tap(find.text('I understand and agree'));
+  await _settle(tester);
+}
+
 void main() {
+
   testWidgets('boot: splash → onboarding on fresh install', (tester) async {
     await _boot(tester);
     // First frame: bootstrap is resolving, the splash screen is shown.
@@ -86,17 +97,22 @@ void main() {
     expect(find.text('Continue'), findsOneWidget);
   });
 
-  testWidgets('onboarding → guest home with server catalog', (tester) async {
+  testWidgets('onboarding → home without a preselected server', (tester) async {
     await _boot(tester);
     await _settle(tester);
 
     // Complete onboarding via Skip → guest home.
-    await tester.tap(find.text('Skip'));
-    await _settle(tester);
-
-    // Home screen after the local fallback catalog loads (350 ms).
+    await passFirstRun(tester);
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Current server'), findsOneWidget);
+
+    // The home screen must NOT advertise a server. It used to show the
+    // fastest entry from the demo catalogue ("Istanbul TR-01"), which has
+    // nothing to do with the key the user actually connects with — an
+    // imported vless:// link carries its own location.
+    expect(find.text('Current server'), findsNothing);
+    expect(find.textContaining('Istanbul'), findsNothing);
+    expect(find.textContaining('Turkey'), findsNothing);
+
     // Guest mode is reflected in the profile tab.
     expect(find.text('Guest mode'), findsNothing);
     await tester.pumpWidget(const SizedBox());
@@ -106,33 +122,37 @@ void main() {
   testWidgets('servers screen opens from bottom navigation', (tester) async {
     await _boot(tester);
     await _settle(tester);
-    await tester.tap(find.text('Skip'));
-    await _settle(tester);
+    await passFirstRun(tester);
     await tester.pump(const Duration(milliseconds: 500));
 
     await tester.tap(find.text('Servers').last);
     await _settle(tester);
 
-    expect(find.text('Search country or city'), findsOneWidget);
-    expect(find.text('Fastest'), findsOneWidget);
-    expect(find.text('Premium'), findsOneWidget);
+    // The screen now lists real endpoints from the user's key. With no key
+    // added it must say so and offer the way to add one, instead of showing
+    // a catalog of servers nobody can connect to.
+    expect(find.text('No servers yet'), findsWidgets);
+    expect(find.text('Add a key'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(milliseconds: 100));
   });
 
-  testWidgets('guest connect attempt opens login screen', (tester) async {
+  testWidgets('guest with no key is sent to the key screen, not to login',
+      (tester) async {
     await _boot(tester);
     await _settle(tester);
-    await tester.tap(find.text('Skip'));
-    await _settle(tester);
+    await passFirstRun(tester);
     await tester.pump(const Duration(milliseconds: 500));
 
-    // Guest taps the power button → redirected to login.
+    // Connecting must not demand an account: someone who already owns a key
+    // has to be able to use it on first launch. With nothing added yet the
+    // button leads to the key screen so the flow can continue.
     await tester.tap(find.byType(PowerButton), warnIfMissed: false);
     await _settle(tester);
+    await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('Welcome back'), findsOneWidget);
-    expect(find.text('Continue as guest'), findsOneWidget);
+    expect(find.text('Access key'), findsOneWidget);
+    expect(find.text('Welcome back'), findsNothing);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(milliseconds: 100));
   });

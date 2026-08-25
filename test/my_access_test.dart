@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import 'package:nexa_vpn/domain/repositories/key_storage.dart';
+import 'package:nexa_vpn/l10n/app_localizations.dart';
 import 'package:nexa_vpn/providers/app_providers.dart';
 import 'package:nexa_vpn/screens/access/my_access_screen.dart';
 import 'package:nexa_vpn/services/api/api_client.dart';
@@ -75,7 +76,11 @@ Future<void> _boot(
           ),
         ),
       ],
-      child: const MaterialApp(home: MyAccessScreen()),
+      child: const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: MyAccessScreen(),
+      ),
     ),
   );
 }

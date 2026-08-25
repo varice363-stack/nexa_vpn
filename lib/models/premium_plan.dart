@@ -23,49 +23,49 @@ class PremiumPlan {
   final bool isPopular;
   final bool isLifetime;
 
+  /// Запасной каталог: показывается, пока приложение не достучалось
+  /// до сервера. Цены обязаны совпадать с боевыми (backend/prisma/seed.ts),
+  /// иначе человек увидит одну сумму, а заплатит другую.
+  ///
+  /// Пожизненный тариф снят с продажи: при аренде сервера ~500 ₽/мес он
+  /// со временем работает в минус.
   static const List<PremiumPlan> available = [
     PremiumPlan(
       id: 'monthly',
-      name: 'Monthly',
-      price: r'$11.99',
-      periodLabel: '/ month',
-      description: 'Flexible plan, cancel anytime',
+      name: '30 дней',
+      price: '199 \u20BD',
+      periodLabel: '/ мес',
+      description: 'Помесячно, без автопродления',
       features: [
-        'Unlimited data',
-        'No-logs policy',
-        '5 devices',
-        '4K streaming',
-        '24/7 support',
+        'Безлимитный трафик',
+        'Логи подключений не ведутся',
+        'Свои ключи и ключи других провайдеров',
+        'Поддержка в Telegram',
+      ],
+    ),
+    PremiumPlan(
+      id: 'quarterly',
+      name: '90 дней',
+      price: '499 \u20BD',
+      periodLabel: '/ 3 мес',
+      description: 'Выгоднее на 98 \u20BD',
+      features: [
+        'Всё из тарифа на 30 дней',
+        '\u2248166 \u20BD в месяц',
       ],
     ),
     PremiumPlan(
       id: 'yearly',
-      name: 'Yearly',
-      price: r'$5.99',
-      periodLabel: '/ month',
-      description: 'Billed \$71.88 per year — save 50%',
+      name: '365 дней',
+      price: '1490 \u20BD',
+      periodLabel: '/ год',
+      description: 'Выгоднее на 898 \u20BD',
       features: [
-        'Everything in Monthly',
-        '10 devices',
-        'Priority support',
-        'Secure core servers',
-        '30-day money back',
+        'Всё из тарифа на 90 дней',
+        '\u2248124 \u20BD в месяц',
+        'Приоритетная поддержка',
       ],
       isPopular: true,
-    ),
-    PremiumPlan(
-      id: 'lifetime',
-      name: 'Lifetime',
-      price: r'$149',
-      periodLabel: ' one-time',
-      description: 'Pay once, protect forever',
-      features: [
-        'Everything in Yearly',
-        'Unlimited devices',
-        'Early feature access',
-        'Lifetime updates',
-      ],
-      isLifetime: true,
     ),
   ];
 }

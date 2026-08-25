@@ -150,8 +150,8 @@ export class ProvisioningService {
    *  * the assigned server exists AND has mandatory ingress parameters.
    * Otherwise config is null — never a fabricated URI.
    */
-  private async toContract(
-    user: SafeUser,
+  async toContract(
+    user: { id: string } | null,
     key: {
       id: string;
       name: string;
@@ -218,7 +218,7 @@ export class ProvisioningService {
       lastUsedAt: key.lastUsedAt,
       deviceId: key.deviceId,
       serverId: key.serverId,
-      userId: user.id,
+      userId: user?.id ?? null,
       server,
       config: {
         format: 'vless',

@@ -1,8 +1,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Required: network access for the VPN client and backend API. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <!-- The tunnel runs as a foreground service so Android does not kill it
+         while the app is in the background (TASK #024). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- Declares to Google Play that this is a VPN app. Required by the
+         VpnService policy; the store listing must mention it too. -->
+    <uses-feature
+        android:name="android.software.vpn"
+        android:required="false"/>
     <application
-        android:label="nexa_vpn"
+        android:label="@string/app_name"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -32,6 +45,11 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- The VpnService (XrayVPNService) is declared by the flutter_vless
+             plugin manifest and merged in automatically — do not redeclare it
+             here, or the merger will fail on conflicting attributes. -->
+
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

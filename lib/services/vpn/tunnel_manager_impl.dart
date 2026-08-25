@@ -1,22 +1,18 @@
 import 'dart:async';
 
 import '../../domain/services/tunnel_manager.dart';
-import '../../models/server.dart';
+import '../../models/connection_source.dart';
 import '../../models/vpn_config.dart';
 import '../../models/vpn_status.dart';
 
 /// Simulated tunnel with the exact lifecycle of a real VPN handshake.
 ///
-/// NATIVE INTEGRATION (TODO — platform engineers):
-/// Replace the timer-driven phase machine with a real tunnel:
-///   1. WireGuard: `wireguard_flutter` — expose a `WireGuardTunnelManager`
-///      implementing [TunnelManager], mapping tunnel status callbacks onto
-///      [TunnelPhase].
-///   2. OpenVPN: OpenVPN3 (`ovpn3` / `dart_openvpn3`) — same mapping.
-///   3. IKEv2: `NetworkExtension` (iOS) / `VpnService` (Android) platform
-///      channels.
-/// The rest of the app (UI, providers, session tracking) depends only on
-/// [TunnelManager], so swapping this class is the single integration point.
+/// Kept for tests and for platforms with no native backend. The real tunnel
+/// lives in `XrayTunnelManager` (Xray-core via `flutter_vless`); both satisfy
+/// [TunnelManager], so the rest of the app is unaware of which one is active.
+///
+/// This mock never moves real packets — it only reproduces the phase
+/// sequence, so a green run here says nothing about actual connectivity.
 class MockTunnelManager implements TunnelManager {
   MockTunnelManager();
 
@@ -47,7 +43,7 @@ class MockTunnelManager implements TunnelManager {
   }
 
   @override
-  Future<void> startTunnel(Server server, VpnConfig config) async {
+  Future<void> startTunnel(ConnectionSource source, VpnConfig config) async {
     if (_phase == TunnelPhase.connected ||
         _phase == TunnelPhase.establishing) {
       return;
@@ -61,6 +57,10 @@ class MockTunnelManager implements TunnelManager {
       _controller.add(_phase);
     }
   }
+
+  @override
+  Future<int?> measurePing() async =>
+      _phase == TunnelPhase.connected ? 42 : null;
 
   @override
   Future<void> stopTunnel() async {

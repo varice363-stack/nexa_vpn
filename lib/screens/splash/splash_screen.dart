@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/app_localizations.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,6 +19,7 @@ class SplashScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     // Triggers the bootstrap chain (authProvider → bootstrapProvider).
     ref.watch(authProvider);
 
@@ -67,9 +70,9 @@ class SplashScreen extends ConsumerWidget {
                   .fadeIn(delay: 300.ms, duration: 600.ms)
                   .slideY(begin: 0.15, end: 0, duration: 600.ms),
               const SizedBox(height: 8),
-              const Text(
-                'Private • Secure • Fast',
-                style: TextStyle(
+              Text(
+                l10n.appTagline,
+                style: const TextStyle(
                   fontSize: 13.5,
                   color: AppColors.textSecondary,
                   letterSpacing: 2.5,

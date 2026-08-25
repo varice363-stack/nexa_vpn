@@ -6,12 +6,30 @@ import Badge from '@/components/Badge';
 import Modal from '@/components/Modal';
 import PageHeader from '@/components/PageHeader';
 import { api } from '@/lib/api';
-import { Banner } from '@/lib/types';
+import { Banner, BannerPlacement, BannerStats } from '@/lib/types';
 
-const EMPTY_FORM = { title: '', description: '', buttonText: '' };
+const EMPTY_FORM = {
+  title: '',
+  description: '',
+  buttonText: '',
+  targetUrl: '',
+  placement: 'home' as BannerPlacement,
+  sortOrder: '0',
+};
+
+const PLACEMENTS: { value: BannerPlacement; label: string }[] = [
+  { value: 'home', label: 'Home screen' },
+  { value: 'premium', label: 'Premium screen' },
+];
+
+function ctr(impressions: number, clicks: number): string {
+  if (impressions === 0) return '—';
+  return `${((clicks / impressions) * 100).toFixed(2)}%`;
+}
 
 export default function BannersPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [stats, setStats] = useState<BannerStats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -19,7 +37,12 @@ export default function BannersPage() {
   const load = useCallback(async () => {
     setError(null);
     try {
-      setBanners(await api<Banner[]>('/banners/all'));
+      const [list, s] = await Promise.all([
+        api<Banner[]>('/banners/all'),
+        api<BannerStats>('/banners/stats'),
+      ]);
+      setBanners(list);
+      setStats(s);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load banners');
     }
@@ -31,6 +54,12 @@ export default function BannersPage() {
 
   async function toggleActive(b: Banner) {
     await api(`/banners/${b.id}/${b.active ? 'deactivate' : 'activate'}`, { method: 'POST' });
+    load();
+  }
+
+  async function resetStats(b: Banner) {
+    if (!confirm(`Reset impressions and clicks for "${b.title}"?`)) return;
+    await api(`/banners/${b.id}/reset-stats`, { method: 'POST' });
     load();
   }
 
@@ -52,7 +81,18 @@ export default function BannersPage() {
   async function createBanner(e: FormEvent) {
     e.preventDefault();
     try {
-      await api('/banners', { method: 'POST', body: JSON.stringify(form) });
+      // Only send optional fields when filled — the API validates
+      // targetUrl as a real http(s) URL and rejects empty strings.
+      const payload: Record<string, unknown> = {
+        title: form.title,
+        description: form.description,
+        placement: form.placement,
+        sortOrder: Number(form.sortOrder) || 0,
+      };
+      if (form.buttonText.trim()) payload.buttonText = form.buttonText.trim();
+      if (form.targetUrl.trim()) payload.targetUrl = form.targetUrl.trim();
+
+      await api('/banners', { method: 'POST', body: JSON.stringify(payload) });
       setModalOpen(false);
       setForm(EMPTY_FORM);
       load();
@@ -65,11 +105,34 @@ export default function BannersPage() {
     <div>
       <PageHeader
         title="Banners"
-        subtitle="Home screen promos"
+        subtitle="Promo slots on Home and Premium"
         action={<button onClick={() => setModalOpen(true)} className="btn-primary">+ Create banner</button>}
       />
 
       {error ? <div className="text-sm text-rose-400 mb-3">{error}</div> : null}
+
+      {stats ? (
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="glass p-4">
+            <div className="text-xs text-muted">Total impressions</div>
+            <div className="text-2xl font-semibold text-text mt-1">
+              {stats.totals.impressions.toLocaleString()}
+            </div>
+          </div>
+          <div className="glass p-4">
+            <div className="text-xs text-muted">Total clicks</div>
+            <div className="text-2xl font-semibold text-text mt-1">
+              {stats.totals.clicks.toLocaleString()}
+            </div>
+          </div>
+          <div className="glass p-4">
+            <div className="text-xs text-muted">Average CTR</div>
+            <div className="text-2xl font-semibold text-text mt-1">
+              {stats.totals.ctr}%
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="space-y-3">
         {banners.map((b) => (
@@ -81,13 +144,34 @@ export default function BannersPage() {
                 no image
               </div>
             )}
-            <div className="flex-1">
-              <div className="font-semibold text-text">{b.title}</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-text flex items-center gap-2">
+                {b.title}
+                <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-white/5 text-muted">
+                  {b.placement}
+                </span>
+              </div>
               <div className="text-xs text-muted mt-0.5 line-clamp-2">{b.description}</div>
-              <div className="text-[11px] text-faint mt-1">
-                {b.buttonText ?? 'no CTA'} · {new Date(b.createdAt).toLocaleDateString()}
+              <div className="text-[11px] text-faint mt-1 truncate">
+                {b.buttonText ?? 'no CTA'}
+                {b.targetUrl ? ` → ${b.targetUrl}` : ' → /premium'}
+                {' · '}#{b.sortOrder}
+                {' · '}{new Date(b.createdAt).toLocaleDateString()}
               </div>
             </div>
+
+            <div className="text-right shrink-0 w-28">
+              <div className="text-[11px] text-muted">
+                {b.impressions.toLocaleString()} views
+              </div>
+              <div className="text-[11px] text-muted">
+                {b.clicks.toLocaleString()} clicks
+              </div>
+              <div className="text-sm font-semibold text-text mt-0.5">
+                CTR {ctr(b.impressions, b.clicks)}
+              </div>
+            </div>
+
             <Badge value={b.active ? 'ACTIVE' : 'DISABLED'} />
             <label className="text-xs text-muted cursor-pointer">
               Upload
@@ -101,6 +185,12 @@ export default function BannersPage() {
                 }}
               />
             </label>
+            <button
+              onClick={() => resetStats(b)}
+              className="px-2.5 py-1 rounded-md text-xs font-medium border border-white/15 text-muted"
+            >
+              Reset
+            </button>
             <button
               onClick={() => toggleActive(b)}
               className={`px-2.5 py-1 rounded-md text-xs font-medium border ${
@@ -127,6 +217,34 @@ export default function BannersPage() {
               onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-base w-full" />
             <input placeholder="Button text (e.g. Upgrade now)" value={form.buttonText}
               onChange={(e) => setForm({ ...form, buttonText: e.target.value })} className="input-base w-full" />
+            <input
+              type="url"
+              placeholder="Target URL (https://… — empty opens Premium)"
+              value={form.targetUrl}
+              onChange={(e) => setForm({ ...form, targetUrl: e.target.value })}
+              className="input-base w-full"
+            />
+            <div className="flex gap-3">
+              <select
+                value={form.placement}
+                onChange={(e) =>
+                  setForm({ ...form, placement: e.target.value as BannerPlacement })
+                }
+                className="input-base w-full"
+              >
+                {PLACEMENTS.map((p) => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                min={0}
+                placeholder="Sort order"
+                value={form.sortOrder}
+                onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
+                className="input-base w-full"
+              />
+            </div>
             <button type="submit" className="btn-primary w-full">Create banner</button>
           </form>
         </Modal>

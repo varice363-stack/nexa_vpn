@@ -74,6 +74,13 @@ export class AuthService {
     });
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
+    // Code-only accounts have no password: they are redeemed with a recovery
+    // code, never with credentials. Refuse the password path for them rather
+    // than leaking that the account exists.
+    if (!user.passwordHash) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
     if (user.status === 'BLOCKED') {

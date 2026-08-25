@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/app_notification.dart';
@@ -15,11 +17,12 @@ class NotificationsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final notifications =
         ref.watch(notificationProvider).value ?? const <AppNotification>[];
 
     return AppPage(
-      title: 'Notifications',
+      title: l10n.notificationsTitle,
       subtitle: '${notifications.where((n) => !n.read).length} unread',
       actions: [
         GlassContainer(
@@ -36,10 +39,10 @@ class NotificationsScreen extends ConsumerWidget {
         ),
       ],
       child: notifications.isEmpty
-          ? const EmptyState(
+          ? EmptyState(
               icon: Icons.notifications_off_rounded,
-              title: 'All caught up',
-              message: 'Connection events and offers will appear here.',
+              title: l10n.notificationsEmptyTitle,
+              message: l10n.notificationsEmptyBody,
             )
           : Column(
               children: [
