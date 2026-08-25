@@ -22,6 +22,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
     String? country,
+    String? masterCode,
   }) async {
     final data = await _api.post(
       '/auth/register',
@@ -29,6 +30,7 @@ class AuthRepositoryImpl implements AuthRepository {
         'email': email,
         'password': password,
         if (country != null && country.isNotEmpty) 'country': country,
+        if (masterCode != null && masterCode.isNotEmpty) 'masterCode': masterCode,
       },
     );
     return AuthResult.fromJson(_asMap(data));

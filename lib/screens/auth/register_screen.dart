@@ -24,6 +24,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
+  final TextEditingController _masterCodeController = TextEditingController();
 
   bool _obscure = true;
   bool _loading = false;
@@ -38,6 +39,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
+    _masterCodeController.dispose();
     super.dispose();
   }
 
@@ -45,8 +47,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (e.isNetworkError) {
       return 'No connection to the server. Please check your network.';
     }
+    final message = e.message.toLowerCase();
     return switch (e.statusCode) {
       409 => 'This email is already registered. Try signing in.',
+      400 when message.contains('master code') =>
+        'Invalid or expired master code.',
       400 => 'Invalid input. Check the form and try again.',
       _ => e.message,
     };
@@ -60,9 +65,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
     try {
       final name = _nameController.text.trim();
+      final masterCode = _masterCodeController.text.trim();
       await ref.read(authProvider.notifier).register(
             email: _emailController.text.trim(),
             password: _passwordController.text,
+            masterCode: masterCode.isNotEmpty ? masterCode : null,
           );
       // Display name is a client-side profile field until the backend
       // User model gains a name column.
@@ -250,7 +257,67 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 }
                                 return null;
                               },
-                              onFieldSubmitted: (_) => _submit(),
+                            ),
+                            const SizedBox(height: 14),
+                            // ── Master Code (optional — admin bootstrap) ───
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: AppColors.primary.withValues(alpha: 0.15),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.admin_panel_settings_outlined,
+                                        size: 16,
+                                        color: AppColors.primaryBright,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Text(
+                                        'Admin master code',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.primaryBright,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        'optional',
+                                        style: TextStyle(
+                                          fontSize: 10.5,
+                                          color: AppColors.textTertiary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    controller: _masterCodeController,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontFamily: 'monospace',
+                                      color: AppColors.textPrimary,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      labelText: 'NEXA-XXXXXXXX',
+                                      isDense: true,
+                                      prefixIcon: Icon(
+                                        Icons.key_outlined,
+                                        size: 18,
+                                      ),
+                                    ),
+                                    onFieldSubmitted: (_) => _submit(),
+                                  ),
+                                ],
+                              ),
                             ),
                             if (_error != null) ...[
                               const SizedBox(height: 12),

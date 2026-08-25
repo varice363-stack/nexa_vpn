@@ -26,4 +26,15 @@ export class AuthController {
   me(@CurrentUser() user: SafeUser) {
     return this.auth.me(user);
   }
+
+  /**
+   * PUBLIC — Bootstrap endpoint.
+   * Returns the master admin code (only while no ADMIN exists).
+   * Once an admin is created, returns `{ adminExists: true }`.
+   */
+  @Public()
+  @Get('bootstrap')
+  bootstrap() {
+    return this.auth.bootstrap();
+  }
 }
