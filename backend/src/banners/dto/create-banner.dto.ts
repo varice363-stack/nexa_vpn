@@ -33,10 +33,18 @@ export class CreateBannerDto {
   /**
    * External URL opened when the CTA is tapped. Only http(s) is accepted —
    * custom schemes could be abused to launch arbitrary intents on device.
+   * Use this for referral links (e.g., registration with referral code).
    */
   @IsOptional()
   @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
   targetUrl?: string;
+
+  /**
+   * Referral code for tracking (optional).
+   */
+  @IsOptional()
+  @IsString()
+  referralCode?: string;
 
   @IsOptional()
   @IsIn(BANNER_PLACEMENTS)

@@ -53,6 +53,7 @@ export interface Banner {
   imageUrl: string | null;
   buttonText: string | null;
   targetUrl: string | null;
+  referralCode: string | null;
   placement: BannerPlacement;
   sortOrder: number;
   impressions: number;

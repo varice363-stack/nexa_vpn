@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Badge from '@/components/Badge';
 import PageHeader from '@/components/PageHeader';
 import StatCard from '@/components/StatCard';
-import { api } from '@/lib/api';
+import { api, getToken } from '@/lib/api';
 import { DashboardData, VpnServer } from '@/lib/types';
 
 export default function DashboardPage() {
@@ -14,12 +14,24 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      setError('Не авторизован. Вернитесь на страницу входа.');
+      return;
+    }
+
     api<DashboardData>('/admin/dashboard')
       .then(setData)
-      .catch((e) => setError(e.message));
+      .catch((e) => {
+        console.error('Dashboard error:', e);
+        setError(`Не удалось загрузить панель управления: ${e.message}. Проверьте что backend запущен и вы администратор.`);
+      });
     api<VpnServer[]>('/servers/all')
       .then(setServers)
-      .catch(() => setServers([]));
+      .catch((e) => {
+        console.error('Servers error:', e);
+        setServers([]);
+      });
   }, []);
 
   if (error) {

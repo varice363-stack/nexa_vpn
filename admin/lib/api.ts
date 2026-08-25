@@ -1,7 +1,6 @@
 'use client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api';
-
 const TOKEN_KEY = 'nexa_admin_token';
 
 export function getToken(): string | null {

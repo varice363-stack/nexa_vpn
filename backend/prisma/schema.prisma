@@ -208,8 +208,11 @@ model Banner {
   imageUrl    String?
   buttonText  String?
   /// External destination opened when the banner CTA is tapped.
+  /// Use this for referral links (e.g., registration with referral code).
   /// Null keeps the legacy behaviour (in-app navigation to Premium).
   targetUrl   String?
+  /// Referral code for tracking (optional).
+  referralCode String?
   /// Placement slot: "home" (default) or "premium".
   placement   String   @default("home")
   /// Display order within a slot — lower comes first.

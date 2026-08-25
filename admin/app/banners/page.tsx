@@ -13,6 +13,7 @@ const EMPTY_FORM = {
   description: '',
   buttonText: '',
   targetUrl: '',
+  referralCode: '',
   placement: 'home' as BannerPlacement,
   sortOrder: '0',
 };
@@ -91,13 +92,14 @@ export default function BannersPage() {
       };
       if (form.buttonText.trim()) payload.buttonText = form.buttonText.trim();
       if (form.targetUrl.trim()) payload.targetUrl = form.targetUrl.trim();
+      if (form.referralCode.trim()) payload.referralCode = form.referralCode.trim();
 
       await api('/banners', { method: 'POST', body: JSON.stringify(payload) });
       setModalOpen(false);
       setForm(EMPTY_FORM);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Create failed');
+      setError(err instanceof Error ? err.message : 'Не удалось создать баннер');
     }
   }
 
@@ -153,8 +155,9 @@ export default function BannersPage() {
               </div>
               <div className="text-xs text-muted mt-0.5 line-clamp-2">{b.description}</div>
               <div className="text-[11px] text-faint mt-1 truncate">
-                {b.buttonText ?? 'no CTA'}
+                {b.buttonText ?? 'без кнопки'}
                 {b.targetUrl ? ` → ${b.targetUrl}` : ' → /premium'}
+                {b.referralCode && ` · ref: ${b.referralCode}`}
                 {' · '}#{b.sortOrder}
                 {' · '}{new Date(b.createdAt).toLocaleDateString()}
               </div>
@@ -222,6 +225,12 @@ export default function BannersPage() {
               placeholder="Ссылка (https://… — пусто открывает Premium)"
               value={form.targetUrl}
               onChange={(e) => setForm({ ...form, targetUrl: e.target.value })}
+              className="input-base w-full"
+            />
+            <input
+              placeholder="Реферальный код (например: REF123)"
+              value={form.referralCode}
+              onChange={(e) => setForm({ ...form, referralCode: e.target.value })}
               className="input-base w-full"
             />
             <div className="flex gap-3">
