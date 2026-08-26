@@ -327,4 +327,41 @@
   "@serversAvailable": {
     "placeholders": { "count": { "type": "int" } }
   }
+,
+  "adminOwnerSection": "OWNER",
+  "adminTitle": "Issue access codes",
+  "adminSubtitle": "Create codes for sale and view all keys",
+  "adminNoAccess": "This account does not have admin rights",
+  "adminIssueFailed": "Failed to issue code: {error}",
+  "@adminIssueFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "adminDurationForever": "Forever",
+  "adminDuration30Days": "30 days",
+  "adminDuration90Days": "90 days",
+  "adminDuration1Year": "1 year",
+  "adminDurationDays": "{count} days",
+  "@adminDurationDays": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "adminOwnerOnly": "This section is only available to the app owner.",
+  "adminAllKeys": "All keys",
+  "adminRefresh": "Refresh",
+  "adminNameLabel": "Name (optional)",
+  "adminNameHint": "e.g. Client #1",
+  "adminDuration": "Duration",
+  "adminIssuing": "Issuing…",
+  "adminIssue": "Issue code",
+  "adminCodeIssued": "Code issued — give it to the buyer",
+  "adminCopyCode": "Copy code",
+  "adminLoadFailed": "Failed to load keys. Make sure the backend is running.\n{error}",
+  "@adminLoadFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "adminNoKeys": "No keys yet.",
+  "adminUntil": "until",
+  "adminLifetime": "lifetime",
+  "adminCopy": "Copy",
+  "adminKeyIssue": "Issue keys",
+  "adminKeyIssueHint": "Create codes for sale and view all keys"
 }

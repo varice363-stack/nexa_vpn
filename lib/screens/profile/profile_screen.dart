@@ -105,11 +105,11 @@ class ProfileScreen extends ConsumerWidget {
           // Обычный человек не должен даже знать, что выпуск ключей есть.
           if (ref.watch(adminUnlockedProvider)) ...[
             const SizedBox(height: 20),
-            const SectionHeader(title: 'ВЛАДЕЛЕЦ'),
+            SectionHeader(title: l10n.adminOwnerSection),
             GlassListTile(
               icon: Icons.vpn_key_rounded,
-              title: 'Выпуск ключей',
-              subtitle: 'Создать коды на продажу и посмотреть все ключи',
+              title: l10n.adminKeyIssue,
+              subtitle: l10n.adminKeyIssueHint,
               onTap: () => context.push('/admin/keys'),
             ),
           ],

@@ -1885,6 +1885,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} available from your key'**
   String serversAvailable(int count);
+
+  String get adminOwnerSection;
+
+  String get adminTitle;
+
+  String get adminSubtitle;
+
+  String get adminNoAccess;
+
+  String adminIssueFailed(String error);
+
+  String get adminDurationForever;
+
+  String get adminDuration30Days;
+
+  String get adminDuration90Days;
+
+  String get adminDuration1Year;
+
+  String adminDurationDays(int count);
+
+  String get adminOwnerOnly;
+
+  String get adminAllKeys;
+
+  String get adminRefresh;
+
+  String get adminNameLabel;
+
+  String get adminNameHint;
+
+  String get adminDuration;
+
+  String get adminIssuing;
+
+  String get adminIssue;
+
+  String get adminCodeIssued;
+
+  String get adminCopyCode;
+
+  String adminLoadFailed(String error);
+
+  String get adminNoKeys;
+
+  String get adminUntil;
+
+  String get adminLifetime;
+
+  String get adminCopy;
+
+  String get adminKeyIssue;
+
+  String get adminKeyIssueHint;
 }
 
 class _AppLocalizationsDelegate

@@ -960,4 +960,85 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String serversAvailable(int count) => 'Доступно $count из вашего ключа';
+
+  @override
+  String get adminOwnerSection => 'ВЛАДЕЛЕЦ';
+
+  @override
+  String get adminTitle => 'Выпуск кодов доступа';
+
+  @override
+  String get adminSubtitle => 'Создавайте коды для продажи и просматривайте все ключи';
+
+  @override
+  String get adminNoAccess => 'У этой учётной записи нет прав администратора';
+
+  @override
+  String adminIssueFailed(String error) => 'Не удалось выпустить код: $error';
+
+  @override
+  String get adminDurationForever => 'Навсегда';
+
+  @override
+  String get adminDuration30Days => '30 дней';
+
+  @override
+  String get adminDuration90Days => '90 дней';
+
+  @override
+  String get adminDuration1Year => '1 год';
+
+  @override
+  String adminDurationDays(int count) => '$count дней';
+
+  @override
+  String get adminOwnerOnly => 'Этот раздел доступен только владельцу приложения.';
+
+  @override
+  String get adminAllKeys => 'Все ключи';
+
+  @override
+  String get adminRefresh => 'Обновить';
+
+  @override
+  String get adminNameLabel => 'Название (необязательно)';
+
+  @override
+  String get adminNameHint => 'например: Клиент #1';
+
+  @override
+  String get adminDuration => 'Срок действия';
+
+  @override
+  String get adminIssuing => 'Выпуск…';
+
+  @override
+  String get adminIssue => 'Выпустить код';
+
+  @override
+  String get adminCodeIssued => 'Код выпущен — передайте его покупателю';
+
+  @override
+  String get adminCopyCode => 'Копировать код';
+
+  @override
+  String adminLoadFailed(String error) => 'Не удалось загрузить ключи. Проверьте что backend запущен.\n$error';
+
+  @override
+  String get adminNoKeys => 'Ключей пока нет.';
+
+  @override
+  String get adminUntil => 'до';
+
+  @override
+  String get adminLifetime => 'бессрочно';
+
+  @override
+  String get adminCopy => 'Копировать';
+
+  @override
+  String get adminKeyIssue => 'Выпуск ключей';
+
+  @override
+  String get adminKeyIssueHint => 'Создать коды на продажу и посмотреть все ключи';
 }

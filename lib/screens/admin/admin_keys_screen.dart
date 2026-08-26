@@ -59,6 +59,7 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
   }
 
   Future<void> _issue() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _issuing = true;
       _error = null;
@@ -81,60 +82,61 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
           // 403 here means the account is not an admin — say so plainly
           // instead of showing a raw status code.
           _error = e.statusCode == 403
-              ? 'У этой учётной записи нет прав администратора'
+              ? l10n.adminNoAccess
               : e.message;
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _error = 'Не удалось выпустить код: $e');
+      if (mounted) setState(() => _error = l10n.adminIssueFailed('$e'));
     } finally {
       if (mounted) setState(() => _issuing = false);
     }
   }
 
-  String _durationLabel(int days) => switch (days) {
-        0 => 'Навсегда',
-        30 => '30 дней',
-        90 => '90 дней',
-        365 => '1 год',
-        _ => '$days дней',
+  String _durationLabel(int days, AppLocalizations l10n) => switch (days) {
+        0 => l10n.adminDurationForever,
+        30 => l10n.adminDuration30Days,
+        90 => l10n.adminDuration90Days,
+        365 => l10n.adminDuration1Year,
+        _ => l10n.adminDurationDays(days),
       };
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // Экран умеет выпускать коды на продажу, поэтому проверка стоит здесь,
     // а не только в меню: попасть сюда по прямой ссылке нельзя.
     // Признак владельца — совпадение кода устройства с OWNER_CODE сборки.
     if (!ref.watch(adminUnlockedProvider)) {
-      return const AppPage(
-        title: 'Раздел владельца',
+      return AppPage(
+        title: l10n.adminOwnerSection,
         child: Padding(
-          padding: EdgeInsets.only(top: 40),
+          padding: const EdgeInsets.only(top: 40),
           child: Text(
-            'Этот раздел доступен только владельцу приложения.',
-            style: TextStyle(color: AppColors.textSecondary),
+            l10n.adminOwnerOnly,
+            style: const TextStyle(color: AppColors.textSecondary),
           ),
         ),
       );
     }
 
     return AppPage(
-      title: 'Выпуск кодов доступа',
-      subtitle: 'Создавайте коды для продажи и просматривайте все ключи',
+      title: l10n.adminTitle,
+      subtitle: l10n.adminSubtitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _issueCard(),
+          _issueCard(context, l10n),
           if (_justIssued != null) ...[
             const SizedBox(height: 12),
-            _issuedCard(_justIssued!),
+            _issuedCard(_justIssued!, context, l10n),
           ],
           const SizedBox(height: 22),
           Row(
             children: [
-              const Text(
-                'Все ключи',
-                style: TextStyle(
+              Text(
+                l10n.adminAllKeys,
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -145,18 +147,18 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
                 onPressed: _refresh,
                 icon: const Icon(Icons.refresh_rounded, size: 20),
                 color: AppColors.textSecondary,
-                tooltip: 'Обновить',
+                tooltip: l10n.adminRefresh,
               ),
             ],
           ),
           const SizedBox(height: 4),
-          _keysList(),
+          _keysList(context, l10n),
         ],
       ),
     );
   }
 
-  Widget _issueCard() {
+  Widget _issueCard(BuildContext context, AppLocalizations l10n) {
     return GlassContainer(
       borderRadius: BorderRadius.circular(18),
       padding: const EdgeInsets.all(16),
@@ -167,17 +169,17 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
             controller: _nameController,
             enabled: !_issuing,
             style: const TextStyle(color: AppColors.textPrimary),
-            decoration: const InputDecoration(
-              labelText: 'Название (необязательно)',
-              hintText: 'например: Клиент #1',
-              labelStyle: TextStyle(color: AppColors.textSecondary),
-              hintStyle: TextStyle(color: AppColors.textTertiary),
+            decoration: InputDecoration(
+              labelText: l10n.adminNameLabel,
+              hintText: l10n.adminNameHint,
+              labelStyle: const TextStyle(color: AppColors.textSecondary),
+              hintStyle: const TextStyle(color: AppColors.textTertiary),
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Срок действия',
-            style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+          Text(
+            l10n.adminDuration,
+            style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -186,7 +188,7 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
             children: [
               for (final days in _durations)
                 ChoiceChip(
-                  label: Text(_durationLabel(days)),
+                  label: Text(_durationLabel(days, l10n)),
                   selected: _duration == days,
                   onSelected:
                       _issuing ? null : (_) => setState(() => _duration = days),
@@ -202,7 +204,7 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
           ],
           const SizedBox(height: 16),
           GlassButton(
-            label: _issuing ? 'Выпуск…' : 'Выпустить код',
+            label: _issuing ? l10n.adminIssuing : l10n.adminIssue,
             icon: Icons.add_circle_outline_rounded,
             loading: _issuing,
             onTap: _issuing ? () {} : _issue,
@@ -212,7 +214,7 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
     );
   }
 
-  Widget _issuedCard(AccessKey key) {
+  Widget _issuedCard(AccessKey key, BuildContext context, AppLocalizations l10n) {
     final code = key.code ?? '—';
     return GlassContainer(
       borderRadius: BorderRadius.circular(18),
@@ -228,7 +230,7 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
                   size: 16, color: AppColors.success),
               const SizedBox(width: 8),
               Text(
-                'Код выпущен — передайте его покупателю',
+                l10n.adminCodeIssued,
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
@@ -252,14 +254,14 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
             children: [
               Expanded(
                 child: GlassButton(
-                  label: 'Копировать код',
+                  label: l10n.adminCopyCode,
                   icon: Icons.copy_rounded,
                   onTap: () async {
                     final messenger = ScaffoldMessenger.of(context);
                     await Clipboard.setData(ClipboardData(text: code));
                     if (!mounted) return;
                     messenger.showSnackBar(
-                      SnackBar(content: Text(AppLocalizations.of(context)!.commonCopied)),
+                      SnackBar(content: Text(l10n.commonCopied)),
                     );
                   },
                 ),
@@ -271,7 +273,7 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
     );
   }
 
-  Widget _keysList() {
+  Widget _keysList(BuildContext context, AppLocalizations l10n) {
     return FutureBuilder<List<AccessKey>>(
       future: _keysFuture,
       builder: (context, snapshot) {
@@ -285,7 +287,7 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
-              'Не удалось загрузить ключи. Проверьте что backend запущен.\n${snapshot.error}',
+              l10n.adminLoadFailed('${snapshot.error}'),
               style: const TextStyle(
                   color: AppColors.textSecondary, fontSize: 12.5),
             ),
@@ -294,12 +296,12 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
 
         final keys = snapshot.data ?? const <AccessKey>[];
         if (keys.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20),
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
-              'Ключей пока нет.',
+              l10n.adminNoKeys,
               style:
-                  TextStyle(color: AppColors.textSecondary, fontSize: 12.5),
+                  const TextStyle(color: AppColors.textSecondary, fontSize: 12.5),
             ),
           );
         }
@@ -309,7 +311,7 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
             for (final key in keys)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: _keyRow(key),
+                child: _keyRow(key, context, l10n),
               ),
           ],
         );
@@ -317,7 +319,7 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
     );
   }
 
-  Widget _keyRow(AccessKey key) {
+  Widget _keyRow(AccessKey key, BuildContext context, AppLocalizations l10n) {
     final code = key.code;
     final statusColor = switch (key.status) {
       'ACTIVE' => AppColors.success,
@@ -346,8 +348,8 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
                 const SizedBox(height: 3),
                 Text(
                   key.expiresAt == null
-                      ? '${key.name} · бессрочно'
-                      : '${key.name} · до '
+                      ? '${key.name} · ${l10n.adminLifetime}'
+                      : '${key.name} · ${l10n.adminUntil} '
                           '${key.expiresAt!.toIso8601String().substring(0, 10)}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -381,12 +383,12 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
                 await Clipboard.setData(ClipboardData(text: code));
                 if (!mounted) return;
                 messenger.showSnackBar(
-                  SnackBar(content: Text(AppLocalizations.of(context)!.commonCopied)),
+                  SnackBar(content: Text(l10n.commonCopied)),
                 );
               },
               icon: const Icon(Icons.copy_rounded, size: 17),
               color: AppColors.textTertiary,
-              tooltip: 'Копировать',
+              tooltip: l10n.adminCopy,
             ),
         ],
       ),

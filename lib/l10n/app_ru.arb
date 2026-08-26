@@ -327,4 +327,41 @@
   "@serversAvailable": {
     "placeholders": { "count": { "type": "int" } }
   }
+,
+  "adminOwnerSection": "ВЛАДЕЛЕЦ",
+  "adminTitle": "Выпуск кодов доступа",
+  "adminSubtitle": "Создавайте коды для продажи и просматривайте все ключи",
+  "adminNoAccess": "У этой учётной записи нет прав администратора",
+  "adminIssueFailed": "Не удалось выпустить код: {error}",
+  "@adminIssueFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "adminDurationForever": "Навсегда",
+  "adminDuration30Days": "30 дней",
+  "adminDuration90Days": "90 дней",
+  "adminDuration1Year": "1 год",
+  "adminDurationDays": "{count} дней",
+  "@adminDurationDays": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "adminOwnerOnly": "Этот раздел доступен только владельцу приложения.",
+  "adminAllKeys": "Все ключи",
+  "adminRefresh": "Обновить",
+  "adminNameLabel": "Название (необязательно)",
+  "adminNameHint": "например: Клиент #1",
+  "adminDuration": "Срок действия",
+  "adminIssuing": "Выпуск…",
+  "adminIssue": "Выпустить код",
+  "adminCodeIssued": "Код выпущен — передайте его покупателю",
+  "adminCopyCode": "Копировать код",
+  "adminLoadFailed": "Не удалось загрузить ключи. Проверьте что backend запущен.\n{error}",
+  "@adminLoadFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "adminNoKeys": "Ключей пока нет.",
+  "adminUntil": "до",
+  "adminLifetime": "бессрочно",
+  "adminCopy": "Копировать",
+  "adminKeyIssue": "Выпуск ключей",
+  "adminKeyIssueHint": "Создать коды на продажу и посмотреть все ключи"
 }

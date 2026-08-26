@@ -952,4 +952,85 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String serversAvailable(int count) => '$count available from your key';
+
+  @override
+  String get adminOwnerSection => 'OWNER';
+
+  @override
+  String get adminTitle => 'Issue access codes';
+
+  @override
+  String get adminSubtitle => 'Create codes for sale and view all keys';
+
+  @override
+  String get adminNoAccess => 'This account does not have admin rights';
+
+  @override
+  String adminIssueFailed(String error) => 'Failed to issue code: $error';
+
+  @override
+  String get adminDurationForever => 'Forever';
+
+  @override
+  String get adminDuration30Days => '30 days';
+
+  @override
+  String get adminDuration90Days => '90 days';
+
+  @override
+  String get adminDuration1Year => '1 year';
+
+  @override
+  String adminDurationDays(int count) => '$count days';
+
+  @override
+  String get adminOwnerOnly => 'This section is only available to the app owner.';
+
+  @override
+  String get adminAllKeys => 'All keys';
+
+  @override
+  String get adminRefresh => 'Refresh';
+
+  @override
+  String get adminNameLabel => 'Name (optional)';
+
+  @override
+  String get adminNameHint => 'e.g. Client #1';
+
+  @override
+  String get adminDuration => 'Duration';
+
+  @override
+  String get adminIssuing => 'Issuing…';
+
+  @override
+  String get adminIssue => 'Issue code';
+
+  @override
+  String get adminCodeIssued => 'Code issued — give it to the buyer';
+
+  @override
+  String get adminCopyCode => 'Copy code';
+
+  @override
+  String adminLoadFailed(String error) => 'Failed to load keys. Make sure the backend is running.\n$error';
+
+  @override
+  String get adminNoKeys => 'No keys yet.';
+
+  @override
+  String get adminUntil => 'until';
+
+  @override
+  String get adminLifetime => 'lifetime';
+
+  @override
+  String get adminCopy => 'Copy';
+
+  @override
+  String get adminKeyIssue => 'Issue keys';
+
+  @override
+  String get adminKeyIssueHint => 'Create codes for sale and view all keys';
 }
