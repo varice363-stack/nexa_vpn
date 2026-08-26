@@ -51,19 +51,21 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
         await notifier.connect(source);
       }
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       messenger.showSnackBar(
         SnackBar(
           content: Text(
             wasConnected
-                ? 'Reconnected via ${source.label}'
-                : 'Selected ${source.label}',
+                ? l10n.serversReconnected(source.label)
+                : l10n.serversSelected(source.label),
           ),
         ),
       );
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       messenger.showSnackBar(
-        SnackBar(content: Text('Не удалось переключиться: $e')),
+        SnackBar(content: Text(l10n.serversSwitchError('$e'))),
       );
     } finally {
       if (mounted) setState(() => _switching = false);
@@ -88,10 +90,10 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     return AppPage(
       title: l10n.navServers,
       subtitle: sources.isEmpty
-          ? 'No servers yet'
-          : '${sources.length} available from your key',
+          ? l10n.serversEmptyTitle
+          : l10n.serversAvailable(sources.length),
       child: sources.isEmpty
-          ? _empty(context)
+          ? _empty(context, l10n)
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -111,9 +113,9 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                   ),
                   const SizedBox(height: 14),
                 ],
-                const Text(
-                  'ALL SERVERS',
-                  style: TextStyle(
+                Text(
+                  l10n.serversAll,
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.1,
@@ -127,11 +129,11 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                     child: _row(source, active?.id == source.id),
                   ),
                 if (visible.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Text(
-                      'Nothing matches that search.',
-                      style: TextStyle(
+                      l10n.serversNoMatch,
+                      style: const TextStyle(
                           color: AppColors.textSecondary, fontSize: 12.5),
                     ),
                   ),
@@ -140,7 +142,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     );
   }
 
-  Widget _empty(BuildContext context) {
+  Widget _empty(BuildContext context, AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.only(top: 40),
       child: Column(
@@ -148,19 +150,18 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
         children: [
           const Icon(Icons.dns_rounded, size: 34, color: AppColors.textTertiary),
           const SizedBox(height: 14),
-          const Text(
-            'No servers yet',
-            style: TextStyle(
+          Text(
+            l10n.serversEmptyTitle,
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Servers appear here once you add a key or a provider '
-            'subscription. Nothing is shown that you cannot connect to.',
-            style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+          Text(
+            l10n.serversEmptyBody,
+            style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 18),
           GestureDetector(
@@ -168,14 +169,14 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
             child: GlassContainer(
               borderRadius: BorderRadius.circular(14),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.vpn_key_rounded,
+                  const Icon(Icons.vpn_key_rounded,
                       size: 17, color: AppColors.primaryBright),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Text(
-                    'Add a key',
-                    style: TextStyle(
+                    l10n.serversAddKey,
+                    style: const TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
@@ -193,6 +194,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
   /// Answers "what am I connected to right now" — the question the old
   /// catalog could not answer.
   Widget _activeCard(ConnectionSource active, VpnStatus status) {
+    final l10n = AppLocalizations.of(context);
     final connected = status == VpnStatus.connected;
     final color = connected ? AppColors.success : AppColors.textTertiary;
 
@@ -214,7 +216,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  connected ? 'Connected' : 'Selected',
+                  connected ? l10n.serversConnected : l10n.serversSelectedStatus,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,

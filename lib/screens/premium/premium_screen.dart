@@ -202,7 +202,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
               },
             ),
             const SizedBox(height: 18),
-            const SectionHeader(title: 'CHOOSE YOUR PLAN'),
+            SectionHeader(title: l10n.premiumChoosePlan),
             for (var i = 0; i < plans.length; i++)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),

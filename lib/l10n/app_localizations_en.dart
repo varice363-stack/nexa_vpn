@@ -865,4 +865,91 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accessOfflineMessage => 'Cannot reach the server. Your access data will appear once the connection is back.';
+
+  @override
+  String get identityTitle => 'My Code';
+
+  @override
+  String get identitySubtitle => 'Instead of login and password';
+
+  @override
+  String get identityYourId => 'Your identifier';
+
+  @override
+  String get identityCopy => 'Copy';
+
+  @override
+  String get identityCodeCopied => 'Code copied';
+
+  @override
+  String get identitySaveNow => 'Save the code right now';
+
+  @override
+  String get identitySaveBody => 'This is the only way to restore paid access on another phone. We don\'t know your email and can\'t restore the code: we simply don\'t have it.\n\nWrite it down on paper or save it in a password manager.';
+
+  @override
+  String get identityTransferTitle => 'Transferring access?';
+
+  @override
+  String get identityTransferBody => 'If you have a code from a previous device, enter it — this code will be replaced.';
+
+  @override
+  String get identityEnterOther => 'Enter another code';
+
+  @override
+  String get identityDialogTitle => 'Enter another code';
+
+  @override
+  String get identityDialogBody => 'Enter the code saved on another device. The current code will be replaced.';
+
+  @override
+  String get identityApply => 'Apply';
+
+  @override
+  String get identityCodeApplied => 'Code applied';
+
+  @override
+  String get identityCodeRejected => 'Code didn\'t match';
+
+  @override
+  String get identityCode16Chars => 'Code must contain 16 characters';
+
+  @override
+  String get identityErrorTitle => 'Couldn\'t read the code';
+
+  @override
+  String get premiumChoosePlan => 'CHOOSE YOUR PLAN';
+
+  @override
+  String serversSwitchError(String error) => 'Failed to switch: $error';
+
+  @override
+  String get serversEmptyTitle => 'No servers yet';
+
+  @override
+  String get serversEmptyBody => 'Servers appear here once you add a key or a provider subscription. Nothing is shown that you cannot connect to.';
+
+  @override
+  String serversReconnected(String label) => 'Reconnected via $label';
+
+  @override
+  String serversSelected(String label) => 'Selected $label';
+
+  @override
+  String get serversAll => 'ALL SERVERS';
+
+  @override
+  String get serversNoMatch => 'Nothing matches that search.';
+
+  @override
+  String get serversAddKey => 'Add a key';
+
+  @override
+  String get serversConnected => 'Connected';
+
+  @override
+  String get serversSelectedStatus => 'Selected';
+
+  @override
+  String serversAvailable(int count) => '$count available from your key';
 }

@@ -1711,6 +1711,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cannot reach the server. Your access data will appear once the connection is back.'**
   String get accessOfflineMessage;
+
+  /// No description provided for @identityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Code'**
+  String get identityTitle;
+
+  /// No description provided for @identitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Instead of login and password'**
+  String get identitySubtitle;
+
+  /// No description provided for @identityYourId.
+  ///
+  /// In en, this message translates to:
+  /// **'Your identifier'**
+  String get identityYourId;
+
+  /// No description provided for @identityCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get identityCopy;
+
+  /// No description provided for @identityCodeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied'**
+  String get identityCodeCopied;
+
+  /// No description provided for @identitySaveNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the code right now'**
+  String get identitySaveNow;
+
+  /// No description provided for @identitySaveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the only way to restore paid access on another phone. We don\'t know your email and can\'t restore the code: we simply don\'t have it.\n\nWrite it down on paper or save it in a password manager.'**
+  String get identitySaveBody;
+
+  /// No description provided for @identityTransferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transferring access?'**
+  String get identityTransferTitle;
+
+  /// No description provided for @identityTransferBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If you have a code from a previous device, enter it — this code will be replaced.'**
+  String get identityTransferBody;
+
+  /// No description provided for @identityEnterOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter another code'**
+  String get identityEnterOther;
+
+  /// No description provided for @identityDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter another code'**
+  String get identityDialogTitle;
+
+  /// No description provided for @identityDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code saved on another device. The current code will be replaced.'**
+  String get identityDialogBody;
+
+  /// No description provided for @identityApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get identityApply;
+
+  /// No description provided for @identityCodeApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code applied'**
+  String get identityCodeApplied;
+
+  /// No description provided for @identityCodeRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Code didn\'t match'**
+  String get identityCodeRejected;
+
+  /// No description provided for @identityCode16Chars.
+  ///
+  /// In en, this message translates to:
+  /// **'Code must contain 16 characters'**
+  String get identityCode16Chars;
+
+  /// No description provided for @identityErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the code'**
+  String get identityErrorTitle;
+
+  /// No description provided for @premiumChoosePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'CHOOSE YOUR PLAN'**
+  String get premiumChoosePlan;
+
+  /// No description provided for @serversSwitchError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to switch: {error}'**
+  String serversSwitchError(String error);
+
+  /// No description provided for @serversEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No servers yet'**
+  String get serversEmptyTitle;
+
+  /// No description provided for @serversEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Servers appear here once you add a key or a provider subscription. Nothing is shown that you cannot connect to.'**
+  String get serversEmptyBody;
+
+  /// No description provided for @serversReconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnected via {label}'**
+  String serversReconnected(String label);
+
+  /// No description provided for @serversSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected {label}'**
+  String serversSelected(String label);
+
+  /// No description provided for @serversAll.
+  ///
+  /// In en, this message translates to:
+  /// **'ALL SERVERS'**
+  String get serversAll;
+
+  /// No description provided for @serversNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matches that search.'**
+  String get serversNoMatch;
+
+  /// No description provided for @serversAddKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a key'**
+  String get serversAddKey;
+
+  /// No description provided for @serversConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get serversConnected;
+
+  /// No description provided for @serversSelectedStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get serversSelectedStatus;
+
+  /// No description provided for @serversAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} available from your key'**
+  String serversAvailable(int count);
 }
 
 class _AppLocalizationsDelegate

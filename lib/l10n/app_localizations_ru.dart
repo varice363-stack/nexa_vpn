@@ -873,4 +873,91 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get accessOfflineMessage => 'Нет связи с сервером. Данные доступа появятся после восстановления соединения.';
+
+  @override
+  String get identityTitle => 'Мой код';
+
+  @override
+  String get identitySubtitle => 'Вместо логина и пароля';
+
+  @override
+  String get identityYourId => 'Ваш идентификатор';
+
+  @override
+  String get identityCopy => 'Скопировать';
+
+  @override
+  String get identityCodeCopied => 'Код скопирован';
+
+  @override
+  String get identitySaveNow => 'Сохраните код прямо сейчас';
+
+  @override
+  String get identitySaveBody => 'Это единственный способ вернуть оплаченный доступ на другом телефоне. Мы не знаем вашей почты и не сможем восстановить код: у нас его просто нет.\n\nЗапишите его на бумаге или сохраните в менеджере паролей.';
+
+  @override
+  String get identityTransferTitle => 'Переносите доступ?';
+
+  @override
+  String get identityTransferBody => 'Если у вас есть код с прежнего устройства, введите его — этот код будет заменён.';
+
+  @override
+  String get identityEnterOther => 'Ввести другой код';
+
+  @override
+  String get identityDialogTitle => 'Ввести другой код';
+
+  @override
+  String get identityDialogBody => 'Введите код, сохранённый на другом устройстве. Текущий код будет заменён.';
+
+  @override
+  String get identityApply => 'Применить';
+
+  @override
+  String get identityCodeApplied => 'Код применён';
+
+  @override
+  String get identityCodeRejected => 'Код не подошёл';
+
+  @override
+  String get identityCode16Chars => 'Код должен содержать 16 знаков';
+
+  @override
+  String get identityErrorTitle => 'Не удалось прочитать код';
+
+  @override
+  String get premiumChoosePlan => 'ВЫБЕРИТЕ ТАРИФ';
+
+  @override
+  String serversSwitchError(String error) => 'Не удалось переключиться: $error';
+
+  @override
+  String get serversEmptyTitle => 'Пока нет серверов';
+
+  @override
+  String get serversEmptyBody => 'Серверы появятся здесь после добавления ключа или подписки провайдера. Показываются только те, к которым можно подключиться.';
+
+  @override
+  String serversReconnected(String label) => 'Переподключено через $label';
+
+  @override
+  String serversSelected(String label) => 'Выбран $label';
+
+  @override
+  String get serversAll => 'ВСЕ СЕРВЕРЫ';
+
+  @override
+  String get serversNoMatch => 'Ничего не найдено.';
+
+  @override
+  String get serversAddKey => 'Добавить ключ';
+
+  @override
+  String get serversConnected => 'Подключено';
+
+  @override
+  String get serversSelectedStatus => 'Выбрано';
+
+  @override
+  String serversAvailable(int count) => 'Доступно $count из вашего ключа';
 }

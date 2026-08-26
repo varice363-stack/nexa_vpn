@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../providers/identity_providers.dart';
 import '../../services/identity/device_identity.dart';
 import '../../theme/app_colors.dart';
@@ -19,11 +20,12 @@ class IdentityScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final identity = ref.watch(identityProvider);
 
     return AppPage(
-      title: 'Мой код',
-      subtitle: 'Вместо логина и пароля',
+      title: l10n.identityTitle,
+      subtitle: l10n.identitySubtitle,
       child: identity.when(
         loading: () => const Padding(
           padding: EdgeInsets.only(top: 60),
@@ -56,6 +58,7 @@ class _Body extends ConsumerWidget {
   }
 
   Future<void> _askRestore(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
     String? error;
 
@@ -64,18 +67,17 @@ class _Body extends ConsumerWidget {
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
           backgroundColor: AppColors.surface,
-          title: const Text(
-            'Ввести другой код',
-            style: TextStyle(color: AppColors.textPrimary, fontSize: 17),
+          title: Text(
+            l10n.identityDialogTitle,
+            style: const TextStyle(color: AppColors.textPrimary, fontSize: 17),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Введите код, сохранённый на другом устройстве. '
-                'Текущий код будет заменён.',
-                style: TextStyle(
+              Text(
+                l10n.identityDialogBody,
+                style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 13,
                   height: 1.35,
@@ -106,19 +108,19 @@ class _Body extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Отмена'),
+              child: Text(l10n.commonCancel),
             ),
             TextButton(
               onPressed: () {
                 // Проверяем формат до закрытия окна: иначе человек решит,
                 // что код принят, и потеряет прежний.
                 if (!DeviceIdentity.isValid(controller.text)) {
-                  setDialogState(() => error = 'Код должен содержать 16 знаков');
+                  setDialogState(() => error = l10n.identityCode16Chars);
                   return;
                 }
                 Navigator.of(dialogContext).pop(true);
               },
-              child: const Text('Применить'),
+              child: Text(l10n.identityApply),
             ),
           ],
         ),
@@ -133,7 +135,7 @@ class _Body extends ConsumerWidget {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(ok ? 'Код применён' : 'Код не подошёл'),
+        content: Text(ok ? l10n.identityCodeApplied : l10n.identityCodeRejected),
         backgroundColor: ok ? AppColors.success : AppColors.danger,
       ),
     );
@@ -148,6 +150,7 @@ class _CodeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     // Разбиваем на строки по две группы: 16 знаков в одну строку на узком
     // экране не помещаются и переносятся в непредсказуемом месте.
     final parts = code.split('-');
@@ -170,7 +173,7 @@ class _CodeCard extends StatelessWidget {
                   size: 20, color: AppColors.primary),
               const SizedBox(width: 10),
               Text(
-                'Ваш идентификатор',
+                l10n.identityYourId,
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
@@ -193,7 +196,7 @@ class _CodeCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           GlassButton(
-            label: 'Скопировать',
+            label: l10n.identityCopy,
             icon: Icons.copy_rounded,
             gradient: AppColors.primaryGradient,
             foreground: Colors.white,
@@ -201,7 +204,7 @@ class _CodeCard extends StatelessWidget {
               await Clipboard.setData(ClipboardData(text: code));
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Код скопирован')),
+                SnackBar(content: Text(l10n.identityCodeCopied)),
               );
             },
           ),
@@ -217,23 +220,24 @@ class _WarningCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return GlassContainer(
       borderRadius: BorderRadius.circular(18),
       padding: const EdgeInsets.all(16),
       color: AppColors.premium.withValues(alpha: 0.05),
       borderColor: AppColors.premium.withValues(alpha: 0.22),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.warning_amber_rounded,
+              const Icon(Icons.warning_amber_rounded,
                   size: 20, color: AppColors.premium),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Сохраните код прямо сейчас',
-                  style: TextStyle(
+                  l10n.identitySaveNow,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -242,13 +246,10 @@ class _WarningCard extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
-            'Это единственный способ вернуть оплаченный доступ на другом '
-            'телефоне. Мы не знаем вашей почты и не сможем восстановить код: '
-            'у нас его просто нет.\n\n'
-            'Запишите его на бумаге или сохраните в менеджере паролей.',
-            style: TextStyle(
+            l10n.identitySaveBody,
+            style: const TextStyle(
               fontSize: 12.5,
               height: 1.4,
               color: AppColors.textSecondary,
@@ -268,25 +269,25 @@ class _RestoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return GlassContainer(
       borderRadius: BorderRadius.circular(18),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Переносите доступ?',
-            style: TextStyle(
+          Text(
+            l10n.identityTransferTitle,
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Если у вас есть код с прежнего устройства, введите его — '
-            'этот код будет заменён.',
-            style: TextStyle(
+          Text(
+            l10n.identityTransferBody,
+            style: const TextStyle(
               fontSize: 12.5,
               height: 1.35,
               color: AppColors.textSecondary,
@@ -294,7 +295,7 @@ class _RestoreCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           GlassButton(
-            label: 'Ввести другой код',
+            label: l10n.identityEnterOther,
             icon: Icons.login_rounded,
             onTap: onRestore,
           ),
@@ -311,6 +312,7 @@ class _ErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return GlassContainer(
       borderRadius: BorderRadius.circular(18),
       padding: const EdgeInsets.all(16),
@@ -319,9 +321,9 @@ class _ErrorCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Не удалось прочитать код',
-            style: TextStyle(
+          Text(
+            l10n.identityErrorTitle,
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,

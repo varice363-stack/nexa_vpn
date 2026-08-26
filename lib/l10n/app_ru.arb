@@ -285,5 +285,46 @@
   "accessExpires": "истекает",
   "accessDevice": "устройство",
   "accessDevices": "устройства",
-  "accessOfflineMessage": "Нет связи с сервером. Данные доступа появятся после восстановления соединения."
+  "accessOfflineMessage": "Нет связи с сервером. Данные доступа появятся после восстановления соединения.",
+  "identityTitle": "Мой код",
+  "identitySubtitle": "Вместо логина и пароля",
+  "identityYourId": "Ваш идентификатор",
+  "identityCopy": "Скопировать",
+  "identityCodeCopied": "Код скопирован",
+  "identitySaveNow": "Сохраните код прямо сейчас",
+  "identitySaveBody": "Это единственный способ вернуть оплаченный доступ на другом телефоне. Мы не знаем вашей почты и не сможем восстановить код: у нас его просто нет.\n\nЗапишите его на бумаге или сохраните в менеджере паролей.",
+  "identityTransferTitle": "Переносите доступ?",
+  "identityTransferBody": "Если у вас есть код с прежнего устройства, введите его — этот код будет заменён.",
+  "identityEnterOther": "Ввести другой код",
+  "identityDialogTitle": "Ввести другой код",
+  "identityDialogBody": "Введите код, сохранённый на другом устройстве. Текущий код будет заменён.",
+  "identityApply": "Применить",
+  "identityCodeApplied": "Код применён",
+  "identityCodeRejected": "Код не подошёл",
+  "identityCode16Chars": "Код должен содержать 16 знаков",
+  "identityErrorTitle": "Не удалось прочитать код",
+  "premiumChoosePlan": "ВЫБЕРИТЕ ТАРИФ",
+  "serversSwitchError": "Не удалось переключиться: {error}",
+  "@serversSwitchError": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "serversEmptyTitle": "Пока нет серверов",
+  "serversEmptyBody": "Серверы появятся здесь после добавления ключа или подписки провайдера. Показываются только те, к которым можно подключиться.",
+  "serversReconnected": "Переподключено через {label}",
+  "@serversReconnected": {
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "serversSelected": "Выбран {label}",
+  "@serversSelected": {
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "serversAll": "ВСЕ СЕРВЕРЫ",
+  "serversNoMatch": "Ничего не найдено.",
+  "serversAddKey": "Добавить ключ",
+  "serversConnected": "Подключено",
+  "serversSelectedStatus": "Выбрано",
+  "serversAvailable": "Доступно {count} из вашего ключа",
+  "@serversAvailable": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }

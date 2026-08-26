@@ -285,5 +285,46 @@
   "accessExpires": "expires",
   "accessDevice": "device",
   "accessDevices": "devices",
-  "accessOfflineMessage": "Cannot reach the server. Your access data will appear once the connection is back."
+  "accessOfflineMessage": "Cannot reach the server. Your access data will appear once the connection is back.",
+  "identityTitle": "My Code",
+  "identitySubtitle": "Instead of login and password",
+  "identityYourId": "Your identifier",
+  "identityCopy": "Copy",
+  "identityCodeCopied": "Code copied",
+  "identitySaveNow": "Save the code right now",
+  "identitySaveBody": "This is the only way to restore paid access on another phone. We don't know your email and can't restore the code: we simply don't have it.\n\nWrite it down on paper or save it in a password manager.",
+  "identityTransferTitle": "Transferring access?",
+  "identityTransferBody": "If you have a code from a previous device, enter it — this code will be replaced.",
+  "identityEnterOther": "Enter another code",
+  "identityDialogTitle": "Enter another code",
+  "identityDialogBody": "Enter the code saved on another device. The current code will be replaced.",
+  "identityApply": "Apply",
+  "identityCodeApplied": "Code applied",
+  "identityCodeRejected": "Code didn't match",
+  "identityCode16Chars": "Code must contain 16 characters",
+  "identityErrorTitle": "Couldn't read the code",
+  "premiumChoosePlan": "CHOOSE YOUR PLAN",
+  "serversSwitchError": "Failed to switch: {error}",
+  "@serversSwitchError": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "serversEmptyTitle": "No servers yet",
+  "serversEmptyBody": "Servers appear here once you add a key or a provider subscription. Nothing is shown that you cannot connect to.",
+  "serversReconnected": "Reconnected via {label}",
+  "@serversReconnected": {
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "serversSelected": "Selected {label}",
+  "@serversSelected": {
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "serversAll": "ALL SERVERS",
+  "serversNoMatch": "Nothing matches that search.",
+  "serversAddKey": "Add a key",
+  "serversConnected": "Connected",
+  "serversSelectedStatus": "Selected",
+  "serversAvailable": "{count} available from your key",
+  "@serversAvailable": {
+    "placeholders": { "count": { "type": "int" } }
+  }
 }
