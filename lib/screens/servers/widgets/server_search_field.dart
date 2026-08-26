@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_colors.dart';
 import '../../../widgets/common/glass_container.dart';
 
@@ -59,24 +60,29 @@ class _ServerSearchFieldState extends State<ServerSearchField> {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: TextField(
-                  controller: widget.controller,
-                  onChanged: widget.onChanged,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textPrimary,
-                  ),
-                  cursorColor: AppColors.primary,
-                  decoration: const InputDecoration(
-                    hintText: 'Search country or city',
-                    hintStyle: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textTertiary,
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 14),
-                  ),
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context);
+                    return TextField(
+                      controller: widget.controller,
+                      onChanged: widget.onChanged,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textPrimary,
+                      ),
+                      cursorColor: AppColors.primary,
+                      decoration: InputDecoration(
+                        hintText: l10n.serversSearchByCity,
+                        hintStyle: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textTertiary,
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    );
+                  },
                 ),
               ),
               ValueListenableBuilder<TextEditingValue>(

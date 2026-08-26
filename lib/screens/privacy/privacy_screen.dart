@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/datasources/static_content.dart';
+import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/app_page.dart';
 import '../../widgets/common/glass_container.dart';
@@ -11,8 +12,9 @@ class PrivacyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AppPage(
-      title: 'Privacy Policy',
+      title: l10n.privacyPolicyTitle,
       subtitle: 'Last updated: August 2026',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -103,10 +103,10 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                     onChanged: (v) =>
                         setState(() => _query = v.trim().toLowerCase()),
                     style: const TextStyle(color: AppColors.textPrimary),
-                    decoration: const InputDecoration(
-                      hintText: 'Search by name or host',
-                      hintStyle: TextStyle(color: AppColors.textTertiary),
-                      prefixIcon: Icon(Icons.search_rounded, size: 18),
+                    decoration: InputDecoration(
+                      hintText: l10n.serversSearchByName,
+                      hintStyle: const TextStyle(color: AppColors.textTertiary),
+                      prefixIcon: const Icon(Icons.search_rounded, size: 18),
                     ),
                   ),
                   const SizedBox(height: 14),

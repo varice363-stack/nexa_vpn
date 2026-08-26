@@ -828,4 +828,16 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get keyEntryOpen => 'У меня есть ключ';
+
+  @override
+  String get faqTitle => 'Частые вопросы';
+
+  @override
+  String get privacyPolicyTitle => 'Политика конфиденциальности';
+
+  @override
+  String get serversSearchByName => 'Поиск по имени или хосту';
+
+  @override
+  String get serversSearchByCity => 'Поиск по стране или городу';
 }

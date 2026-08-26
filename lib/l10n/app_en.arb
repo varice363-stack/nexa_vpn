@@ -270,5 +270,9 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "keyEntryErrorUnsupportedScheme2": "Only vless:// links and https:// subscriptions are supported.",
-  "keyEntryOpen": "I have a key"
+  "keyEntryOpen": "I have a key",
+  "faqTitle": "FAQ",
+  "privacyPolicyTitle": "Privacy Policy",
+  "serversSearchByName": "Search by name or host",
+  "serversSearchByCity": "Search country or city"
 }

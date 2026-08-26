@@ -270,5 +270,9 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "keyEntryErrorUnsupportedScheme2": "Поддерживаются только ссылки vless:// и подписки https://.",
-  "keyEntryOpen": "У меня есть ключ"
+  "keyEntryOpen": "У меня есть ключ",
+  "faqTitle": "Частые вопросы",
+  "privacyPolicyTitle": "Политика конфиденциальности",
+  "serversSearchByName": "Поиск по имени или хосту",
+  "serversSearchByCity": "Поиск по стране или городу"
 }

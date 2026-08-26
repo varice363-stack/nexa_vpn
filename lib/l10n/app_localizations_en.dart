@@ -820,4 +820,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keyEntryOpen => 'I have a key';
+
+  @override
+  String get faqTitle => 'FAQ';
+
+  @override
+  String get privacyPolicyTitle => 'Privacy Policy';
+
+  @override
+  String get serversSearchByName => 'Search by name or host';
+
+  @override
+  String get serversSearchByCity => 'Search country or city';
 }

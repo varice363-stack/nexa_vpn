@@ -1621,6 +1621,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I have a key'**
   String get keyEntryOpen;
+
+  /// No description provided for @faqTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'FAQ'**
+  String get faqTitle;
+
+  /// No description provided for @privacyPolicyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicyTitle;
+
+  /// No description provided for @serversSearchByName.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or host'**
+  String get serversSearchByName;
+
+  /// No description provided for @serversSearchByCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Search country or city'**
+  String get serversSearchByCity;
 }
 
 class _AppLocalizationsDelegate

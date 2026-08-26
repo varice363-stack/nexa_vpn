@@ -87,7 +87,7 @@ class AboutScreen extends ConsumerWidget {
           ),
           GlassListTile(
             icon: Icons.help_center_rounded,
-            title: 'FAQ',
+            title: l10n.faqTitle,
             subtitle: l10n.aboutFaqHint,
             onTap: () => context.push('/faq'),
           ),

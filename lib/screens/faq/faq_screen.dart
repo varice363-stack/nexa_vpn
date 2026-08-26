@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/datasources/static_content.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/faq_entry.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/app_page.dart';
@@ -19,8 +20,9 @@ class _FaqScreenState extends State<FaqScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AppPage(
-      title: 'FAQ',
+      title: l10n.faqTitle,
       subtitle: '${StaticContent.faq.length} questions',
       child: Column(
         children: [

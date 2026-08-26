@@ -54,7 +54,7 @@ class ServerFilterBar extends StatelessWidget {
           ),
           _FilterOption(
             icon: Icons.workspace_premium_rounded,
-            label: 'Premium',
+            label: l10n.serversFilterPremium,
             premium: true,
             selected: mode == ServersViewMode.premium,
             onTap: () => onChanged(ServersViewMode.premium),
