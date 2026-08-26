@@ -832,4 +832,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serversSearchByCity => 'Search country or city';
+
+  @override
+  String get accessKeysHeader => 'ACCESS KEYS';
+
+  @override
+  String get accessNoActiveWarning => 'No active access — renew your subscription to activate a key.';
+
+  @override
+  String get accessGenerateHintLong => 'Get access to generate your personal key — usable in the Nexa app and any compatible client.';
+
+  @override
+  String get accessStatusActive => 'ACTIVE';
+
+  @override
+  String get accessStatusExpired => 'EXPIRED';
+
+  @override
+  String get accessStatusRevoked => 'REVOKED';
+
+  @override
+  String get accessLastUsed => 'last used';
+
+  @override
+  String get accessExpires => 'expires';
+
+  @override
+  String get accessDevice => 'device';
+
+  @override
+  String get accessDevices => 'devices';
+
+  @override
+  String get accessOfflineMessage => 'Cannot reach the server. Your access data will appear once the connection is back.';
 }

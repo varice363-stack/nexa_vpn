@@ -274,5 +274,16 @@
   "faqTitle": "Частые вопросы",
   "privacyPolicyTitle": "Политика конфиденциальности",
   "serversSearchByName": "Поиск по имени или хосту",
-  "serversSearchByCity": "Поиск по стране или городу"
+  "serversSearchByCity": "Поиск по стране или городу",
+  "accessKeysHeader": "КЛЮЧИ ДОСТУПА",
+  "accessNoActiveWarning": "Нет активного доступа — продлите подписку для активации ключа.",
+  "accessGenerateHintLong": "Получите доступ для создания персонального ключа — работает в приложении Nexa и любом совместимом клиенте.",
+  "accessStatusActive": "АКТИВЕН",
+  "accessStatusExpired": "ИСТЁК",
+  "accessStatusRevoked": "ОТОЗВАН",
+  "accessLastUsed": "использован",
+  "accessExpires": "истекает",
+  "accessDevice": "устройство",
+  "accessDevices": "устройства",
+  "accessOfflineMessage": "Нет связи с сервером. Данные доступа появятся после восстановления соединения."
 }

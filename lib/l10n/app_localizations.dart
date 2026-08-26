@@ -1645,6 +1645,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search country or city'**
   String get serversSearchByCity;
+
+  /// No description provided for @accessKeysHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'ACCESS KEYS'**
+  String get accessKeysHeader;
+
+  /// No description provided for @accessNoActiveWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'No active access — renew your subscription to activate a key.'**
+  String get accessNoActiveWarning;
+
+  /// No description provided for @accessGenerateHintLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Get access to generate your personal key — usable in the Nexa app and any compatible client.'**
+  String get accessGenerateHintLong;
+
+  /// No description provided for @accessStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE'**
+  String get accessStatusActive;
+
+  /// No description provided for @accessStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'EXPIRED'**
+  String get accessStatusExpired;
+
+  /// No description provided for @accessStatusRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'REVOKED'**
+  String get accessStatusRevoked;
+
+  /// No description provided for @accessLastUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'last used'**
+  String get accessLastUsed;
+
+  /// No description provided for @accessExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'expires'**
+  String get accessExpires;
+
+  /// No description provided for @accessDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'device'**
+  String get accessDevice;
+
+  /// No description provided for @accessDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'devices'**
+  String get accessDevices;
+
+  /// No description provided for @accessOfflineMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot reach the server. Your access data will appear once the connection is back.'**
+  String get accessOfflineMessage;
 }
 
 class _AppLocalizationsDelegate

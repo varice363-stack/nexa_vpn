@@ -840,4 +840,37 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get serversSearchByCity => 'Поиск по стране или городу';
+
+  @override
+  String get accessKeysHeader => 'КЛЮЧИ ДОСТУПА';
+
+  @override
+  String get accessNoActiveWarning => 'Нет активного доступа — продлите подписку для активации ключа.';
+
+  @override
+  String get accessGenerateHintLong => 'Получите доступ для создания персонального ключа — работает в приложении Nexa и любом совместимом клиенте.';
+
+  @override
+  String get accessStatusActive => 'АКТИВЕН';
+
+  @override
+  String get accessStatusExpired => 'ИСТЁК';
+
+  @override
+  String get accessStatusRevoked => 'ОТОЗВАН';
+
+  @override
+  String get accessLastUsed => 'использован';
+
+  @override
+  String get accessExpires => 'истекает';
+
+  @override
+  String get accessDevice => 'устройство';
+
+  @override
+  String get accessDevices => 'устройства';
+
+  @override
+  String get accessOfflineMessage => 'Нет связи с сервером. Данные доступа появятся после восстановления соединения.';
 }

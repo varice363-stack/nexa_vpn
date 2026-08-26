@@ -90,7 +90,7 @@ class MyAccessScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    const SectionHeader(title: 'ACCESS KEYS'),
+                    SectionHeader(title: l10n.accessKeysHeader),
                     // ── No active access banner ─────────────────────────
                     if (keys.isNotEmpty && !keys.any((k) => k.isActive)) ...[
                       Padding(
@@ -104,19 +104,18 @@ class MyAccessScreen extends ConsumerWidget {
                           color: AppColors.warning.withValues(alpha: 0.08),
                           borderColor:
                               AppColors.warning.withValues(alpha: 0.3),
-                          child: const Row(
+                          child: Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.warning_amber_rounded,
                                 size: 18,
                                 color: AppColors.warning,
                               ),
-                              SizedBox(width: 10),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
-                                  'No active access — renew your subscription '
-                                  'to activate a key.',
-                                  style: TextStyle(
+                                  l10n.accessNoActiveWarning,
+                                  style: const TextStyle(
                                     fontSize: 12.5,
                                     color: AppColors.textSecondary,
                                   ),
@@ -140,9 +139,7 @@ class MyAccessScreen extends ConsumerWidget {
                       EmptyState(
                         icon: Icons.vpn_key_off_rounded,
                         title: l10n.accessNoKeys,
-                        message:
-                            'Get access to generate your personal key — '
-                            'usable in the Nexa app and any compatible client.',
+                        message: l10n.accessGenerateHintLong,
                         actionLabel: l10n.accessGetAccess,
                         onAction: () => context.push('/premium'),
                       )
@@ -309,10 +306,11 @@ class _KeyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final (statusColor, statusLabel) = switch (accessKey.status) {
-      'ACTIVE' => (AppColors.success, 'ACTIVE'),
-      'EXPIRED' => (AppColors.warning, 'EXPIRED'),
-      _ => (AppColors.danger, 'REVOKED'),
+      'ACTIVE' => (AppColors.success, l10n.accessStatusActive),
+      'EXPIRED' => (AppColors.warning, l10n.accessStatusExpired),
+      _ => (AppColors.danger, l10n.accessStatusRevoked),
     };
 
     return GlassContainer(
@@ -382,7 +380,7 @@ class _KeyCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _meta(),
+                  _meta(l10n),
                   style: const TextStyle(
                     fontSize: 11.5,
                     color: AppColors.textTertiary,
@@ -406,13 +404,13 @@ class _KeyCard extends StatelessWidget {
     );
   }
 
-  String _meta() {
+  String _meta(AppLocalizations l10n) {
     final parts = <String>[
       if (accessKey.lastUsedAt != null)
-        'last used ${Formatters.shortDate(accessKey.lastUsedAt!)}',
+        '${l10n.accessLastUsed} ${Formatters.shortDate(accessKey.lastUsedAt!)}',
       if (accessKey.expiresAt != null)
-        'expires ${Formatters.shortDate(accessKey.expiresAt!)}',
-      '${accessKey.deviceCount} ${accessKey.deviceCount == 1 ? 'device' : 'devices'}',
+        '${l10n.accessExpires} ${Formatters.shortDate(accessKey.expiresAt!)}',
+      '${accessKey.deviceCount} ${accessKey.deviceCount == 1 ? l10n.accessDevice : l10n.accessDevices}',
     ];
     return parts.join(' · ');
   }
@@ -507,9 +505,7 @@ class _OfflineState extends StatelessWidget {
     return EmptyState(
       icon: Icons.cloud_off_rounded,
       title: l10n.commonOffline,
-      message:
-          'Cannot reach the server. Your access data will appear once the '
-          'connection is back.',
+      message: l10n.accessOfflineMessage,
       actionLabel: l10n.commonRetry,
       onAction: onRetry,
     );

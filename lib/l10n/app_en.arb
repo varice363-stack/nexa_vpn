@@ -274,5 +274,16 @@
   "faqTitle": "FAQ",
   "privacyPolicyTitle": "Privacy Policy",
   "serversSearchByName": "Search by name or host",
-  "serversSearchByCity": "Search country or city"
+  "serversSearchByCity": "Search country or city",
+  "accessKeysHeader": "ACCESS KEYS",
+  "accessNoActiveWarning": "No active access — renew your subscription to activate a key.",
+  "accessGenerateHintLong": "Get access to generate your personal key — usable in the Nexa app and any compatible client.",
+  "accessStatusActive": "ACTIVE",
+  "accessStatusExpired": "EXPIRED",
+  "accessStatusRevoked": "REVOKED",
+  "accessLastUsed": "last used",
+  "accessExpires": "expires",
+  "accessDevice": "device",
+  "accessDevices": "devices",
+  "accessOfflineMessage": "Cannot reach the server. Your access data will appear once the connection is back."
 }
