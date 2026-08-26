@@ -1033,4 +1033,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminKeyIssueHint => 'Create codes for sale and view all keys';
+
+  @override
+  String get profileLoadError => 'Failed to load subscription data. Check your connection.';
+
+  @override
+  String get notificationsLoadError => 'Failed to load notifications. Check your connection.';
 }

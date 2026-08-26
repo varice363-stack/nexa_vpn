@@ -1041,4 +1041,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get adminKeyIssueHint => 'Создать коды на продажу и посмотреть все ключи';
+
+  @override
+  String get profileLoadError => 'Не удалось загрузить данные подписки. Проверьте подключение.';
+
+  @override
+  String get notificationsLoadError => 'Не удалось загрузить уведомления. Проверьте подключение.';
 }

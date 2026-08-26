@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../core/utils/app_logger.dart';
+import '../../core/utils/retry.dart';
 import 'api_config.dart';
 import 'api_exception.dart';
 import 'token_storage.dart';
@@ -49,6 +50,27 @@ class ApiClient {
 
     _logger?.debug('$method $path', source: 'api');
 
+    // Retry только на сетевые ошибки, не на 4xx/5xx.
+    return await retry(
+      () => _executeRequest(method, uri, headers, body),
+      maxAttempts: 3,
+      shouldRetry: (error) {
+        // Retry только на timeout и network errors.
+        if (error is ApiException) {
+          return error.isNetworkError || error.code == 'TIMEOUT';
+        }
+        return error is TimeoutException || error is http.ClientException;
+      },
+      logger: _logger,
+    );
+  }
+
+  Future<dynamic> _executeRequest(
+    String method,
+    Uri uri,
+    Map<String, String> headers,
+    Object? body,
+  ) async {
     late http.Response response;
     try {
       response = switch (method) {
@@ -80,7 +102,7 @@ class ApiClient {
     }
 
     final message = _errorMessage(decoded, response.statusCode);
-    _logger?.warn('$method $path → ${response.statusCode}: $message',
+    _logger?.warn('$method ${uri.path} → ${response.statusCode}: $message',
         source: 'api');
     throw ApiException(
       message,

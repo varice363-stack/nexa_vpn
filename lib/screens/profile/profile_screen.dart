@@ -10,6 +10,7 @@ import '../../providers/subscription_providers.dart';
 import '../../providers/session_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/app_page.dart';
+import '../../widgets/common/error_display.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/glass_list_tile.dart';
 import '../../widgets/common/section_header.dart';
@@ -21,10 +22,23 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final subscription = ref.watch(subscriptionProvider).value;
+    final subscriptionAsync = ref.watch(subscriptionProvider);
+    final subscription = subscriptionAsync.value;
     final isPremium = subscription?.isPremium ?? false;
     final sessions = ref.watch(sessionsProvider).value ?? const [];
     final unread = ref.watch(unreadNotificationsProvider);
+
+    // Если загрузка подписки упала с ошибкой — покажем понятное сообщение.
+    if (subscriptionAsync.hasError && subscription == null) {
+      return AppPage(
+        title: l10n.profileTitle,
+        subtitle: l10n.commonFreePlan,
+        child: ErrorDisplay(
+          message: l10n.profileLoadError,
+          onRetry: () => ref.read(subscriptionProvider.notifier).refresh(),
+        ),
+      );
+    }
 
     return AppPage(
       title: l10n.profileTitle,

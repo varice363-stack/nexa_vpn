@@ -1939,6 +1939,10 @@ abstract class AppLocalizations {
   String get adminKeyIssue;
 
   String get adminKeyIssueHint;
+
+  String get profileLoadError;
+
+  String get notificationsLoadError;
 }
 
 class _AppLocalizationsDelegate

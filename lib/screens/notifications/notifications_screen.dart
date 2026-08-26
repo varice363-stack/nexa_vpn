@@ -8,6 +8,7 @@ import '../../providers/notifications_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/app_page.dart';
 import '../../widgets/common/empty_state.dart';
+import '../../widgets/common/error_display.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../core/utils/formatters.dart';
 
@@ -18,8 +19,21 @@ class NotificationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final notificationsAsync = ref.watch(notificationProvider);
     final notifications =
-        ref.watch(notificationProvider).value ?? const <AppNotification>[];
+        notificationsAsync.value ?? const <AppNotification>[];
+
+    // Если загрузка уведомлений упала — покажем понятное сообщение.
+    if (notificationsAsync.hasError && notifications.isEmpty) {
+      return AppPage(
+        title: l10n.notificationsTitle,
+        subtitle: '0 unread',
+        child: ErrorDisplay(
+          message: l10n.notificationsLoadError,
+          onRetry: () => ref.read(notificationProvider.notifier).refresh(),
+        ),
+      );
+    }
 
     return AppPage(
       title: l10n.notificationsTitle,

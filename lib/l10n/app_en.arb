@@ -364,4 +364,8 @@
   "adminCopy": "Copy",
   "adminKeyIssue": "Issue keys",
   "adminKeyIssueHint": "Create codes for sale and view all keys"
+,
+  "profileLoadError": "Failed to load subscription data. Check your connection."
+,
+  "notificationsLoadError": "Failed to load notifications. Check your connection."
 }
