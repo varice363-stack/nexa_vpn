@@ -78,17 +78,6 @@ class SettingsScreen extends ConsumerWidget {
             onChanged: (v) =>
                 ref.read(settingsProvider.notifier).setAutoConnect(v),
           ),
-          SectionHeader(title: l10n.settingsSectionData),
-          _ActionRow(
-            title: l10n.settingsClearLogs,
-            subtitle: l10n.settingsClearLogsHint,
-            onTap: () {
-              ref.read(loggerProvider).clear();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.settingsLogsCleared)),
-              );
-            },
-          ),
           SectionHeader(title: l10n.settingsSectionApp),
           _LanguageRow(
             title: l10n.settingsLanguage,

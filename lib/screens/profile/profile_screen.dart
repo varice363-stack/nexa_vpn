@@ -60,22 +60,10 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: 20),
           const SectionHeader(title: 'ACCOUNT'),
           GlassListTile(
-            icon: Icons.vpn_key_rounded,
-            title: 'My Access',
-            subtitle: 'Subscription and access keys',
-            onTap: () => context.push('/access'),
-          ),
-          GlassListTile(
             icon: Icons.receipt_long_rounded,
             title: 'Payment History',
             subtitle: 'Checkouts and payments',
             onTap: () => context.push('/payment-history'),
-          ),
-          GlassListTile(
-            icon: Icons.star_rounded,
-            title: 'Favorites',
-            subtitle: 'Saved locations',
-            onTap: () => context.push('/favorites'),
           ),
           GlassListTile(
             icon: Icons.notifications_rounded,
@@ -89,12 +77,6 @@ class ProfileScreen extends ConsumerWidget {
             title: 'Settings',
             subtitle: 'Protocol, kill switch, DNS',
             onTap: () => context.push('/settings'),
-          ),
-          GlassListTile(
-            icon: Icons.article_rounded,
-            title: 'Logs',
-            subtitle: 'Diagnostic event log',
-            onTap: () => context.push('/logs'),
           ),
           const SizedBox(height: 20),
           const SectionHeader(title: 'SUPPORT'),
