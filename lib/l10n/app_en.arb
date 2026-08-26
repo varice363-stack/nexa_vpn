@@ -367,5 +367,7 @@
 ,
   "profileLoadError": "Failed to load subscription data. Check your connection."
 ,
-  "notificationsLoadError": "Failed to load notifications. Check your connection."
+  "notificationsLoadError": "Failed to load notifications. Check your connection.",
+  "commonCopied": "Copied",
+  "vlessCopied": "VLESS configuration copied"
 }
