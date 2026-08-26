@@ -431,6 +431,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileAboutHint => 'Версия и правовая информация';
 
   @override
+  String get profileMyActivity => 'МОЯ АКТИВНОСТЬ';
+
+  @override
+  String get profileAccount => 'АККАУНТ';
+
+  @override
+  String get profileOnline => 'В сети';
+
+  @override
+  String get profileSettings => 'Настройки';
+
+  @override
+  String get profileMyCode => 'Мой код';
+
+  @override
   String get profileSignedOut =>
       'Вы вышли из аккаунта. Будем рады видеть снова.';
 

@@ -426,6 +426,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileAboutHint => 'Version and legal';
 
   @override
+  String get profileMyActivity => 'MY ACTIVITY';
+
+  @override
+  String get profileAccount => 'ACCOUNT';
+
+  @override
+  String get profileOnline => 'Online';
+
+  @override
+  String get profileSettings => 'Settings';
+
+  @override
+  String get profileMyCode => 'My code';
+
+  @override
   String get profileSignedOut => 'Signed out. Welcome back anytime.';
 
   @override

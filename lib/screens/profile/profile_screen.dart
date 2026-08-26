@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../providers/admin_providers.dart';
 import '../../providers/identity_providers.dart';
 import '../../providers/notifications_providers.dart';
@@ -19,77 +20,84 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final subscription = ref.watch(subscriptionProvider).value;
     final isPremium = subscription?.isPremium ?? false;
     final sessions = ref.watch(sessionsProvider).value ?? const [];
     final unread = ref.watch(unreadNotificationsProvider);
 
     return AppPage(
-      title: 'Profile',
-      subtitle: isPremium ? 'Premium member' : 'Free plan',
+      title: l10n.profileTitle,
+      subtitle: isPremium ? l10n.profilePremiumMember : l10n.commonFreePlan,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Код устройства вместо аккаунта: почты и пароля больше нет.
-          _IdentityCodeCard(onTap: () => context.push('/identity')),
+          _IdentityCodeCard(
+            title: l10n.profileMyCode,
+            onTap: () => context.push('/identity'),
+          ),
           const SizedBox(height: 16),
           // Plan card.
           _PlanCard(
             isPremium: isPremium,
-            planName: isPremium ? 'Nexa Premium' : 'Free Plan',
+            planName: isPremium ? l10n.profileNexaPremium : l10n.commonFreePlan,
+            planDescription: isPremium
+                ? l10n.profileAllUnlocked
+                : l10n.profileUpgradeHint,
             onTap: () => context.push('/premium'),
           ),
           const SizedBox(height: 20),
-          const SectionHeader(title: 'MY ACTIVITY'),
+          SectionHeader(title: l10n.profileMyActivity),
           Row(
             children: [
-              _MiniStat(value: '${sessions.length}', label: 'Sessions'),
+              _MiniStat(value: '${sessions.length}', label: l10n.profileSessions),
               const SizedBox(width: 10),
               _MiniStat(
                 value:
                     '${sessions.fold<int>(0, (s, x) => s + x.duration.inMinutes) ~/ 60}h',
-                label: 'Online',
+                label: l10n.profileOnline,
               ),
               const SizedBox(width: 10),
               _MiniStat(
                 value: isPremium ? '∞' : '1',
-                label: 'Devices',
+                label: l10n.commonDevices,
               ),
             ],
           ),
           const SizedBox(height: 20),
-          const SectionHeader(title: 'ACCOUNT'),
+          SectionHeader(title: l10n.profileAccount),
           GlassListTile(
             icon: Icons.receipt_long_rounded,
-            title: 'Payment History',
-            subtitle: 'Checkouts and payments',
+            title: l10n.profilePaymentHistory,
+            subtitle: l10n.profilePaymentHistoryHint,
             onTap: () => context.push('/payment-history'),
           ),
           GlassListTile(
             icon: Icons.notifications_rounded,
-            title: 'Notifications',
-            subtitle: 'App events and alerts',
+            title: l10n.notificationsTitle,
+            subtitle: l10n.profileNotificationsHint,
             badge: unread > 0 ? '$unread' : null,
             onTap: () => context.push('/notifications'),
           ),
           GlassListTile(
             icon: Icons.settings_rounded,
-            title: 'Settings',
-            subtitle: 'Protocol, kill switch, DNS',
+            title: l10n.profileSettings,
+            subtitle: l10n.profileSettingsHint,
             onTap: () => context.push('/settings'),
           ),
           const SizedBox(height: 20),
-          const SectionHeader(title: 'SUPPORT'),
+          SectionHeader(title: l10n.profileSupport.toUpperCase()),
           GlassListTile(
             icon: Icons.support_agent_rounded,
-            title: 'Support',
-            subtitle: 'Contact us or read the FAQ',
+            title: l10n.profileSupport,
+            subtitle: l10n.profileSupportHint,
             onTap: () => context.push('/support'),
           ),
           GlassListTile(
             icon: Icons.info_rounded,
-            title: 'About',
-            subtitle: 'Version and legal',
+            title: l10n.profileAbout,
+            subtitle: l10n.profileAboutHint,
             onTap: () => context.push('/about'),
           ),
           // Раздел владельца. Виден, только если код этого устройства
@@ -119,8 +127,9 @@ class ProfileScreen extends ConsumerWidget {
 /// на отдельном экране, чтобы его нельзя было подсмотреть мельком через
 /// плечо.
 class _IdentityCodeCard extends ConsumerWidget {
-  const _IdentityCodeCard({required this.onTap});
+  const _IdentityCodeCard({required this.title, required this.onTap});
 
+  final String title;
   final VoidCallback onTap;
 
   @override
@@ -152,9 +161,9 @@ class _IdentityCodeCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Мой код',
-                    style: TextStyle(
+                  Text(
+                    title,
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -186,11 +195,13 @@ class _PlanCard extends StatelessWidget {
   const _PlanCard({
     required this.isPremium,
     required this.planName,
+    required this.planDescription,
     required this.onTap,
   });
 
   final bool isPremium;
   final String planName;
+  final String planDescription;
   final VoidCallback onTap;
 
   @override
@@ -238,9 +249,7 @@ class _PlanCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    isPremium
-                        ? 'All features unlocked'
-                        : 'Upgrade for unlimited data and 4K streaming',
+                    planDescription,
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,

@@ -908,6 +908,36 @@ abstract class AppLocalizations {
   /// **'Version and legal'**
   String get profileAboutHint;
 
+  /// No description provided for @profileMyActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'MY ACTIVITY'**
+  String get profileMyActivity;
+
+  /// No description provided for @profileAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'ACCOUNT'**
+  String get profileAccount;
+
+  /// No description provided for @profileOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get profileOnline;
+
+  /// No description provided for @profileSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get profileSettings;
+
+  /// No description provided for @profileMyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'My code'**
+  String get profileMyCode;
+
   /// No description provided for @profileSignedOut.
   ///
   /// In en, this message translates to:
