@@ -358,6 +358,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonExpires => 'Expires';
 
   @override
+  String get bannerCarousel => 'Recommended';
+
+  @override
+  String bannerDuration(int seconds) => '${seconds}s';
+
+  @override
+  String get bannerTapToOpen => 'Tap to open';
+
+  @override
   String get profileTitle => 'Profile';
 
   @override

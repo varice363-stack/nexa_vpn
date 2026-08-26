@@ -15,6 +15,7 @@ const EMPTY_FORM = {
   targetUrl: '',
   referralCode: '',
   placement: 'home' as BannerPlacement,
+  displayDuration: '30',
   sortOrder: '0',
 };
 
@@ -89,6 +90,7 @@ export default function BannersPage() {
         description: form.description,
         placement: form.placement,
         sortOrder: Number(form.sortOrder) || 0,
+        displayDuration: Number(form.displayDuration) || 30,
       };
       if (form.buttonText.trim()) payload.buttonText = form.buttonText.trim();
       if (form.targetUrl.trim()) payload.targetUrl = form.targetUrl.trim();
@@ -158,6 +160,7 @@ export default function BannersPage() {
                 {b.buttonText ?? 'без кнопки'}
                 {b.targetUrl ? ` → ${b.targetUrl}` : ' → /premium'}
                 {b.referralCode && ` · ref: ${b.referralCode}`}
+                {' · '}{b.displayDuration}с показ
                 {' · '}#{b.sortOrder}
                 {' · '}{new Date(b.createdAt).toLocaleDateString()}
               </div>
@@ -233,6 +236,25 @@ export default function BannersPage() {
               onChange={(e) => setForm({ ...form, referralCode: e.target.value })}
               className="input-base w-full"
             />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="number"
+                min={5}
+                max={300}
+                placeholder="Время показа (сек)"
+                value={form.displayDuration}
+                onChange={(e) => setForm({ ...form, displayDuration: e.target.value })}
+                className="input-base"
+              />
+              <input
+                type="number"
+                min={0}
+                placeholder="Порядок сортировки"
+                value={form.sortOrder}
+                onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
+                className="input-base"
+              />
+            </div>
             <div className="flex gap-3">
               <select
                 value={form.placement}

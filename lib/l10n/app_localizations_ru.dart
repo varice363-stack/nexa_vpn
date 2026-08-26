@@ -362,6 +362,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get commonExpires => 'Истекает';
 
   @override
+  String get bannerCarousel => 'Рекомендации';
+
+  @override
+  String bannerDuration(int seconds) => '${seconds}с';
+
+  @override
+  String get bannerTapToOpen => 'Нажмите, чтобы открыть';
+
+  @override
   String get profileTitle => 'Профиль';
 
   @override

@@ -776,6 +776,24 @@ abstract class AppLocalizations {
   /// **'Expires'**
   String get commonExpires;
 
+  /// No description provided for @bannerCarousel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get bannerCarousel;
+
+  /// No description provided for @bannerDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String bannerDuration(int seconds);
+
+  /// No description provided for @bannerTapToOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to open'**
+  String get bannerTapToOpen;
+
   /// No description provided for @profileTitle.
   ///
   /// In en, this message translates to:

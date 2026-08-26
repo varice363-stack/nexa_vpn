@@ -50,6 +50,16 @@ export class CreateBannerDto {
   @IsIn(BANNER_PLACEMENTS)
   placement?: BannerPlacement;
 
+  /**
+   * Duration (seconds) the banner stays visible in the carousel.
+   * Defaults to 30s. Must be between 5 and 300 seconds.
+   */
+  @IsOptional()
+  @IsInt()
+  @Min(5)
+  @Max(300)
+  displayDuration?: number;
+
   @IsOptional()
   @IsInt()
   @Min(0)

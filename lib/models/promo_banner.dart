@@ -26,6 +26,7 @@ class PromoBanner {
     this.targetUrl,
     this.placement = BannerPlacement.home,
     this.active = true,
+    this.displayDuration = 30,
   });
 
   final String id;
@@ -40,6 +41,10 @@ class PromoBanner {
 
   final BannerPlacement placement;
   final bool active;
+
+  /// Duration (seconds) this banner stays visible in the carousel.
+  /// Per-banner control: one banner can show for 30s, another for 45s.
+  final int displayDuration;
 
   /// True when the CTA should open an external http(s) destination.
   /// Any other scheme is ignored: the payload comes from the network and
@@ -61,6 +66,7 @@ class PromoBanner {
       targetUrl: json['targetUrl'] as String?,
       placement: BannerPlacement.fromJson(json['placement']),
       active: json['active'] as bool? ?? true,
+      displayDuration: (json['displayDuration'] as num?)?.toInt() ?? 30,
     );
   }
 }

@@ -55,6 +55,7 @@ export interface Banner {
   targetUrl: string | null;
   referralCode: string | null;
   placement: BannerPlacement;
+  displayDuration: number;
   sortOrder: number;
   impressions: number;
   clicks: number;

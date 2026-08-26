@@ -217,6 +217,9 @@ model Banner {
   placement   String   @default("home")
   /// Display order within a slot — lower comes first.
   sortOrder   Int      @default(0)
+  /// Duration (seconds) this banner stays visible in the carousel.
+  /// Defaults to 30s. Set per-banner to control the auto-rotate cadence.
+  displayDuration Int      @default(30)
   /// Ad performance counters (TASK #020).
   impressions Int      @default(0)
   clicks      Int      @default(0)
