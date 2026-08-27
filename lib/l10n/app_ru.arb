@@ -445,5 +445,6 @@
   "adminBannerButtonText": "Текст кнопки (опционально)",
   "adminBannerTargetUrl": "Целевой URL (опционально)",
   "adminBannerDisplayDuration": "Длительность показа (секунды)",
-  "adminBannerPlacement": "Размещение"
+  "adminBannerPlacement": "Размещение",
+  "commonLoading": "Загрузка..."
 }

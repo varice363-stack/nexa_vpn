@@ -445,5 +445,6 @@
   "adminBannerButtonText": "Button text (optional)",
   "adminBannerTargetUrl": "Target URL (optional)",
   "adminBannerDisplayDuration": "Display duration (seconds)",
-  "adminBannerPlacement": "Placement"
+  "adminBannerPlacement": "Placement",
+  "commonLoading": "Loading..."
 }

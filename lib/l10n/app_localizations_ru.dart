@@ -1115,6 +1115,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get commonError => 'Ошибка';
 
   @override
+  String get commonLoading => 'Загрузка...';
+
+  @override
   String get adminCreateBanner => 'Создать баннер';
 
   @override

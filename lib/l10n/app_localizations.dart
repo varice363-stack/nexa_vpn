@@ -1988,6 +1988,8 @@ abstract class AppLocalizations {
 
   String get commonError;
 
+  String get commonLoading;
+
   String get adminCreateBanner;
 
   String get adminCreateBannerSubtitle;

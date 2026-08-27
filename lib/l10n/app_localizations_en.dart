@@ -1107,6 +1107,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonError => 'Error';
 
   @override
+  String get commonLoading => 'Loading...';
+
+  @override
   String get adminCreateBanner => 'Create Banner';
 
   @override
