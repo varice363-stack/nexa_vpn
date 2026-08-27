@@ -1110,4 +1110,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get adminDailySignups => 'Регистрации за день (7 дней)';
+
+  @override
+  String get commonError => 'Ошибка';
 }

@@ -1985,6 +1985,8 @@ abstract class AppLocalizations {
   String get adminAllBanners;
 
   String get adminDailySignups;
+
+  String get commonError;
 }
 
 class _AppLocalizationsDelegate

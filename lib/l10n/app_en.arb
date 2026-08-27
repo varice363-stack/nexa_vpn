@@ -435,5 +435,6 @@
   "adminNoData": "No data available",
   "adminNoBanners": "No banners yet",
   "adminAllBanners": "Banner Performance",
-  "adminDailySignups": "Daily Signups (last 7 days)"
+  "adminDailySignups": "Daily Signups (last 7 days)",
+  "commonError": "Error"
 }

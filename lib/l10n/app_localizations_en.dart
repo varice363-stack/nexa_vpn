@@ -1102,4 +1102,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminDailySignups => 'Daily Signups (last 7 days)';
+
+  @override
+  String get commonError => 'Error';
 }
