@@ -1105,4 +1105,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonError => 'Error';
+
+  @override
+  String get adminCreateBanner => 'Create Banner';
+
+  @override
+  String get adminCreateBannerSubtitle => 'Add new promotional banner';
+
+  @override
+  String get adminBannerTitle => 'Title';
+
+  @override
+  String get adminBannerDescription => 'Description';
+
+  @override
+  String get adminBannerImageUrl => 'Image URL (optional)';
+
+  @override
+  String get adminBannerButtonText => 'Button text (optional)';
+
+  @override
+  String get adminBannerTargetUrl => 'Target URL (optional)';
+
+  @override
+  String get adminBannerDisplayDuration => 'Display duration (seconds)';
+
+  @override
+  String get adminBannerPlacement => 'Placement';
 }

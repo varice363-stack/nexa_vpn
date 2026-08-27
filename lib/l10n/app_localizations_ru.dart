@@ -1113,4 +1113,31 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get commonError => 'Ошибка';
+
+  @override
+  String get adminCreateBanner => 'Создать баннер';
+
+  @override
+  String get adminCreateBannerSubtitle => 'Добавить новый промо-баннер';
+
+  @override
+  String get adminBannerTitle => 'Заголовок';
+
+  @override
+  String get adminBannerDescription => 'Описание';
+
+  @override
+  String get adminBannerImageUrl => 'URL изображения (опционально)';
+
+  @override
+  String get adminBannerButtonText => 'Текст кнопки (опционально)';
+
+  @override
+  String get adminBannerTargetUrl => 'Целевой URL (опционально)';
+
+  @override
+  String get adminBannerDisplayDuration => 'Длительность показа (секунды)';
+
+  @override
+  String get adminBannerPlacement => 'Размещение';
 }

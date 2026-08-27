@@ -436,5 +436,14 @@
   "adminNoBanners": "Баннеров пока нет",
   "adminAllBanners": "Эффективность баннеров",
   "adminDailySignups": "Регистрации за день (7 дней)",
-  "commonError": "Ошибка"
+  "commonError": "Ошибка",
+  "adminCreateBanner": "Создать баннер",
+  "adminCreateBannerSubtitle": "Добавить новый промо-баннер",
+  "adminBannerTitle": "Заголовок",
+  "adminBannerDescription": "Описание",
+  "adminBannerImageUrl": "URL изображения (опционально)",
+  "adminBannerButtonText": "Текст кнопки (опционально)",
+  "adminBannerTargetUrl": "Целевой URL (опционально)",
+  "adminBannerDisplayDuration": "Длительность показа (секунды)",
+  "adminBannerPlacement": "Размещение"
 }

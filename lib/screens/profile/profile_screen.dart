@@ -7,7 +7,6 @@ import '../../providers/admin_providers.dart';
 import '../../providers/identity_providers.dart';
 import '../../providers/notifications_providers.dart';
 import '../../providers/subscription_providers.dart';
-import '../../providers/session_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/app_page.dart';
 import '../../widgets/common/error_display.dart';
@@ -25,7 +24,6 @@ class ProfileScreen extends ConsumerWidget {
     final subscriptionAsync = ref.watch(subscriptionProvider);
     final subscription = subscriptionAsync.value;
     final isPremium = subscription?.isPremium ?? false;
-    final sessions = ref.watch(sessionsProvider).value ?? const [];
     final unread = ref.watch(unreadNotificationsProvider);
 
     // Если загрузка подписки упала с ошибкой — покажем понятное сообщение.
@@ -60,24 +58,6 @@ class ProfileScreen extends ConsumerWidget {
                 ? l10n.profileAllUnlocked
                 : l10n.profileUpgradeHint,
             onTap: () => context.push('/premium'),
-          ),
-          const SizedBox(height: 20),
-          SectionHeader(title: l10n.profileMyActivity),
-          Row(
-            children: [
-              _MiniStat(value: '${sessions.length}', label: l10n.profileSessions),
-              const SizedBox(width: 10),
-              _MiniStat(
-                value:
-                    '${sessions.fold<int>(0, (s, x) => s + x.duration.inMinutes) ~/ 60}h',
-                label: l10n.profileOnline,
-              ),
-              const SizedBox(width: 10),
-              _MiniStat(
-                value: isPremium ? '∞' : '1',
-                label: l10n.commonDevices,
-              ),
-            ],
           ),
           const SizedBox(height: 20),
           SectionHeader(title: l10n.profileAccount),
@@ -290,39 +270,4 @@ class _PlanCard extends StatelessWidget {
   }
 }
 
-class _MiniStat extends StatelessWidget {
-  const _MiniStat({required this.value, required this.label});
 
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GlassContainer(
-        borderRadius: BorderRadius.circular(18),
-        padding: const EdgeInsets.symmetric(vertical: 13),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 10.5,
-                color: AppColors.textTertiary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

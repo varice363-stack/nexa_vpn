@@ -436,5 +436,14 @@
   "adminNoBanners": "No banners yet",
   "adminAllBanners": "Banner Performance",
   "adminDailySignups": "Daily Signups (last 7 days)",
-  "commonError": "Error"
+  "commonError": "Error",
+  "adminCreateBanner": "Create Banner",
+  "adminCreateBannerSubtitle": "Add new promotional banner",
+  "adminBannerTitle": "Title",
+  "adminBannerDescription": "Description",
+  "adminBannerImageUrl": "Image URL (optional)",
+  "adminBannerButtonText": "Button text (optional)",
+  "adminBannerTargetUrl": "Target URL (optional)",
+  "adminBannerDisplayDuration": "Display duration (seconds)",
+  "adminBannerPlacement": "Placement"
 }

@@ -39,6 +39,55 @@ class BannerRepositoryImpl implements BannerRepository {
   Future<void> trackClick(String bannerId) =>
       _fireAndForget('/banners/$bannerId/click');
 
+  @override
+  Future<PromoBanner> createBanner({
+    required String title,
+    required String description,
+    String? imageUrl,
+    String? buttonText,
+    String? targetUrl,
+    BannerPlacement placement = BannerPlacement.home,
+    int? displayDuration,
+  }) async {
+    final data = await _api.post(
+      '/banners',
+      body: {
+        'title': title,
+        'description': description,
+        if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
+        if (buttonText != null && buttonText.isNotEmpty) 'buttonText': buttonText,
+        if (targetUrl != null && targetUrl.isNotEmpty) 'targetUrl': targetUrl,
+        'placement': placement.wireValue,
+        if (displayDuration != null) 'displayDuration': displayDuration,
+      },
+    );
+    return PromoBanner.fromJson(Map<String, Object?>.from(data as Map));
+  }
+
+  @override
+  Future<List<PromoBanner>> getAllBanners() async {
+    final data = await _api.get('/banners/all');
+    if (data is! List) {
+      throw const ApiException('Unexpected banners response',
+          code: 'BAD_RESPONSE');
+    }
+    return data
+        .map(
+          (item) => PromoBanner.fromJson(
+            Map<String, Object?>.from(item as Map),
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<void> activateBanner(String bannerId) =>
+      _api.post('/banners/$bannerId/activate');
+
+  @override
+  Future<void> deactivateBanner(String bannerId) =>
+      _api.post('/banners/$bannerId/deactivate');
+
   Future<void> _fireAndForget(String path) async {
     try {
       await _api.post(path);

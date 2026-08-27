@@ -11,6 +11,7 @@ import '../../screens/faq/faq_screen.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/notifications/notifications_screen.dart';
 import '../../screens/access/key_entry_screen.dart';
+import '../../screens/admin/admin_create_banner_screen.dart';
 import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/admin_keys_screen.dart';
 import '../../screens/consent/vpn_consent_screen.dart';
@@ -99,6 +100,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/dashboard',
         builder: (context, state) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/admin/create-banner',
+        builder: (context, state) => const AdminCreateBannerScreen(),
       ),
       GoRoute(
         path: '/admin/keys',

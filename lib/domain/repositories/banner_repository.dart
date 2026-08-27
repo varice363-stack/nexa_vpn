@@ -11,4 +11,24 @@ abstract class BannerRepository {
 
   /// POST /banners/:id/click — fire-and-forget analytics.
   Future<void> trackClick(String bannerId);
+
+  /// POST /banners — create a new banner (admin only).
+  Future<PromoBanner> createBanner({
+    required String title,
+    required String description,
+    String? imageUrl,
+    String? buttonText,
+    String? targetUrl,
+    BannerPlacement placement,
+    int? displayDuration,
+  });
+
+  /// GET /banners/all — all banners including inactive (admin only).
+  Future<List<PromoBanner>> getAllBanners();
+
+  /// POST /banners/:id/activate — activate a banner (admin only).
+  Future<void> activateBanner(String bannerId);
+
+  /// POST /banners/:id/deactivate — deactivate a banner (admin only).
+  Future<void> deactivateBanner(String bannerId);
 }

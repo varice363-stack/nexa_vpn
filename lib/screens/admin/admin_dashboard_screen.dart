@@ -266,10 +266,60 @@ class _BannersTab extends ConsumerWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         children: [
+          _buildCreateBannerButton(context, l10n),
+          const SizedBox(height: 16),
           _buildTotalsCard(context, l10n, statsAsync),
           const SizedBox(height: 16),
           _buildBannersList(context, l10n, statsAsync),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCreateBannerButton(BuildContext context, AppLocalizations l10n) {
+    return GestureDetector(
+      onTap: () => context.push('/admin/create-banner'),
+      child: GlassContainer(
+        borderRadius: BorderRadius.circular(16),
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.adminCreateBanner,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    l10n.adminCreateBannerSubtitle,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textTertiary),
+          ],
+        ),
       ),
     );
   }

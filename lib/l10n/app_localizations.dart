@@ -1987,6 +1987,24 @@ abstract class AppLocalizations {
   String get adminDailySignups;
 
   String get commonError;
+
+  String get adminCreateBanner;
+
+  String get adminCreateBannerSubtitle;
+
+  String get adminBannerTitle;
+
+  String get adminBannerDescription;
+
+  String get adminBannerImageUrl;
+
+  String get adminBannerButtonText;
+
+  String get adminBannerTargetUrl;
+
+  String get adminBannerDisplayDuration;
+
+  String get adminBannerPlacement;
 }
 
 class _AppLocalizationsDelegate
