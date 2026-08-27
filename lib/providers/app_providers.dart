@@ -7,6 +7,7 @@ import '../data/repositories/config_repository_impl.dart';
 import '../data/repositories/key_storage_impl.dart';
 import '../data/repositories/server_repository_impl.dart';
 import '../data/repositories/session_manager_impl.dart';
+import '../domain/repositories/admin_repository.dart';
 import '../domain/repositories/auth_repository.dart';
 import '../domain/repositories/access_repository.dart';
 import '../domain/repositories/account_repository.dart';
@@ -19,6 +20,7 @@ import '../domain/repositories/server_repository.dart';
 import '../domain/repositories/session_manager.dart';
 import '../domain/repositories/subscription_repository.dart';
 import '../repositories/access_repository_impl.dart';
+import '../repositories/admin_repository_impl.dart';
 import '../repositories/auth_repository_impl.dart';
 import '../repositories/account_repository_impl.dart';
 import '../repositories/banner_repository_impl.dart';
@@ -112,6 +114,11 @@ final notificationRepositoryProvider = Provider<NotificationRepository>(
 /// Subscriptions.
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>(
   (ref) => SubscriptionRepositoryImpl(api: ref.watch(apiClientProvider)),
+);
+
+/// Admin dashboard, analytics, banner stats.
+final adminRepositoryProvider = Provider<AdminRepository>(
+  (ref) => AdminRepositoryImpl(api: ref.watch(apiClientProvider)),
 );
 
 /// Session history.

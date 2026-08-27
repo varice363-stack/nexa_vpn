@@ -121,6 +121,12 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 20),
             SectionHeader(title: l10n.adminOwnerSection),
             GlassListTile(
+              icon: Icons.dashboard_rounded,
+              title: l10n.adminDashboard,
+              subtitle: l10n.adminDashboardSubtitle,
+              onTap: () => context.push('/admin/dashboard'),
+            ),
+            GlassListTile(
               icon: Icons.vpn_key_rounded,
               title: l10n.adminKeyIssue,
               subtitle: l10n.adminKeyIssueHint,

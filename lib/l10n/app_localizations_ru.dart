@@ -1047,4 +1047,67 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get notificationsLoadError => 'Не удалось загрузить уведомления. Проверьте подключение.';
+
+  @override
+  String get adminDashboard => 'Панель управления';
+
+  @override
+  String get adminDashboardSubtitle => 'Статистика и аналитика баннеров';
+
+  @override
+  String get adminTabOverview => 'Обзор';
+
+  @override
+  String get adminTabBanners => 'Баннеры';
+
+  @override
+  String get adminTabAnalytics => 'Аналитика';
+
+  @override
+  String get adminOverview => 'Обзор';
+
+  @override
+  String get adminTotalUsers => 'Всего пользователей';
+
+  @override
+  String get adminNewToday => 'Новых сегодня';
+
+  @override
+  String get adminActivePremium => 'Активных Premium';
+
+  @override
+  String get adminActiveServers => 'Активных серверов';
+
+  @override
+  String get adminRevenue => 'Доход';
+
+  @override
+  String get adminTotalRevenue => 'Общий доход';
+
+  @override
+  String get adminBlockedUsers => 'Заблокированных';
+
+  @override
+  String get adminPremiumUsers => 'Premium пользователей';
+
+  @override
+  String get adminBannerTotals => 'Все баннеры';
+
+  @override
+  String get adminImpressions => 'Показы';
+
+  @override
+  String get adminClicks => 'Клики';
+
+  @override
+  String get adminNoData => 'Нет данных';
+
+  @override
+  String get adminNoBanners => 'Баннеров пока нет';
+
+  @override
+  String get adminAllBanners => 'Эффективность баннеров';
+
+  @override
+  String get adminDailySignups => 'Регистрации за день (7 дней)';
 }

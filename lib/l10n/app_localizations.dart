@@ -1943,6 +1943,48 @@ abstract class AppLocalizations {
   String get profileLoadError;
 
   String get notificationsLoadError;
+
+  String get adminDashboard;
+
+  String get adminDashboardSubtitle;
+
+  String get adminTabOverview;
+
+  String get adminTabBanners;
+
+  String get adminTabAnalytics;
+
+  String get adminOverview;
+
+  String get adminTotalUsers;
+
+  String get adminNewToday;
+
+  String get adminActivePremium;
+
+  String get adminActiveServers;
+
+  String get adminRevenue;
+
+  String get adminTotalRevenue;
+
+  String get adminBlockedUsers;
+
+  String get adminPremiumUsers;
+
+  String get adminBannerTotals;
+
+  String get adminImpressions;
+
+  String get adminClicks;
+
+  String get adminNoData;
+
+  String get adminNoBanners;
+
+  String get adminAllBanners;
+
+  String get adminDailySignups;
 }
 
 class _AppLocalizationsDelegate

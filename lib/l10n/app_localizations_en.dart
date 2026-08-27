@@ -1039,4 +1039,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationsLoadError => 'Failed to load notifications. Check your connection.';
+
+  @override
+  String get adminDashboard => 'Admin Dashboard';
+
+  @override
+  String get adminDashboardSubtitle => 'Statistics & banner analytics';
+
+  @override
+  String get adminTabOverview => 'Overview';
+
+  @override
+  String get adminTabBanners => 'Banners';
+
+  @override
+  String get adminTabAnalytics => 'Analytics';
+
+  @override
+  String get adminOverview => 'Overview';
+
+  @override
+  String get adminTotalUsers => 'Total Users';
+
+  @override
+  String get adminNewToday => 'New Today';
+
+  @override
+  String get adminActivePremium => 'Active Premium';
+
+  @override
+  String get adminActiveServers => 'Active Servers';
+
+  @override
+  String get adminRevenue => 'Revenue';
+
+  @override
+  String get adminTotalRevenue => 'Total Revenue';
+
+  @override
+  String get adminBlockedUsers => 'Blocked Users';
+
+  @override
+  String get adminPremiumUsers => 'Premium Users';
+
+  @override
+  String get adminBannerTotals => 'All Banners';
+
+  @override
+  String get adminImpressions => 'Impressions';
+
+  @override
+  String get adminClicks => 'Clicks';
+
+  @override
+  String get adminNoData => 'No data available';
+
+  @override
+  String get adminNoBanners => 'No banners yet';
+
+  @override
+  String get adminAllBanners => 'Banner Performance';
+
+  @override
+  String get adminDailySignups => 'Daily Signups (last 7 days)';
 }

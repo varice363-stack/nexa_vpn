@@ -187,19 +187,35 @@
   "premiumCheckPaymentStatus": "Я оплатил — проверить статус",
   "premiumGetFor": "Оформить за {price}",
   "@premiumGetFor": {
-    "placeholders": { "price": { "type": "String" } }
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
   },
   "premiumPerMonth": "≈{price}/мес",
   "@premiumPerMonth": {
-    "placeholders": { "price": { "type": "String" } }
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
   },
   "premiumSavings": "Выгода {amount}",
   "@premiumSavings": {
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "premiumDaysOfAccess": "{days} дней доступа",
   "@premiumDaysOfAccess": {
-    "placeholders": { "days": { "type": "int" } }
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
   },
   "premiumTrialHint": "Полный доступ без привязки карты. Один пробный период на аккаунт.",
   "serversTitle": "Серверы",
@@ -267,7 +283,11 @@
   "keyEntryDetectedSubscription": "Подписка провайдера",
   "keyEntrySuccessSubscription": "{count, plural, one{Импортирован {count} сервер} few{Импортировано {count} сервера} other{Импортировано {count} серверов}}",
   "@keyEntrySuccessSubscription": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "keyEntryErrorUnsupportedScheme2": "Поддерживаются только ссылки vless:// и подписки https://.",
   "keyEntryOpen": "У меня есть ключ",
@@ -306,17 +326,29 @@
   "premiumChoosePlan": "ВЫБЕРИТЕ ТАРИФ",
   "serversSwitchError": "Не удалось переключиться: {error}",
   "@serversSwitchError": {
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "serversEmptyTitle": "Пока нет серверов",
   "serversEmptyBody": "Серверы появятся здесь после добавления ключа или подписки провайдера. Показываются только те, к которым можно подключиться.",
   "serversReconnected": "Переподключено через {label}",
   "@serversReconnected": {
-    "placeholders": { "label": { "type": "String" } }
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
   },
   "serversSelected": "Выбран {label}",
   "@serversSelected": {
-    "placeholders": { "label": { "type": "String" } }
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
   },
   "serversAll": "ВСЕ СЕРВЕРЫ",
   "serversNoMatch": "Ничего не найдено.",
@@ -325,16 +357,23 @@
   "serversSelectedStatus": "Выбрано",
   "serversAvailable": "Доступно {count} из вашего ключа",
   "@serversAvailable": {
-    "placeholders": { "count": { "type": "int" } }
-  }
-,
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminOwnerSection": "ВЛАДЕЛЕЦ",
   "adminTitle": "Выпуск кодов доступа",
   "adminSubtitle": "Создавайте коды для продажи и просматривайте все ключи",
   "adminNoAccess": "У этой учётной записи нет прав администратора",
   "adminIssueFailed": "Не удалось выпустить код: {error}",
   "@adminIssueFailed": {
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "adminDurationForever": "Навсегда",
   "adminDuration30Days": "30 дней",
@@ -342,7 +381,11 @@
   "adminDuration1Year": "1 год",
   "adminDurationDays": "{count} дней",
   "@adminDurationDays": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "adminOwnerOnly": "Этот раздел доступен только владельцу приложения.",
   "adminAllKeys": "Все ключи",
@@ -356,18 +399,41 @@
   "adminCopyCode": "Копировать код",
   "adminLoadFailed": "Не удалось загрузить ключи. Проверьте что backend запущен.\n{error}",
   "@adminLoadFailed": {
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "adminNoKeys": "Ключей пока нет.",
   "adminUntil": "до",
   "adminLifetime": "бессрочно",
   "adminCopy": "Копировать",
   "adminKeyIssue": "Выпуск ключей",
-  "adminKeyIssueHint": "Создать коды на продажу и посмотреть все ключи"
-,
-  "profileLoadError": "Не удалось загрузить данные подписки. Проверьте подключение."
-,
+  "adminKeyIssueHint": "Создать коды на продажу и посмотреть все ключи",
+  "profileLoadError": "Не удалось загрузить данные подписки. Проверьте подключение.",
   "notificationsLoadError": "Не удалось загрузить уведомления. Проверьте подключение.",
   "commonCopied": "Скопировано",
-  "vlessCopied": "Конфигурация VLESS скопирована"
+  "vlessCopied": "Конфигурация VLESS скопирована",
+  "adminDashboard": "Панель управления",
+  "adminDashboardSubtitle": "Статистика и аналитика баннеров",
+  "adminTabOverview": "Обзор",
+  "adminTabBanners": "Баннеры",
+  "adminTabAnalytics": "Аналитика",
+  "adminOverview": "Обзор",
+  "adminTotalUsers": "Всего пользователей",
+  "adminNewToday": "Новых сегодня",
+  "adminActivePremium": "Активных Premium",
+  "adminActiveServers": "Активных серверов",
+  "adminRevenue": "Доход",
+  "adminTotalRevenue": "Общий доход",
+  "adminBlockedUsers": "Заблокированных",
+  "adminPremiumUsers": "Premium пользователей",
+  "adminBannerTotals": "Все баннеры",
+  "adminImpressions": "Показы",
+  "adminClicks": "Клики",
+  "adminNoData": "Нет данных",
+  "adminNoBanners": "Баннеров пока нет",
+  "adminAllBanners": "Эффективность баннеров",
+  "adminDailySignups": "Регистрации за день (7 дней)"
 }

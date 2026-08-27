@@ -184,22 +184,38 @@
   "premiumPaymentsComingSoonTitle": "Payment is coming soon",
   "premiumPaymentsComingSoonBody": "In-app purchase is not connected yet, so we are not taking payments. Prices above are final. If you already have an access code, activate it now.",
   "premiumIHaveCode": "I have an access code",
-  "premiumCheckPaymentStatus": "I have paid \u2014 check status",
-  "premiumGetFor": "Get Premium \u2014 {price}",
+  "premiumCheckPaymentStatus": "I have paid — check status",
+  "premiumGetFor": "Get Premium — {price}",
   "@premiumGetFor": {
-    "placeholders": { "price": { "type": "String" } }
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
   },
-  "premiumPerMonth": "\u2248{price}/mo",
+  "premiumPerMonth": "≈{price}/mo",
   "@premiumPerMonth": {
-    "placeholders": { "price": { "type": "String" } }
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
   },
   "premiumSavings": "Save {amount}",
   "@premiumSavings": {
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "premiumDaysOfAccess": "{days} days of access",
   "@premiumDaysOfAccess": {
-    "placeholders": { "days": { "type": "int" } }
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
   },
   "premiumTrialHint": "Full access, no card required. One trial per account.",
   "serversTitle": "Servers",
@@ -267,7 +283,11 @@
   "keyEntryDetectedSubscription": "Provider subscription",
   "keyEntrySuccessSubscription": "{count, plural, =1{1 server imported} other{{count} servers imported}}",
   "@keyEntrySuccessSubscription": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "keyEntryErrorUnsupportedScheme2": "Only vless:// links and https:// subscriptions are supported.",
   "keyEntryOpen": "I have a key",
@@ -306,17 +326,29 @@
   "premiumChoosePlan": "CHOOSE YOUR PLAN",
   "serversSwitchError": "Failed to switch: {error}",
   "@serversSwitchError": {
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "serversEmptyTitle": "No servers yet",
   "serversEmptyBody": "Servers appear here once you add a key or a provider subscription. Nothing is shown that you cannot connect to.",
   "serversReconnected": "Reconnected via {label}",
   "@serversReconnected": {
-    "placeholders": { "label": { "type": "String" } }
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
   },
   "serversSelected": "Selected {label}",
   "@serversSelected": {
-    "placeholders": { "label": { "type": "String" } }
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
   },
   "serversAll": "ALL SERVERS",
   "serversNoMatch": "Nothing matches that search.",
@@ -325,16 +357,23 @@
   "serversSelectedStatus": "Selected",
   "serversAvailable": "{count} available from your key",
   "@serversAvailable": {
-    "placeholders": { "count": { "type": "int" } }
-  }
-,
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminOwnerSection": "OWNER",
   "adminTitle": "Issue access codes",
   "adminSubtitle": "Create codes for sale and view all keys",
   "adminNoAccess": "This account does not have admin rights",
   "adminIssueFailed": "Failed to issue code: {error}",
   "@adminIssueFailed": {
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "adminDurationForever": "Forever",
   "adminDuration30Days": "30 days",
@@ -342,7 +381,11 @@
   "adminDuration1Year": "1 year",
   "adminDurationDays": "{count} days",
   "@adminDurationDays": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "adminOwnerOnly": "This section is only available to the app owner.",
   "adminAllKeys": "All keys",
@@ -356,18 +399,41 @@
   "adminCopyCode": "Copy code",
   "adminLoadFailed": "Failed to load keys. Make sure the backend is running.\n{error}",
   "@adminLoadFailed": {
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "adminNoKeys": "No keys yet.",
   "adminUntil": "until",
   "adminLifetime": "lifetime",
   "adminCopy": "Copy",
   "adminKeyIssue": "Issue keys",
-  "adminKeyIssueHint": "Create codes for sale and view all keys"
-,
-  "profileLoadError": "Failed to load subscription data. Check your connection."
-,
+  "adminKeyIssueHint": "Create codes for sale and view all keys",
+  "profileLoadError": "Failed to load subscription data. Check your connection.",
   "notificationsLoadError": "Failed to load notifications. Check your connection.",
   "commonCopied": "Copied",
-  "vlessCopied": "VLESS configuration copied"
+  "vlessCopied": "VLESS configuration copied",
+  "adminDashboard": "Admin Dashboard",
+  "adminDashboardSubtitle": "Statistics & banner analytics",
+  "adminTabOverview": "Overview",
+  "adminTabBanners": "Banners",
+  "adminTabAnalytics": "Analytics",
+  "adminOverview": "Overview",
+  "adminTotalUsers": "Total Users",
+  "adminNewToday": "New Today",
+  "adminActivePremium": "Active Premium",
+  "adminActiveServers": "Active Servers",
+  "adminRevenue": "Revenue",
+  "adminTotalRevenue": "Total Revenue",
+  "adminBlockedUsers": "Blocked Users",
+  "adminPremiumUsers": "Premium Users",
+  "adminBannerTotals": "All Banners",
+  "adminImpressions": "Impressions",
+  "adminClicks": "Clicks",
+  "adminNoData": "No data available",
+  "adminNoBanners": "No banners yet",
+  "adminAllBanners": "Banner Performance",
+  "adminDailySignups": "Daily Signups (last 7 days)"
 }
