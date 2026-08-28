@@ -6,6 +6,7 @@ import {
   IsString,
   IsUrl,
   Length,
+  Max,
   Min,
 } from 'class-validator';
 
