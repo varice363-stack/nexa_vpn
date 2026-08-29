@@ -7,7 +7,7 @@ import '../../models/admin_dashboard.dart';
 import '../../models/analytics.dart';
 import '../../providers/admin_dashboard_providers.dart';
 import '../../theme/app_colors.dart';
-import '../../widgets/common/app_page.dart';
+import '../../widgets/background/animated_background.dart';
 import '../../widgets/common/glass_container.dart';
 
 /// Admin dashboard — overview of users, servers, revenue, and banner stats.
@@ -39,41 +39,89 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return AppPage(
-      title: l10n.adminDashboard,
-      subtitle: l10n.adminDashboardSubtitle,
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          _buildTabBar(context, l10n),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _OverviewTab(),
-                _BannersTab(),
-                _AnalyticsTab(),
-              ],
-            ),
+    return Scaffold(
+      body: AnimatedBackground(
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => context.pop(),
+                      child: Container(
+                        padding: const EdgeInsets.all(11),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          color: AppColors.surface.withValues(alpha: 0.5),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back_rounded,
+                          size: 20,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.adminDashboard,
+                            style: const TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            l10n.adminDashboardSubtitle,
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // TabBar
+              Container(
+                color: AppColors.surface.withValues(alpha: 0.3),
+                child: TabBar(
+                  controller: _tabController,
+                  indicatorColor: AppColors.primary,
+                  labelColor: AppColors.primary,
+                  unselectedLabelColor: AppColors.textSecondary,
+                  tabs: [
+                    Tab(text: l10n.adminTabOverview),
+                    Tab(text: l10n.adminTabBanners),
+                    Tab(text: l10n.adminTabAnalytics),
+                  ],
+                ),
+              ),
+              // Tabs
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    const _OverviewTab(),
+                    const _BannersTab(),
+                    const _AnalyticsTab(),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabBar(BuildContext context, AppLocalizations l10n) {
-    return Container(
-      color: AppColors.surface.withValues(alpha: 0.5),
-      child: TabBar(
-        controller: _tabController,
-        indicatorColor: AppColors.primary,
-        labelColor: AppColors.primary,
-        unselectedLabelColor: AppColors.textSecondary,
-        tabs: [
-          Tab(text: l10n.adminTabOverview),
-          Tab(text: l10n.adminTabBanners),
-          Tab(text: l10n.adminTabAnalytics),
-        ],
+        ),
       ),
     );
   }
@@ -81,6 +129,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
 
 /// Overview tab — users, servers, revenue summary.
 class _OverviewTab extends ConsumerWidget {
+  const _OverviewTab();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -257,6 +307,8 @@ class _OverviewTab extends ConsumerWidget {
 
 /// Banners tab — impressions, clicks, CTR.
 class _BannersTab extends ConsumerWidget {
+  const _BannersTab();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -447,6 +499,8 @@ class _BannersTab extends ConsumerWidget {
 
 /// Analytics tab — daily signups chart.
 class _AnalyticsTab extends ConsumerWidget {
+  const _AnalyticsTab();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -492,7 +546,7 @@ class _AnalyticsTab extends ConsumerWidget {
   }
 }
 
-// ── Helper widgets ──────────────────────────────────────────────────────
+// ─ Helper widgets ──────────────────────────────────────────────────────
 
 class _StatTile extends StatelessWidget {
   const _StatTile({
@@ -719,7 +773,6 @@ class _DailyChart extends StatelessWidget {
     if (data.isEmpty) return const SizedBox.shrink();
 
     final maxUsers = data.map((d) => d.users).reduce((a, b) => a > b ? a : b);
-    final barWidth = 32.0;
     final chartHeight = 150.0;
 
     return SizedBox(
@@ -762,7 +815,7 @@ class _DailyChart extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      row.day.substring(5), // MM-DD
+                      row.day.substring(5),
                       style: const TextStyle(
                         fontSize: 9,
                         color: AppColors.textTertiary,
