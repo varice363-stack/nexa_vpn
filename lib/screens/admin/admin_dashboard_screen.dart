@@ -99,6 +99,7 @@ class _OverviewTab extends ConsumerWidget {
           _buildDashboardCard(context, l10n, dashboardAsync),
           const SizedBox(height: 16),
           _buildAnalyticsCard(context, l10n, analyticsAsync),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -272,6 +273,7 @@ class _BannersTab extends ConsumerWidget {
           _buildTotalsCard(context, l10n, statsAsync),
           const SizedBox(height: 16),
           _buildBannersList(context, l10n, statsAsync),
+          const SizedBox(height: 16),
         ],
       ),
     );
