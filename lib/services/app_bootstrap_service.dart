@@ -1,10 +1,14 @@
 import '../core/utils/app_logger.dart';
 import '../domain/repositories/auth_repository.dart';
 import '../domain/repositories/config_repository.dart';
+import '../domain/repositories/key_storage.dart';
 import '../models/auth_user.dart';
 import '../services/api/api_exception.dart';
 import '../services/api/token_storage.dart';
 import '../services/identity/device_identity.dart';
+
+/// Ключ в защищённом хранилище устройства (Android Keystore).
+const _kIdentityKey = 'nexa_identity_code';
 
 /// Result of the application bootstrap sequence.
 class BootstrapResult {
@@ -34,15 +38,18 @@ class AppBootstrapService {
     required TokenStorage tokenStorage,
     required ConfigRepository configRepository,
     required AuthRepository authRepository,
+    required KeyStorage keyStorage,
     required AppLogger logger,
   })  : _tokenStorage = tokenStorage,
         _configRepository = configRepository,
         _authRepository = authRepository,
+        _keyStorage = keyStorage,
         _logger = logger;
 
   final TokenStorage _tokenStorage;
   final ConfigRepository _configRepository;
   final AuthRepository _authRepository;
+  final KeyStorage _keyStorage;
   final AppLogger _logger;
 
   Future<BootstrapResult> run() async {
@@ -97,12 +104,20 @@ class AppBootstrapService {
 
   /// Silently registers this device on the backend.
   ///
-  /// Errors are logged but swallowed: a missing backend or a network blip
-  /// must not prevent the app from opening. The call retries on the next
-  /// launch automatically.
+  /// Reads the stored Device Identity (or creates one on first launch)
+  /// and sends it to the backend. Errors are logged but swallowed: a missing
+  /// backend or a network blip must not prevent the app from opening.
+  /// The call retries on the next launch automatically.
   Future<void> _autoRegisterIfPossible() async {
     try {
-      final deviceId = DeviceIdentity.generate();
+      // Read existing Device Identity from secure storage (or create one).
+      var deviceId = await _keyStorage.read(_kIdentityKey);
+      if (deviceId == null || !DeviceIdentity.isValid(deviceId)) {
+        deviceId = DeviceIdentity.generate();
+        await _keyStorage.write(_kIdentityKey, deviceId);
+        _logger.info('New Device Identity created: $deviceId', source: 'bootstrap');
+      }
+
       _logger.info('Auto-registering device: $deviceId', source: 'bootstrap');
 
       final result = await _authRepository.autoRegister(deviceId: deviceId);
