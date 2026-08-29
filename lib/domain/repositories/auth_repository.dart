@@ -12,6 +12,17 @@ abstract class AuthRepository {
     String? country,
   });
 
+  /// POST /auth/auto-register — device-only login, no email/password.
+  /// Creates an anonymous account on first call, refreshes the token on
+  /// subsequent calls. The server-side [deviceId] is matched against
+  /// the user table, so a lost token on the client simply re-authenticates.
+  Future<AuthResult> autoRegister({
+    required String deviceId,
+    String? country,
+    String? platform,
+    String? modelName,
+  });
+
   /// GET /auth/me — current user. Throws [ApiException] on failure.
   Future<AuthUser> me();
 

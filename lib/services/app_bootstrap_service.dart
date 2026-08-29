@@ -4,6 +4,7 @@ import '../domain/repositories/config_repository.dart';
 import '../models/auth_user.dart';
 import '../services/api/api_exception.dart';
 import '../services/api/token_storage.dart';
+import '../services/identity/device_identity.dart';
 
 /// Result of the application bootstrap sequence.
 class BootstrapResult {
@@ -25,10 +26,9 @@ class BootstrapResult {
 /// Responsibilities:
 ///  * reads the stored token (secure storage);
 ///  * validates it against the backend (`GET /auth/me`) — auto login;
+///  * **auto-registers the device** on first launch (`POST /auth/auto-register`)
+///    so every user is visible in the admin dashboard even without an account;
 ///  * resolves the onboarding flag (first launch detection).
-///
-/// No artificial splash delay: navigation after bootstrap is driven by
-/// the AuthGate redirect in the router.
 class AppBootstrapService {
   AppBootstrapService({
     required TokenStorage tokenStorage,
@@ -77,6 +77,13 @@ class AppBootstrapService {
       }
     }
 
+    // No authenticated user? Auto-register this device on the backend
+    // so the admin dashboard can see it. Fire-and-forget — a failed
+    // registration must never block the app from starting.
+    if (user == null) {
+      _autoRegisterIfPossible();
+    }
+
     _logger.info(
       'Bootstrap done: onboarding=$onboarding authenticated=${user != null}',
       source: 'bootstrap',
@@ -86,5 +93,29 @@ class AppBootstrapService {
       hasToken: hasToken,
       user: user,
     );
+  }
+
+  /// Silently registers this device on the backend.
+  ///
+  /// Errors are logged but swallowed: a missing backend or a network blip
+  /// must not prevent the app from opening. The call retries on the next
+  /// launch automatically.
+  Future<void> _autoRegisterIfPossible() async {
+    try {
+      final deviceId = DeviceIdentity.generate();
+      _logger.info('Auto-registering device: $deviceId', source: 'bootstrap');
+
+      final result = await _authRepository.autoRegister(deviceId: deviceId);
+      await _tokenStorage.write(result.accessToken);
+
+      _logger.info(
+        'Auto-register success: user=${result.user.email}',
+        source: 'bootstrap',
+      );
+    } on ApiException catch (e) {
+      _logger.warn('Auto-register failed (network?): $e', source: 'bootstrap');
+    } catch (e) {
+      _logger.warn('Auto-register failed: $e', source: 'bootstrap');
+    }
   }
 }

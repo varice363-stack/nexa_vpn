@@ -35,6 +35,25 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<AuthResult> autoRegister({
+    required String deviceId,
+    String? country,
+    String? platform,
+    String? modelName,
+  }) async {
+    final data = await _api.post(
+      '/auth/auto-register',
+      body: {
+        'deviceId': deviceId,
+        if (country != null && country.isNotEmpty) 'country': country,
+        if (platform != null && platform.isNotEmpty) 'platform': platform,
+        if (modelName != null && modelName.isNotEmpty) 'modelName': modelName,
+      },
+    );
+    return AuthResult.fromJson(_asMap(data));
+  }
+
+  @override
   Future<AuthUser> me() async {
     final data = await _api.get('/auth/me');
     return AuthUser.fromJson(_asMap(data));

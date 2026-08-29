@@ -80,6 +80,8 @@ model User {
   /// Optional: accounts are opt-in. Access is normally tied to a
   /// recovery code, so most buyers never hand over an address.
   email        String?  @unique
+  /// Device identifier for auto-registered users (no email/password).
+  deviceId     String?  @unique
   /// Null for code-only accounts that never set a password.
   passwordHash String?
   role         Role     @default(USER)
