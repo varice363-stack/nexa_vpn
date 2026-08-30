@@ -99,12 +99,15 @@ async function bootstrap() {
 
   // ── Start ──────────────────────────────────────────────────────────────
   const port = Number(process.env.PORT || 3000);
-  await app.listen(port);
+  // Listen on all interfaces (0.0.0.0) so mobile devices on the same LAN
+  // can reach the backend. localhost-only would block every phone request.
+  const host = process.env.HOST || '0.0.0.0';
+  await app.listen(port, host);
   // eslint-disable-next-line no-console
-  console.log(`Nexa VPN API ready → http://localhost:${port}/api`);
+  console.log(`Nexa VPN API ready → http://${host}:${port}/api`);
   if (process.env.NODE_ENV !== 'production') {
     // eslint-disable-next-line no-console
-    console.log(`Swagger docs → http://localhost:${port}/api/docs`);
+    console.log(`Swagger docs → http://${host}:${port}/api/docs`);
   }
 }
 

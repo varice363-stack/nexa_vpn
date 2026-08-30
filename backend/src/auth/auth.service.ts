@@ -79,6 +79,10 @@ export class AuthService {
    *
    * If a user with this deviceId already exists, we log them in (refresh token).
    * Otherwise we create a new anonymous account with an auto-generated email.
+   *
+   * The very first user ever registered on this backend becomes ADMIN
+   * automatically — there's no chicken-and-egg problem with bootstrapping
+   * the admin account.
    */
   async autoRegister(dto: AutoRegisterDto) {
     let user = await this.prisma.user.findUnique({
@@ -88,12 +92,18 @@ export class AuthService {
     if (!user) {
       // Generate a unique email so the unique constraint never fires.
       const email = `device-${dto.deviceId.toLowerCase().replace(/[^a-z0-9-]/g, '')}@nexa.local`;
+
+      // If this is the very first user on the platform, make them ADMIN.
+      const userCount = await this.prisma.user.count();
+      const isFirstUser = userCount === 0;
+
       try {
         user = await this.prisma.user.create({
           data: {
             deviceId: dto.deviceId,
             email,
             country: dto.country,
+            role: isFirstUser ? 'ADMIN' : 'USER',
           },
         });
       } catch (e) {

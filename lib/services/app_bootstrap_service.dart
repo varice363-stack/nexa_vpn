@@ -130,7 +130,13 @@ class AppBootstrapService {
       );
       return result.user;
     } on ApiException catch (e) {
-      _logger.warn('Auto-register failed (network?): $e', source: 'bootstrap');
+      if (e.isNetworkError) {
+        _logger.warn('Auto-register failed: no network/backend reach. '
+            'Check VPN is OFF and API_BASE_URL is correct.', source: 'bootstrap');
+      } else {
+        _logger.warn('Auto-register failed: HTTP ${e.statusCode} — $e',
+            source: 'bootstrap');
+      }
       return null;
     } catch (e) {
       _logger.warn('Auto-register failed: $e', source: 'bootstrap');

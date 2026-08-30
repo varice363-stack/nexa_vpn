@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/promo_banner.dart';
 import '../../providers/app_providers.dart';
+import '../../services/api/api_exception.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/app_page.dart';
 import '../../widgets/common/glass_button.dart';
@@ -74,12 +75,40 @@ class _AdminCreateBannerScreenState
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
+
+      final message = _buildErrorMessage(e);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create banner: $e')),
+        SnackBar(content: Text(message)),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  /// Превращает исключение в понятное пользователю сообщение.
+  String _buildErrorMessage(Object e) {
+    if (e is ApiException) {
+      if (e.isNetworkError) {
+        return 'Нет связи с сервером. '
+            'Убедитесь что:\n'
+            '• VPN на телефоне ВЫКЛЮЧЕН\n'
+            '• Backend запущен на ПК\n'
+            '• Телефон и ПК в одной Wi-Fi сети';
+      }
+      switch (e.statusCode) {
+        case 401:
+          return 'Сессия истекла. Выйдите и войдите снова.';
+        case 403:
+          return 'Недостаточно прав. Нужна роль ADMIN.';
+        case 400:
+          return 'Неверные данные. Проверьте заполнение полей.';
+        case 409:
+          return 'Такой баннер уже существует.';
+        default:
+          return 'Ошибка сервера (${e.statusCode}): ${e.message}';
+      }
+    }
+    return 'Неизвестная ошибка: $e';
   }
 
   @override
