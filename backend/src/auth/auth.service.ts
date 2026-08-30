@@ -88,13 +88,22 @@ export class AuthService {
     if (!user) {
       // Generate a unique email so the unique constraint never fires.
       const email = `device-${dto.deviceId.toLowerCase().replace(/[^a-z0-9-]/g, '')}@nexa.local`;
-      user = await this.prisma.user.create({
-        data: {
-          deviceId: dto.deviceId,
-          email,
-          country: dto.country,
-        },
-      });
+      try {
+        user = await this.prisma.user.create({
+          data: {
+            deviceId: dto.deviceId,
+            email,
+            country: dto.country,
+          },
+        });
+      } catch (e) {
+        // Race condition: another request created this user between our
+        // findUnique and create. Re-read instead of failing.
+        user = await this.prisma.user.findUnique({
+          where: { deviceId: dto.deviceId },
+        });
+        if (!user) throw e; // Genuine error — propagate.
+      }
     }
 
     // Create or touch the device row so we know this device is alive.

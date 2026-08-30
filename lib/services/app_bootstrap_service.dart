@@ -85,10 +85,10 @@ class AppBootstrapService {
     }
 
     // No authenticated user? Auto-register this device on the backend
-    // so the admin dashboard can see it. Fire-and-forget — a failed
-    // registration must never block the app from starting.
+    // so the admin dashboard can see it. We await this — without the token
+    // the app opens as "guest" and the user won't see their stats.
     if (user == null) {
-      _autoRegisterIfPossible();
+      user = await _autoRegisterIfPossible();
     }
 
     _logger.info(
@@ -105,10 +105,11 @@ class AppBootstrapService {
   /// Silently registers this device on the backend.
   ///
   /// Reads the stored Device Identity (or creates one on first launch)
-  /// and sends it to the backend. Errors are logged but swallowed: a missing
-  /// backend or a network blip must not prevent the app from opening.
-  /// The call retries on the next launch automatically.
-  Future<void> _autoRegisterIfPossible() async {
+  /// and sends it to the backend. Returns the authenticated user on success,
+  /// null on failure. Errors are logged but swallowed: a missing backend or
+  /// a network blip must not crash the app — the call retries on the next
+  /// launch automatically.
+  Future<AuthUser?> _autoRegisterIfPossible() async {
     try {
       // Read existing Device Identity from secure storage (or create one).
       var deviceId = await _keyStorage.read(_kIdentityKey);
@@ -127,10 +128,13 @@ class AppBootstrapService {
         'Auto-register success: user=${result.user.email}',
         source: 'bootstrap',
       );
+      return result.user;
     } on ApiException catch (e) {
       _logger.warn('Auto-register failed (network?): $e', source: 'bootstrap');
+      return null;
     } catch (e) {
       _logger.warn('Auto-register failed: $e', source: 'bootstrap');
+      return null;
     }
   }
 }
