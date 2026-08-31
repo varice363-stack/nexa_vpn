@@ -33,11 +33,21 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, Postman)
-      if (!origin) return callback(null, true);
+      // SECURITY: Only allow requests with valid Origin OR from mobile apps (no Origin)
+      // Mobile apps don't send Origin header, so we allow them
+      // But we MUST validate if Origin IS present
+      if (!origin) {
+        // No Origin header - likely mobile app or curl/Postman
+        // Allow for development, but in production this should be restricted
+        return callback(null, true);
+      }
+      
+      // Check if origin is in whitelist
       if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
         callback(null, true);
       } else {
+        // SECURITY: Log suspicious origin attempts
+        console.warn(`[SECURITY] Blocked CORS request from origin: ${origin}`);
         callback(new Error('Not allowed by CORS'));
       }
     },
@@ -64,9 +74,39 @@ async function bootstrap() {
     legacyHeaders: false,
   });
 
+  // CRITICAL: Strict rate limiting for auto-register to prevent mass account creation
+  const autoRegisterLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, // max 5 registrations per IP per hour
+    message: { message: 'Too many registration attempts. Try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // CRITICAL: Strict rate limiting for webhook to prevent DoS and fake payments
+  const webhookLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 50, // max 50 webhooks per 15 minutes
+    message: { message: 'Too many webhook requests.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // CRITICAL: Strict rate limiting for code redemption to prevent brute force
+  const redeemLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 10, // max 10 redemption attempts per IP per hour
+    message: { message: 'Too many redemption attempts. Try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
   app.use('/api', limiter);
   app.use('/api/auth/login', authLimiter);
   app.use('/api/auth/register', authLimiter);
+  app.use('/api/auth/auto-register', autoRegisterLimiter); // CRITICAL: prevent mass registration
+  app.use('/api/billing/webhook', webhookLimiter); // CRITICAL: prevent DoS
+  app.use('/api/provisioning/redeem', redeemLimiter); // CRITICAL: prevent brute force
 
   // ── Validation ─────────────────────────────────────────────────────────
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
@@ -83,7 +123,9 @@ async function bootstrap() {
   }
 
   // ── Swagger (dev only) ─────────────────────────────────────────────────
-  if (process.env.NODE_ENV !== 'production') {
+  // SECURITY: Explicit production check - never expose API docs in production
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (!isProduction) {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('Nexa VPN API')
       .setDescription(

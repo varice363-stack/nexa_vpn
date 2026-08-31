@@ -14,10 +14,16 @@ export interface JwtPayload {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly prisma: PrismaService) {
+    // CRITICAL: No fallback for JWT_SECRET - must be set in environment
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('FATAL: JWT_SECRET is not configured');
+    }
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'dev-secret',
+      secretOrKey: secret,
     });
   }
 

@@ -27,7 +27,8 @@ export class AuthService {
     });
     if (existing) throw new ConflictException('Email already registered');
 
-    const passwordHash = await bcrypt.hash(dto.password, 10);
+    // SECURITY: Use 12 rounds for bcrypt (industry standard for 2026)
+    const passwordHash = await bcrypt.hash(dto.password, 12);
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
