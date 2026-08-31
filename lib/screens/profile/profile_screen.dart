@@ -81,6 +81,29 @@ class ProfileScreen extends ConsumerWidget {
             onTap: () => context.push('/settings'),
           ),
           const SizedBox(height: 20),
+          SectionHeader(title: '️ SECURITY'),
+          GlassListTile(
+            icon: Icons.shield_rounded,
+            title: 'SOCKS5 Shield',
+            subtitle: 'Exclusive: Your SOCKS5 is password-protected',
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'UNIQUE',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.green,
+                ),
+              ),
+            ),
+            onTap: () => context.push('/socks5-shield'),
+          ),
+          const SizedBox(height: 20),
           SectionHeader(title: l10n.profileSupport.toUpperCase()),
           GlassListTile(
             icon: Icons.support_agent_rounded,
