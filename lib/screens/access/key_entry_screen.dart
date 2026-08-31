@@ -41,11 +41,14 @@ class _KeyEntryScreenState extends ConsumerState<KeyEntryScreen> {
   @override
   void initState() {
     super.initState();
-    _controller.addListener(() {
-      setState(() {
-        _parsed = KeyInput.parse(_controller.text);
-        _error = null;
-      });
+    _controller.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    if (!mounted) return;
+    setState(() {
+      _parsed = KeyInput.parse(_controller.text);
+      _error = null;
     });
   }
 
@@ -81,6 +84,7 @@ class _KeyEntryScreenState extends ConsumerState<KeyEntryScreen> {
     final input = KeyInput.parse(_controller.text);
 
     if (_controller.text.trim().isEmpty) {
+      if (!mounted) return;
       setState(() => _error = l10n.keyEntryErrorEmpty);
       return;
     }
@@ -88,12 +92,14 @@ class _KeyEntryScreenState extends ConsumerState<KeyEntryScreen> {
       final lower = _controller.text.trim().toLowerCase();
       final otherScheme = ['vmess://', 'trojan://', 'ss://', 'socks://']
           .any(lower.startsWith);
+      if (!mounted) return;
       setState(() => _error = otherScheme
           ? l10n.keyEntryErrorUnsupportedScheme
           : l10n.keyEntryErrorUnknown);
       return;
     }
 
+    if (!mounted) return;
     setState(() {
       _busy = true;
       _error = null;
