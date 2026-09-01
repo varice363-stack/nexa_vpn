@@ -35,6 +35,7 @@
   "powerDisconnecting": "Disconnecting…",
   "powerNotConnected": "Not connected",
   "powerConnectionError": "Connection error",
+  "powerReconnecting": "Reconnecting…",
   "powerConnectedFor": "Connected • {duration}",
   "@powerConnectedFor": {
     "placeholders": {

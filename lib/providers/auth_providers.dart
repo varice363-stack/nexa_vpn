@@ -53,7 +53,8 @@ class AuthNotifier extends AsyncNotifier<AuthUser?> {
   Future<void> logout() async {
     final vpnStatus = ref.read(connectionStateProvider);
     if (vpnStatus == VpnStatus.connected ||
-        vpnStatus == VpnStatus.connecting) {
+        vpnStatus == VpnStatus.connecting ||
+        vpnStatus == VpnStatus.reconnecting) {
       await ref.read(connectionStateProvider.notifier).disconnect();
     }
 

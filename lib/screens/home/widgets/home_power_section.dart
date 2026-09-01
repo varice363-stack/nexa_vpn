@@ -25,6 +25,7 @@ class HomePowerSection extends ConsumerWidget {
       VpnStatus.disconnected => PowerButtonState.disconnected,
       VpnStatus.connecting || VpnStatus.disconnecting =>
         PowerButtonState.connecting,
+      VpnStatus.reconnecting => PowerButtonState.connecting,
       VpnStatus.connected => PowerButtonState.connected,
       VpnStatus.error => PowerButtonState.disconnected,
     };
@@ -37,6 +38,7 @@ class HomePowerSection extends ConsumerWidget {
           'Connected • ${Formatters.duration(stats?.duration ?? Duration.zero)}',
         ),
       VpnStatus.disconnecting => (AppColors.warning, l10n.powerDisconnecting),
+      VpnStatus.reconnecting => (AppColors.warning, l10n.powerReconnecting),
       VpnStatus.error => (AppColors.danger, l10n.powerConnectionError),
     };
 
@@ -68,7 +70,9 @@ class HomePowerSection extends ConsumerWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          status == VpnStatus.connected ? l10n.powerTapToDisconnect : l10n.powerTapToConnect,
+          (status == VpnStatus.connected || status == VpnStatus.reconnecting)
+              ? l10n.powerTapToDisconnect
+              : l10n.powerTapToConnect,
           style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
         ),
       ],

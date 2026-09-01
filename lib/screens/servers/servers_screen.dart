@@ -195,7 +195,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
   /// catalog could not answer.
   Widget _activeCard(ConnectionSource active, VpnStatus status) {
     final l10n = AppLocalizations.of(context);
-    final connected = status == VpnStatus.connected;
+    final connected = status == VpnStatus.connected || status == VpnStatus.reconnecting;
     final color = connected ? AppColors.success : AppColors.textTertiary;
 
     return GlassContainer(

@@ -57,6 +57,7 @@ class ConnectionManagerImpl implements ConnectionManager {
         _startSession();
       case VpnStatus.connecting:
       case VpnStatus.disconnecting:
+      case VpnStatus.reconnecting:
         break;
       case VpnStatus.disconnected:
         _endSession();

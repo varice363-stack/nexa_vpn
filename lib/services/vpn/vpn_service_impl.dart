@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
+
 import '../../core/errors/app_exception.dart';
 import '../../core/utils/app_logger.dart';
 import '../../domain/services/tunnel_manager.dart';
@@ -12,6 +14,9 @@ import '../../models/vpn_status.dart';
 ///
 /// Maps tunnel phases onto the public status stream and guards concurrent
 /// connect/disconnect calls.
+///
+/// Supports auto-reconnect: when network connectivity is lost while connected,
+/// the service waits for restoration and automatically reconnects.
 class VpnServiceImpl implements VpnService {
   VpnServiceImpl({
     required TunnelManager tunnel,
@@ -29,9 +34,12 @@ class VpnServiceImpl implements VpnService {
       StreamController<VpnStatus>.broadcast();
 
   StreamSubscription<TunnelPhase>? _phaseSub;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   ConnectionSource? _activeSource;
   VpnStatus _status = VpnStatus.disconnected;
   bool _pendingDisconnect = false;
+  bool _autoReconnectEnabled = true;
+  Timer? _reconnectDebounce;
 
   @override
   VpnStatus get status => _status;
@@ -47,6 +55,47 @@ class VpnServiceImpl implements VpnService {
 
   void init() {
     _phaseSub = _tunnel.phases.listen(_onPhase);
+    _startConnectivityMonitoring();
+  }
+
+  void _startConnectivityMonitoring() {
+    _connectivitySub = Connectivity().onConnectivityChanged.listen(_onConnectivityChanged);
+  }
+
+  void _onConnectivityChanged(List<ConnectivityResult> results) {
+    final hasNetwork = results.any((r) => r != ConnectivityResult.none);
+
+    if (_status == VpnStatus.connected && !hasNetwork) {
+      // Lost network while connected — prepare for reconnect
+      _logger.info('Network lost, waiting for restoration…', source: 'vpn');
+      _reconnectDebounce?.cancel();
+    } else if (_status == VpnStatus.reconnecting && hasNetwork) {
+      // Network restored while reconnecting — trigger reconnect
+      _reconnectDebounce?.cancel();
+      _reconnectDebounce = Timer(const Duration(seconds: 2), () {
+        _performAutoReconnect();
+      });
+    }
+  }
+
+  Future<void> _performAutoReconnect() async {
+    final source = _activeSource;
+    if (source == null) return;
+
+    _logger.info('Auto-reconnecting to ${source.label}…', source: 'vpn');
+
+    try {
+      // Stop current tunnel first
+      await _tunnel.stopTunnel();
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Reconnect
+      await _tunnel.startTunnel(source, _configProvider());
+      _logger.info('Auto-reconnect successful', source: 'vpn');
+    } catch (e) {
+      _logger.error('Auto-reconnect failed: $e', source: 'vpn');
+      // Status will be set to error by _onPhase
+    }
   }
 
   void _onPhase(TunnelPhase phase) {
@@ -58,7 +107,9 @@ class VpnServiceImpl implements VpnService {
       TunnelPhase.handshake ||
       TunnelPhase.authenticating ||
       TunnelPhase.establishing =>
-        VpnStatus.connecting,
+        _status == VpnStatus.reconnecting
+            ? VpnStatus.reconnecting
+            : VpnStatus.connecting,
       TunnelPhase.connected => VpnStatus.connected,
       TunnelPhase.disconnecting => VpnStatus.disconnecting,
       TunnelPhase.error => VpnStatus.error,
@@ -66,6 +117,15 @@ class VpnServiceImpl implements VpnService {
     if (phase == TunnelPhase.connected && _pendingDisconnect) {
       _pendingDisconnect = false;
     }
+
+    // If connection drops unexpectedly and we have an active source,
+    // prepare for auto-reconnect
+    if (phase == TunnelPhase.idle && _activeSource != null &&
+        previous == VpnStatus.connected && _autoReconnectEnabled) {
+      _status = VpnStatus.reconnecting;
+      _logger.info('Connection dropped, entering reconnect state', source: 'vpn');
+    }
+
     if (_status != previous) _controller.add(_status);
   }
 
@@ -84,6 +144,7 @@ class VpnServiceImpl implements VpnService {
     );
     _activeSource = source;
     _pendingDisconnect = false;
+    _reconnectDebounce?.cancel();
     try {
       await _tunnel.startTunnel(source, _configProvider());
       _logger.info('Connected to ${source.label}', source: 'vpn');
@@ -100,6 +161,7 @@ class VpnServiceImpl implements VpnService {
       return;
     }
     _pendingDisconnect = true;
+    _reconnectDebounce?.cancel();
     _logger.info('Disconnecting…', source: 'vpn');
     await _tunnel.stopTunnel();
     _activeSource = null;
@@ -108,6 +170,8 @@ class VpnServiceImpl implements VpnService {
 
   void dispose() {
     _phaseSub?.cancel();
+    _connectivitySub?.cancel();
+    _reconnectDebounce?.cancel();
     _controller.close();
   }
 }

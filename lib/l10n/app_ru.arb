@@ -35,6 +35,7 @@
   "powerDisconnecting": "Отключение…",
   "powerNotConnected": "Не подключено",
   "powerConnectionError": "Ошибка подключения",
+  "powerReconnecting": "Восстановление соединения…",
   "powerConnectedFor": "Подключено • {duration}",
   "@powerConnectedFor": {
     "placeholders": {

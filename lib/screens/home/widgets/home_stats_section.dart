@@ -16,8 +16,8 @@ class HomeStatsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final stats = ref.watch(connectionStatsProvider).value;
-    final connected =
-        ref.watch(connectionStateProvider) == VpnStatus.connected;
+    final status = ref.watch(connectionStateProvider);
+    final connected = status == VpnStatus.connected || status == VpnStatus.reconnecting;
 
     final download =
         connected && stats != null ? '${stats.speedDown.round()} Mbps' : '—';

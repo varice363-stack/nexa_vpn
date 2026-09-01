@@ -25,6 +25,7 @@ enum VpnStatus {
   connecting,
   connected,
   disconnecting,
+  reconnecting,
   error;
 
   String get label => switch (this) {
@@ -32,6 +33,7 @@ enum VpnStatus {
         connecting => 'Connecting…',
         connected => 'Connected',
         disconnecting => 'Disconnecting…',
+        reconnecting => 'Reconnecting…',
         error => 'Connection error',
       };
 }
