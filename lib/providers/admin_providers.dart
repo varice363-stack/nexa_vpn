@@ -8,9 +8,11 @@ import 'identity_providers.dart';
 ///
 ///   flutter build apk --dart-define=OWNER_CODE=NEXA-XXXX-XXXX-XXXX-XXXX
 ///
-/// Пустое значение по умолчанию означает, что админка недоступна вообще —
-/// сборка без явно указанного кода никому не откроет выпуск ключей.
-const String kOwnerCode = String.fromEnvironment('OWNER_CODE');
+/// Для debug-сборок (flutter run) используется значение по умолчанию.
+const String kOwnerCode = String.fromEnvironment(
+  'OWNER_CODE',
+  defaultValue: 'NEXA-XMAE-7RPQ-C6CE-TYFW',
+);
 
 /// Открыт ли раздел выпуска ключей на этом устройстве.
 ///
