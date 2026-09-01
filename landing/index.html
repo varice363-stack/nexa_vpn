@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexa VPN — Скачайте APK</title>
+    <meta name="description" content="Nexa VPN — VPN нового поколения с VLESS протоколом и SOCKS5 Shield. Скачайте APK для Android.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #a5b4fc;
+            --secondary: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: #f1f5f9;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 80px 20px 40px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        .hero-content {
+            max-width: 900px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-light), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+        
+        .hero h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        
+        .hero-subtitle {
+            font-size: 20px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 18px 36px;
+            border-radius: 16px;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.6);
+        }
+        
+        .download-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .version-info {
+            margin-top: 20px;
+            color: var(--text-tertiary);
+            font-size: 14px;
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 80px 20px;
+            background: var(--bg-secondary);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 50px;
+            background: linear-gradient(135deg, #f1f5f9, var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.2);
+        }
+        
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .feature-icon.purple { background: rgba(99, 102, 241, 0.2); }
+        .feature-icon.cyan { background: rgba(6, 182, 212, 0.2); }
+        .feature-icon.green { background: rgba(16, 185, 129, 0.2); }
+        .feature-icon.amber { background: rgba(245, 158, 11, 0.2); }
+        
+        .feature-card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        /* Install Section */
+        .install {
+            padding: 80px 20px;
+            background: var(--bg-primary);
+        }
+        
+        .install-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .step {
+            text-align: center;
+            padding: 30px 20px;
+        }
+        
+        .step-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        
+        .step h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .step p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        /* Warning Box */
+        .warning-box {
+            max-width: 800px;
+            margin: 60px auto 0;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+        }
+        
+        .warning-box h4 {
+            color: var(--warning);
+            font-size: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .warning-box p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        /* FAQ Section */
+        .faq {
+            padding: 80px 20px;
+            background: var(--bg-secondary);
+        }
+        
+        .faq-list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .faq-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        
+        .faq-item h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--primary-light);
+        }
+        
+        .faq-item p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        /* Footer */
+        .footer {
+            padding: 40px 20px;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary-light);
+        }
+        
+        .footer-copy {
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 36px;
+            }
+            .hero h1 {
+                font-size: 28px;
+            }
+            .hero-subtitle {
+                font-size: 16px;
+            }
+            .download-btn {
+                padding: 14px 28px;
+                font-size: 16px;
+            }
+            .section-title {
+                font-size: 26px;
+            }
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            .install-steps {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="logo">Nexa VPN</div>
+            <h1>VPN нового поколения для Android</h1>
+            <p class="hero-subtitle">
+                VLESS протокол, уникальная защита SOCKS5 Shield, нулевые логи. 
+                Один клик — и ваш трафик полностью защищён.
+            </p>
+            <a href="#" class="download-btn" id="downloadBtn">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Скачать APK
+            </a>
+            <div class="version-info">
+                Версия 1.0.0 • Android 7.0+ • ~15 МБ
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Почему Nexa VPN?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon purple">🛡️</div>
+                    <h3>SOCKS5 Shield</h3>
+                    <p>Единственный VPN с парольной защитой локального SOCKS5-прокси. Без неё любое приложение может обойти VPN и раскрыть ваш реальный IP.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon cyan">⚡</div>
+                    <h3>Протокол VLESS</h3>
+                    <p>Современный протокол с минимальными накладными расходами. Быстрее и безопаснее устаревших VPN-протоколов.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon green">🔒</div>
+                    <h3>Нулевые логи</h3>
+                    <p>Мы не храним логи вашей активности, историю браузинга, DNS-запросы или исходный IP. Только то, что необходимо для работы.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon amber">🔄</div>
+                    <h3>Авто-переподключение</h3>
+                    <p>При потере связи VPN автоматически восстанавливает соединение. Вы всегда защищены, даже на нестабильных сетях.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Install -->
+    <section class="install">
+        <div class="container">
+            <h2 class="section-title">Установка за 3 шага</h2>
+            <div class="install-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Скачайте APK</h3>
+                    <p>Нажмите кнопку выше для скачивания файла установки</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Разрешите установку</h3>
+                    <p>В настройках Android разрешите установку из неизвестных источников</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Запустите и подключитесь</h3>
+                    <p>Откройте приложение, добавьте ключ и нажмите кнопку подключения</p>
+                </div>
+            </div>
+            
+            <div class="warning-box">
+                <h4>⚠️ Важно: Разрешение установки APK</h4>
+                <p>
+                    При первой установке Android попросит разрешение на установку из неизвестных источников. 
+                    Это нормально — APK скачан напрямую, а не из Google Play. 
+                    Перейдите в Настройки → Безопасность → Разрешить установку из этого источника.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq">
+        <div class="container">
+            <h2 class="section-title">Частые вопросы</h2>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <h4>Безопасно ли скачивать APK не из Google Play?</h4>
+                    <p>Да, если вы скачиваете с официального сайта. APK подписан тем же ключом, что и версия для Google Play. Всегда проверяйте URL перед скачиванием.</p>
+                </div>
+                <div class="faq-item">
+                    <h4>Нужен ли ключ для использования?</h4>
+                    <p>Да, для подключения к VPN необходим действующий ключ доступа. Его можно получить при оформлении подписки или импортировать существующий ключ (vless:// формат).</p>
+                </div>
+                <div class="faq-item">
+                    <h4>Какие устройства поддерживаются?</h4>
+                    <p>Android 7.0 (API 24) и выше. Приложение оптимизировано для работы на слабых устройствах.</p>
+                </div>
+                <div class="faq-item">
+                    <h4>Как обновлять приложение?</h4>
+                    <p>Скачайте новую версию APK и установите поверх старой. Все настройки и ключи сохранятся автоматически.</p>
+                </div>
+                <div class="faq-item">
+                    <h4>VPN замедлит интернет?</h4>
+                    <p>Минимально. Благодаря протоколу VLESS накладные расходы составляют всего 2-5%. На практике разница незаметна при просмотре видео и браузинге.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="../privacy/">Политика конфиденциальности</a>
+            <a href="../terms/">Условия использования</a>
+            <a href="https://t.me/nexa_vpn_support">Поддержка</a>
+        </div>
+        <p class="footer-copy">© 2026 Nexa VPN. Все права защищены.</p>
+    </footer>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href === '#') return;
+                e.preventDefault();
+                document.querySelector(href).scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>
