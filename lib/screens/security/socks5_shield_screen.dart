@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../l10n/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/app_page.dart';
 import '../../widgets/common/glass_container.dart';
@@ -52,8 +50,6 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
     return AppPage(
       title: 'SOCKS5 Shield',
       subtitle: 'Exclusive protection',

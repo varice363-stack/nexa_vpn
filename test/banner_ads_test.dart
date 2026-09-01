@@ -32,6 +32,28 @@ class _FakeBannerRepository implements BannerRepository {
 
   @override
   Future<void> trackClick(String bannerId) async => clicks.add(bannerId);
+
+  @override
+  Future<PromoBanner> createBanner({
+    required String title,
+    required String description,
+    String? imageUrl,
+    String? buttonText,
+    String? targetUrl,
+    BannerPlacement placement = BannerPlacement.home,
+    int? displayDuration,
+  }) async {
+    throw UnimplementedError('Not used in tests');
+  }
+
+  @override
+  Future<List<PromoBanner>> getAllBanners() async => banners;
+
+  @override
+  Future<void> activateBanner(String bannerId) async {}
+
+  @override
+  Future<void> deactivateBanner(String bannerId) async {}
 }
 
 PromoBanner _banner({
