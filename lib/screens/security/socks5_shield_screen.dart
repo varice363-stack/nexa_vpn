@@ -23,6 +23,7 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
   final _scanner = const Socks5Scanner();
   List<Socks5ScanResult>? _scanResults;
   bool _isScanning = false;
+  String? _scanError;
 
   @override
   void initState() {
@@ -31,7 +32,11 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
   }
 
   Future<void> _scan() async {
-    setState(() => _isScanning = true);
+    setState(() {
+      _isScanning = true;
+      _scanResults = null;
+      _scanError = null;
+    });
 
     try {
       final results = await _scanner.scan();
@@ -43,7 +48,10 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isScanning = false);
+        setState(() {
+          _scanError = e.toString();
+          _isScanning = false;
+        });
       }
     }
   }
@@ -139,6 +147,28 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
             const SizedBox(height: 12),
             ..._scanResults!.map((result) => _buildPortResult(result)),
             const SizedBox(height: 16),
+          ],
+
+          // Scan button
+          if (_scanError != null) ...[
+            const SizedBox(height: 12),
+            GlassContainer(
+              borderRadius: BorderRadius.circular(12),
+              padding: const EdgeInsets.all(12),
+              color: Colors.red.withOpacity(0.05),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Scan failed: $_scanError',
+                      style: const TextStyle(fontSize: 12, color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
 
           // Scan button

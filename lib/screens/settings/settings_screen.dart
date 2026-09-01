@@ -6,7 +6,6 @@ import '../../l10n/app_localizations.dart';
 
 import '../../models/app_settings.dart';
 import '../../models/vpn_config.dart';
-import '../../providers/app_providers.dart';
 import '../../providers/locale_providers.dart';
 import '../../providers/settings_providers.dart';
 import '../../theme/app_colors.dart';
