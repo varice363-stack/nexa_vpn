@@ -155,7 +155,7 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
             GlassContainer(
               borderRadius: BorderRadius.circular(12),
               padding: const EdgeInsets.all(12),
-              color: Colors.red.withOpacity(0.05),
+              color: Colors.red.withValues(alpha: 0.05),
               child: Row(
                 children: [
                   const Icon(Icons.error_outline, color: Colors.red, size: 20),

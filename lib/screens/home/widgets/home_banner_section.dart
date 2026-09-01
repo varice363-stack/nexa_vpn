@@ -110,7 +110,7 @@ class _HomeBannerSectionState extends ConsumerState<HomeBannerSection> {
               decoration: BoxDecoration(
                 color: _currentIndex == index
                     ? const Color(0xFF6C63FF)
-                    : const Color(0xFF6C63FF).withOpacity(0.3),
+                    : const Color(0xFF6C63FF).withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
