@@ -29,21 +29,15 @@ class _Slide {
 List<_Slide> _slidesOf(AppLocalizations l10n) => [
   _Slide(
     icon: Icons.shield_rounded,
-    title: l10n.onboardingTitle2,
-    description: l10n.onboardingBody2,
+    title: l10n.onboardingTitle1,
+    description: l10n.onboardingBody1,
     accent: AppColors.primaryBright,
   ),
   _Slide(
     icon: Icons.bolt_rounded,
-    title: l10n.onboardingTitle3,
-    description: l10n.onboardingBody3,
+    title: l10n.onboardingTitle2,
+    description: l10n.onboardingBody2,
     accent: AppColors.success,
-  ),
-  _Slide(
-    icon: Icons.touch_app_rounded,
-    title: l10n.onboardingTitle1,
-    description: l10n.onboardingBody1,
-    accent: AppColors.cyan,
   ),
 ];
 
