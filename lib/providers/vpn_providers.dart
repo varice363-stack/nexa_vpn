@@ -124,8 +124,8 @@ final connectionStatsProvider = StreamProvider<ConnectionStats>(
 /// подключения измерять нечего. Раньше на этом месте показывался пинг
 /// сервера из демо-каталога, который к активному ключу отношения не имел.
 final livePingProvider = StreamProvider<int?>((ref) async* {
-  final connected =
-      ref.watch(connectionStateProvider) == VpnStatus.connected;
+  final status = ref.watch(connectionStateProvider);
+  final connected = status == VpnStatus.connected || status == VpnStatus.reconnecting;
   if (!connected) {
     yield null;
     return;
@@ -136,6 +136,12 @@ final livePingProvider = StreamProvider<int?>((ref) async* {
 
   while (true) {
     await Future<void>.delayed(const Duration(seconds: 10));
+    final currentStatus = ref.read(connectionStateProvider);
+    final stillConnected = currentStatus == VpnStatus.connected || currentStatus == VpnStatus.reconnecting;
+    if (!stillConnected) {
+      yield null;
+      return;
+    }
     yield await tunnel.measurePing();
   }
 });
