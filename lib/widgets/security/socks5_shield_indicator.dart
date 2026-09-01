@@ -71,7 +71,7 @@ class Socks5ShieldIndicator extends StatelessWidget {
       case Socks5ShieldStatus.vulnerable:
         return (Icons.shield_outlined, Colors.red, 'SOCKS5 Exposed');
       case Socks5ShieldStatus.unknown:
-        return (Icons.shield_question, Colors.grey, 'Status Unknown');
+        return (Icons.help_outline, Colors.grey, 'Status Unknown');
     }
   }
 }
