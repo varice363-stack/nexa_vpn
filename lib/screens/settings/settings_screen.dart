@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../services/api/api_config.dart';
 
 import '../../models/app_settings.dart';
 import '../../models/vpn_config.dart';
@@ -77,6 +78,8 @@ class SettingsScreen extends ConsumerWidget {
             onChanged: (v) =>
                 ref.read(settingsProvider.notifier).setAutoConnect(v),
           ),
+          SectionHeader(title: 'Backend'),
+          _BackendUrlRow(ref: ref),
           SectionHeader(title: l10n.settingsSectionApp),
           _LanguageRow(
             title: l10n.settingsLanguage,
@@ -275,6 +278,157 @@ class _ActionRow extends StatelessWidget {
                           fontSize: 12,
                           color: AppColors.textSecondary,
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: AppColors.textTertiary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Backend URL configuration row
+class _BackendUrlRow extends StatefulWidget {
+  const _BackendUrlRow({required this.ref});
+  
+  final WidgetRef ref;
+
+  @override
+  State<_BackendUrlRow> createState() => _BackendUrlRowState();
+}
+
+class _BackendUrlRowState extends State<_BackendUrlRow> {
+  String? _currentUrl;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentUrl();
+  }
+
+  Future<void> _loadCurrentUrl() async {
+    final saved = await ApiConfig.getSavedBaseUrl();
+    if (mounted) {
+      setState(() {
+        _currentUrl = saved ?? 'http://192.168.X.X:3000/api';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _showUrlDialog() async {
+    final controller = TextEditingController(text: _currentUrl ?? '');
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('URL Backend сервера'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Укажите адрес backend сервера.\n'
+              'Например: http://192.168.1.100:3000/api',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'http://192.168.X.X:3000/api',
+              ),
+              keyboardType: TextInputType.url,
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, ''),
+            child: const Text('Сбросить'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Сохранить'),
+          ),
+        ],
+      ),
+    );
+    
+    if (result != null && mounted) {
+      if (result.isEmpty) {
+        await ApiConfig.clearBaseUrl();
+        setState(() => _currentUrl = 'http://192.168.X.X:3000/api');
+      } else {
+        await ApiConfig.setBaseUrl(result);
+        setState(() => _currentUrl = result);
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('URL сохранён. Перезапустите приложение.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    return GlassContainer(
+      borderRadius: BorderRadius.circular(18),
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: _showUrlDialog,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            child: Row(
+              children: [
+                const Icon(Icons.dns_rounded, size: 20, color: AppColors.textSecondary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'URL Backend',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _currentUrl ?? 'Не настроен',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),

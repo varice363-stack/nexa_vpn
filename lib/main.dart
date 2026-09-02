@@ -8,9 +8,13 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'app/app.dart';
 import 'firebase_options.dart';
 import 'providers/app_providers.dart';
+import 'services/api/api_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize API config from SharedPreferences
+  await ApiConfig.initialize();
 
   // Local persistence is initialized once and injected via Riverpod override.
   final prefs = await SharedPreferences.getInstance();

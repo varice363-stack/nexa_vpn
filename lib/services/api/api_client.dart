@@ -18,11 +18,10 @@ class ApiClient {
     required TokenStorage tokenStorage,
     AppLogger? logger,
     http.Client? httpClient,
-    String baseUrl = ApiConfig.baseUrl,
   })  : _tokenStorage = tokenStorage,
         _logger = logger,
         _client = httpClient ?? http.Client(),
-        _baseUrl = baseUrl;
+        _baseUrl = ApiConfig.resolvedBaseUrl;
 
   final TokenStorage _tokenStorage;
   final AppLogger? _logger;
@@ -48,6 +47,7 @@ class ApiClient {
         'Authorization': 'Bearer $token',
     };
 
+    _logger?.info('$method $_baseUrl$path (base=$_baseUrl)', source: 'api');
     _logger?.debug('$method $path', source: 'api');
 
     // Retry только на сетевые ошибки, не на 4xx/5xx.
