@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../providers/admin_providers.dart';
+import '../../providers/app_providers.dart';
 import '../../providers/identity_providers.dart';
 import '../../providers/notifications_providers.dart';
 import '../../providers/subscription_providers.dart';
@@ -82,6 +85,13 @@ class ProfileScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
           SectionHeader(title: '️ SECURITY'),
+          // Кнопка для получения прав админа
+          GlassListTile(
+            icon: Icons.admin_panel_settings_rounded,
+            title: 'Получить права админа',
+            subtitle: 'Введите OWNER_CODE',
+            onTap: () => _showAdminCodeDialog(context, ref),
+          ),
           GlassListTile(
             icon: Icons.shield_rounded,
             title: 'SOCKS5 Shield',
@@ -141,6 +151,73 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+}
+
+/// Диалог для ввода OWNER_CODE и получения прав админа
+void _showAdminCodeDialog(BuildContext context, WidgetRef ref) {
+  final codeController = TextEditingController();
+  
+  showDialog(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Введите код владельца'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Введите OWNER_CODE для получения прав администратора',
+            style: TextStyle(fontSize: 14),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: codeController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'NEXA-XXXX-XXXX-XXXX-XXXX',
+            ),
+            autofocus: true,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: const Text('Отмена'),
+        ),
+        FilledButton(
+          onPressed: () async {
+            final code = codeController.text.trim();
+            if (code.isEmpty) return;
+            
+            try {
+              // Вызываем новый endpoint
+              final api = ref.read(apiClientProvider);
+              final result = await api.post('/auth/promote-to-admin', body: {
+                'ownerCode': code,
+              });
+              
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Права админа получены!')),
+              );
+              
+              // Перезагружаем провайдеры чтобы обновить UI
+              ref.invalidate(adminUnlockedProvider);
+            } catch (e) {
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Ошибка: $e')),
+              );
+            }
+          },
+          child: const Text('Получить'),
+        ),
+      ],
+    ),
+  );
 }
 
 /// Guest identity card with a sign-in CTA.

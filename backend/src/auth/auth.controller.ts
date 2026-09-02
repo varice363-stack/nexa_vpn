@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UnauthorizedException } from '@nestjs/common';
 
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser, SafeUser } from '../common/decorators/current-user.decorator';
@@ -38,5 +38,22 @@ export class AuthController {
   @Get('me')
   me(@CurrentUser() user: SafeUser) {
     return this.auth.me(user);
+  }
+
+  /**
+   * Promote current user to ADMIN role using OWNER_CODE.
+   * This endpoint is protected: requires valid JWT + correct OWNER_CODE.
+   */
+  @Post('promote-to-admin')
+  async promoteToAdmin(
+    @Body() dto: { ownerCode: string },
+    @CurrentUser() user: SafeUser,
+  ) {
+    const expectedCode = process.env.OWNER_CODE;
+    if (!expectedCode || dto.ownerCode !== expectedCode) {
+      throw new UnauthorizedException('Invalid owner code');
+    }
+    
+    return this.auth.promoteToAdmin(user.id);
   }
 }

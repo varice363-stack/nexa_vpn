@@ -145,6 +145,36 @@ export class AuthService {
     return this.issueTokens(user);
   }
 
+  /**
+   * Promote a user to ADMIN role.
+   * Called after verifying OWNER_CODE in the controller.
+   */
+  async promoteToAdmin(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) throw new UnauthorizedException('User not found');
+
+    if (user.role === 'ADMIN') {
+      return { message: 'Already an admin', user: this.sanitize(user) };
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { role: 'ADMIN' },
+    });
+
+    return {
+      message: 'Promoted to admin',
+      user: this.sanitize(updated),
+      accessToken: this.jwt.sign({
+        sub: updated.id,
+        email: updated.email,
+        role: updated.role,
+      }),
+    };
+  }
+
   private issueTokens(user: User) {
     const payload = { sub: user.id, email: user.email, role: user.role };
     return {
