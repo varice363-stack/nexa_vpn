@@ -114,13 +114,11 @@ async function bootstrap() {
   // ── Global prefix ──────────────────────────────────────────────────────
   app.setGlobalPrefix('api');
 
-  // ── Static files (dev only) ────────────────────────────────────────────
-  // Production: object storage + CDN (S3, CloudFront, etc.)
-  if (process.env.NODE_ENV !== 'production') {
-    app.useStaticAssets(join(process.cwd(), process.env.UPLOADS_DIR || 'uploads'), {
-      prefix: '/uploads',
-    });
-  }
+  // ── Static files (uploads) ────────────────────────────────────────────
+  // Serve uploaded banner images in all environments
+  app.useStaticAssets(join(process.cwd(), process.env.UPLOADS_DIR || 'uploads'), {
+    prefix: '/uploads',
+  });
 
   // ── Swagger (dev only) ─────────────────────────────────────────────────
   // SECURITY: Explicit production check - never expose API docs in production

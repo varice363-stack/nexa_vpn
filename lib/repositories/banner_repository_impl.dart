@@ -117,7 +117,8 @@ class BannerRepositoryImpl implements BannerRepository {
     required File imageFile,
   }) async {
     final token = await _tokenStorage.read();
-    final uri = Uri.parse('${ApiConfig.baseUrl}/banners/$bannerId/upload');
+    final baseUrl = ApiConfig.resolvedBaseUrl;
+    final uri = Uri.parse('$baseUrl/banners/$bannerId/upload');
     
     _logger?.info('Uploading image for banner $bannerId', source: 'banner');
     
