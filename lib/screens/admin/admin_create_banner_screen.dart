@@ -49,6 +49,8 @@ class _AdminCreateBannerScreenState
     setState(() => _isSubmitting = true);
 
     try {
+      final displayDuration = int.tryParse(_displayDurationController.text.trim());
+      
       final banner = await ref.read(bannerRepositoryProvider).createBanner(
             title: _titleController.text.trim(),
             description: _descriptionController.text.trim(),
@@ -62,13 +64,13 @@ class _AdminCreateBannerScreenState
                 ? _targetUrlController.text.trim()
                 : null,
             placement: _placement,
-            displayDuration: int.tryParse(_displayDurationController.text) ?? 30,
+            displayDuration: displayDuration,
           );
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Banner "${banner.title}" created')),
+        SnackBar(content: Text('Баннер "${banner.title}" создан!')),
       );
 
       Navigator.of(context).pop();
@@ -127,6 +129,7 @@ class _AdminCreateBannerScreenState
               label: l10n.adminBannerTitle,
               hint: 'Summer Sale 2026',
               required: true,
+              minLength: 2,
             ),
             const SizedBox(height: 16),
             _buildTextField(
@@ -135,6 +138,7 @@ class _AdminCreateBannerScreenState
               hint: 'Get 50% off on all premium plans!',
               maxLines: 3,
               required: true,
+              minLength: 2,
             ),
             const SizedBox(height: 16),
             _buildTextField(
@@ -185,6 +189,7 @@ class _AdminCreateBannerScreenState
     required bool required,
     int maxLines = 1,
     TextInputType? keyboardType,
+    int? minLength,
   }) {
     return GlassContainer(
       borderRadius: BorderRadius.circular(14),
@@ -201,14 +206,15 @@ class _AdminCreateBannerScreenState
           hintStyle: const TextStyle(color: AppColors.textTertiary),
         ),
         style: const TextStyle(color: AppColors.textPrimary),
-        validator: required
-            ? (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'This field is required';
-                }
-                return null;
-              }
-            : null,
+        validator: (value) {
+          if (required && (value == null || value.trim().isEmpty)) {
+            return 'Обязательное поле';
+          }
+          if (minLength != null && value != null && value.trim().length < minLength) {
+            return 'Минимум $minLength символа';
+          }
+          return null;
+        },
       ),
     );
   }

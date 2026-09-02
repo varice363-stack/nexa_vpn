@@ -6,6 +6,8 @@ import '../../l10n/app_localizations.dart';
 import '../../models/admin_dashboard.dart';
 import '../../models/analytics.dart';
 import '../../providers/admin_dashboard_providers.dart';
+import '../../providers/app_providers.dart';
+import '../../providers/banner_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/background/animated_background.dart';
 import '../../widgets/common/glass_container.dart';
@@ -653,14 +655,14 @@ class _MetricTile extends StatelessWidget {
   }
 }
 
-class _BannerStatCard extends StatelessWidget {
+class _BannerStatCard extends ConsumerWidget {
   const _BannerStatCard({required this.banner, required this.l10n});
 
   final dynamic banner;
   final AppLocalizations l10n;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final color = banner.active ? AppColors.success : AppColors.textTertiary;
 
     return Padding(
@@ -701,6 +703,33 @@ class _BannerStatCard extends StatelessWidget {
                     color: AppColors.textTertiary,
                   ),
                 ),
+                const SizedBox(width: 8),
+                // Кнопка активации/деактивации
+                GestureDetector(
+                  onTap: () => _toggleActive(ref, banner.id, banner.active),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: banner.active 
+                          ? AppColors.success.withValues(alpha: 0.15)
+                          : AppColors.danger.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: banner.active 
+                            ? AppColors.success.withValues(alpha: 0.4)
+                            : AppColors.danger.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Text(
+                      banner.active ? 'ON' : 'OFF',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: banner.active ? AppColors.success : AppColors.danger,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -729,6 +758,20 @@ class _BannerStatCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _toggleActive(WidgetRef ref, String bannerId, bool currentlyActive) async {
+    try {
+      if (currentlyActive) {
+        await ref.read(bannerRepositoryProvider).deactivateBanner(bannerId);
+      } else {
+        await ref.read(bannerRepositoryProvider).activateBanner(bannerId);
+      }
+      // Обновляем список баннеров
+      ref.read(bannerStatsProvider.notifier).refresh();
+    } catch (e) {
+      // Ошибка обработана в repository
+    }
   }
 }
 

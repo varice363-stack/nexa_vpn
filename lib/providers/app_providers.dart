@@ -103,7 +103,10 @@ final accountRepositoryProvider = Provider<AccountRepository>(
 
 /// Promotional banners.
 final bannerRepositoryProvider = Provider<BannerRepository>(
-  (ref) => BannerRepositoryImpl(api: ref.watch(apiClientProvider)),
+  (ref) => BannerRepositoryImpl(
+    api: ref.watch(apiClientProvider),
+    logger: ref.watch(loggerProvider),
+  ),
 );
 
 /// In-app notifications.

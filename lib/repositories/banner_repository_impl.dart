@@ -1,3 +1,4 @@
+import '../core/utils/app_logger.dart';
 import '../domain/repositories/banner_repository.dart';
 import '../models/promo_banner.dart';
 import '../services/api/api_client.dart';
@@ -5,9 +6,12 @@ import '../services/api/api_exception.dart';
 
 /// [BannerRepository] backed by the Nexa VPN API.
 class BannerRepositoryImpl implements BannerRepository {
-  BannerRepositoryImpl({required ApiClient api}) : _api = api;
+  BannerRepositoryImpl({required ApiClient api, AppLogger? logger}) 
+      : _api = api,
+        _logger = logger;
 
   final ApiClient _api;
+  final AppLogger? _logger;
 
   @override
   Future<List<PromoBanner>> getActiveBanners({
@@ -49,19 +53,27 @@ class BannerRepositoryImpl implements BannerRepository {
     BannerPlacement placement = BannerPlacement.home,
     int? displayDuration,
   }) async {
-    final data = await _api.post(
-      '/banners',
-      body: {
-        'title': title,
-        'description': description,
-        if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
-        if (buttonText != null && buttonText.isNotEmpty) 'buttonText': buttonText,
-        if (targetUrl != null && targetUrl.isNotEmpty) 'targetUrl': targetUrl,
-        'placement': placement.wireValue,
-        if (displayDuration != null) 'displayDuration': displayDuration,
-      },
-    );
-    return PromoBanner.fromJson(Map<String, Object?>.from(data as Map));
+    final body = {
+      'title': title,
+      'description': description,
+      if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
+      if (buttonText != null && buttonText.isNotEmpty) 'buttonText': buttonText,
+      if (targetUrl != null && targetUrl.isNotEmpty) 'targetUrl': targetUrl,
+      'placement': placement.wireValue,
+      if (displayDuration != null) 'displayDuration': displayDuration,
+      'active': true, // Активируем сразу при создании
+    };
+    
+    _logger?.info('Creating banner: $body', source: 'banner');
+    
+    try {
+      final data = await _api.post('/banners', body: body);
+      _logger?.info('Banner created successfully: $data', source: 'banner');
+      return PromoBanner.fromJson(Map<String, Object?>.from(data as Map));
+    } catch (e) {
+      _logger?.error('Failed to create banner: $e', source: 'banner');
+      rethrow;
+    }
   }
 
   @override
