@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/promo_banner.dart';
@@ -31,6 +34,20 @@ class _AdminCreateBannerScreenState
 
   BannerPlacement _placement = BannerPlacement.home;
   bool _isSubmitting = false;
+  XFile? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage() async {
+    final image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      maxHeight: 600,
+      imageQuality: 85,
+    );
+    if (image != null) {
+      setState(() => _selectedImage = image);
+    }
+  }
 
   @override
   void dispose() {
@@ -51,6 +68,7 @@ class _AdminCreateBannerScreenState
     try {
       final displayDuration = int.tryParse(_displayDurationController.text.trim());
       
+      // Создаём баннер
       final banner = await ref.read(bannerRepositoryProvider).createBanner(
             title: _titleController.text.trim(),
             description: _descriptionController.text.trim(),
@@ -66,6 +84,14 @@ class _AdminCreateBannerScreenState
             placement: _placement,
             displayDuration: displayDuration,
           );
+
+      // Если выбрана картинка — загружаем её
+      if (_selectedImage != null) {
+        await ref.read(bannerRepositoryProvider).uploadBannerImage(
+              bannerId: banner.id,
+              imageFile: File(_selectedImage!.path),
+            );
+      }
 
       if (!mounted) return;
 
@@ -141,12 +167,7 @@ class _AdminCreateBannerScreenState
               minLength: 2,
             ),
             const SizedBox(height: 16),
-            _buildTextField(
-              controller: _imageUrlController,
-              label: l10n.adminBannerImageUrl,
-              hint: 'https://example.com/banner.jpg',
-              required: false,
-            ),
+            _buildImagePicker(),
             const SizedBox(height: 16),
             _buildTextField(
               controller: _buttonTextController,
@@ -178,6 +199,70 @@ class _AdminCreateBannerScreenState
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildImagePicker() {
+    return GlassContainer(
+      borderRadius: BorderRadius.circular(14),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Картинка баннера',
+            style: TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (_selectedImage != null)
+            Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(
+                    File(_selectedImage!.path),
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => setState(() => _selectedImage = null),
+                  child: const Text(
+                    'Удалить',
+                    style: TextStyle(color: AppColors.danger),
+                  ),
+                ),
+              ],
+            )
+          else
+            GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.textTertiary, width: 2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_photo_alternate, size: 40, color: AppColors.textTertiary),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Нажми чтобы выбрать картинку',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

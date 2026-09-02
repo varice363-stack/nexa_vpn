@@ -1,16 +1,27 @@
+import 'dart:io';
+
+import 'package:http/http.dart' as http;
+
 import '../core/utils/app_logger.dart';
 import '../domain/repositories/banner_repository.dart';
 import '../models/promo_banner.dart';
 import '../services/api/api_client.dart';
+import '../services/api/api_config.dart';
 import '../services/api/api_exception.dart';
+import '../services/api/token_storage.dart';
 
 /// [BannerRepository] backed by the Nexa VPN API.
 class BannerRepositoryImpl implements BannerRepository {
-  BannerRepositoryImpl({required ApiClient api, AppLogger? logger}) 
-      : _api = api,
+  BannerRepositoryImpl({
+    required ApiClient api,
+    required TokenStorage tokenStorage,
+    AppLogger? logger,
+  })  : _api = api,
+        _tokenStorage = tokenStorage,
         _logger = logger;
 
   final ApiClient _api;
+  final TokenStorage _tokenStorage;
   final AppLogger? _logger;
 
   @override
@@ -99,6 +110,39 @@ class BannerRepositoryImpl implements BannerRepository {
   @override
   Future<void> deactivateBanner(String bannerId) =>
       _api.post('/banners/$bannerId/deactivate');
+
+  @override
+  Future<void> uploadBannerImage({
+    required String bannerId,
+    required File imageFile,
+  }) async {
+    final token = await _tokenStorage.read();
+    final uri = Uri.parse('${ApiConfig.baseUrl}/banners/$bannerId/upload');
+    
+    _logger?.info('Uploading image for banner $bannerId', source: 'banner');
+    
+    final request = http.MultipartRequest('POST', uri);
+    if (token != null && token.isNotEmpty) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+    
+    final file = await http.MultipartFile.fromPath('file', imageFile.path);
+    request.files.add(file);
+    
+    try {
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        _logger?.info('Image uploaded successfully', source: 'banner');
+      } else {
+        throw ApiException('Failed to upload image', statusCode: response.statusCode);
+      }
+    } catch (e) {
+      _logger?.error('Image upload failed: $e', source: 'banner');
+      throw ApiException('Image upload failed: $e', code: 'UPLOAD_ERROR');
+    }
+  }
 
   Future<void> _fireAndForget(String path) async {
     try {

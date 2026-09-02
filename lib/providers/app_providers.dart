@@ -105,6 +105,7 @@ final accountRepositoryProvider = Provider<AccountRepository>(
 final bannerRepositoryProvider = Provider<BannerRepository>(
   (ref) => BannerRepositoryImpl(
     api: ref.watch(apiClientProvider),
+    tokenStorage: ref.watch(tokenStorageProvider),
     logger: ref.watch(loggerProvider),
   ),
 );

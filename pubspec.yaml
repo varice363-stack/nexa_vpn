@@ -41,6 +41,9 @@ dependencies:
   # Diagnostics
   connectivity_plus: ^6.1.0
 
+  # Image picker for banner upload
+  image_picker: ^1.0.7
+
   # HTTP client
   http: ^1.2.0
 

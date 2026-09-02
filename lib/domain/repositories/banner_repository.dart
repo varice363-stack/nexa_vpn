@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../../models/promo_banner.dart';
 
 /// Promotional banners contract (backend `/banners`).
@@ -31,4 +33,10 @@ abstract class BannerRepository {
 
   /// POST /banners/:id/deactivate — deactivate a banner (admin only).
   Future<void> deactivateBanner(String bannerId);
+
+  /// POST /banners/:id/upload — upload image file for banner (admin only).
+  Future<void> uploadBannerImage({
+    required String bannerId,
+    required File imageFile,
+  });
 }
