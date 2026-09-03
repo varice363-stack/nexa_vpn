@@ -1,94 +1,99 @@
-# 🛡️ Настройка сервера с Reality + Vision + XHTTP
+# 🛡️ Настройка сервера Nexa VPN с Reality + Vision + XHTTP
 
-**Дата:** 3 сентября 2026  
-**Цель:** Поднять VPS с полным стеком обхода ТСПУ (95-98% эффективность)
+Полная инструкция по поднятию VPS с максимальным обходом блокировок РКН.
+
+## 📋 Требования
+
+- VPS сервер (рекомендуется **Fornex** от 199₽/мес)
+- Ubuntu 22.04 или новее
+- Базовые знания Linux
+
+## 🎯 Цель
+
+Поднять сервер с протоколом **VLESS + Reality + Vision + XHTTP** который:
+- Обходит ТСПУ (DPI) на 95-98%
+- Маскируется под обычный HTTPS трафик
+- Работает в РФ с декабря 2025
 
 ---
 
-## 📋 ТРЕБОВАНИЯ
+## 🚀 Пошаговая инструкция
 
-- **VPS:** Fornex VPS-1 (Финляндия) — 199₽/мес
-- **ОС:** Ubuntu 22.04 LTS
-- **Доступ:** SSH с root
-- **Домен:** Опционально (можно работать по IP)
+### 1. Аренда VPS
 
----
+**Рекомендация: Fornex**
 
-## 🚀 БЫСТРЫЙ СТАРТ (30 минут)
+1. Зайти на [fornex.com](https://fornex.com)
+2. Выбрать тариф **VPS-1** (1 CPU, 1GB RAM, 15GB SSD)
+3. Локация: **Финляндия** (ближе всего к РФ, меньше задержки)
+4. ОС: **Ubuntu 22.04**
+5. Оплатить (принимает карты РФ, СБП)
 
-### Шаг 1: Подключение к VPS
+**Цена:** 199₽/мес
+
+После оплаты получишь:
+- IP адрес сервера
+- Root пароль
+- SSH доступ
+
+### 2. Подключение к серверу
 
 ```bash
-# Подключение по SSH
-ssh root@YOUR_VPS_IP
-
-# Обновление системы
-apt update && apt upgrade -y
-
-# Установка базовых инструментов
-apt install -y curl wget unzip nano htop
+ssh root@YOUR_SERVER_IP
 ```
 
----
+Введи пароль при первом подключении.
 
-### Шаг 2: Установка Xray-core
+### 3. Обновление системы
 
 ```bash
-# Установка Xray через официальный скрипт
-bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
+apt update && apt upgrade -y
+```
 
-# Проверка версии (должна быть >= 24.8.15)
+### 4. Установка Xray-core
+
+```bash
+bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
+```
+
+Проверить версию:
+```bash
 xray version
 ```
 
-**ВАЖНО:** Если версия старая (< 24.8.15), XHTTP не поддерживается!
+Должна быть **>= 24.8.15** (поддержка XHTTP).
+
+### 5. Генерация ключей
 
 ```bash
-# Принудительное обновление до последней версии
-bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install --version latest
-```
-
----
-
-### Шаг 3: Генерация ключей
-
-```bash
-# Генерация UUID (для клиента)
+# UUID для клиента
 xray uuid
-# Вывод: abcdef12-3456-7890-abcd-ef1234567890
-# СОХРАНИ ЭТОТ UUID!
 
-# Генерация X25519 ключей (для Reality)
+# Ключи для Reality
 xray x25519
-# Вывод:
-# Private key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-# Public key: YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
-# СОХРАНИ ОБА КЛЮЧА!
 
-# Генерация Short ID (8 hex символов)
+# Short ID (8 hex символов)
 openssl rand -hex 4
-# Вывод: abcdef12
-# СОХРАНИ ЭТОТ SHORT ID!
 ```
 
-**Запиши всё в блокнот:**
+**Сохрани все три значения!**
+
+Пример вывода:
 ```
-UUID: abcdef12-3456-7890-abcd-ef1234567890
-Private Key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-Public Key: YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+UUID: 123e4567-e89b-12d3-a456-426614174000
+Private key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+Public key: YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
 Short ID: abcdef12
 ```
 
----
+### 6. Настройка конфигурации Xray
 
-### Шаг 4: Настройка конфигурации Xray
-
+Создать файл конфигурации:
 ```bash
-# Открыть конфигурационный файл
 nano /usr/local/etc/xray/config.json
 ```
 
-**Вставить эту конфигурацию:**
+Вставить эту конфигурацию (заменить плейсхолдеры на свои значения):
 
 ```json
 {
@@ -113,12 +118,10 @@ nano /usr/local/etc/xray/config.json
         "network": "tcp",
         "security": "reality",
         "realitySettings": {
-          "show": false,
-          "dest": "icloud.com:443",
-          "xver": 0,
+          "dest": "www.apple.com:443",
           "serverNames": [
-            "icloud.com",
             "www.apple.com",
+            "icloud.com",
             "www.microsoft.com"
           ],
           "privateKey": "YOUR_PRIVATE_KEY_HERE",
@@ -147,386 +150,279 @@ nano /usr/local/etc/xray/config.json
       "protocol": "blackhole",
       "tag": "block"
     }
-  ],
-  "routing": {
-    "domainStrategy": "IPIfNonMatch",
-    "rules": [
-      {
-        "type": "field",
-        "ip": [
-          "geoip:private"
-        ],
-        "outboundTag": "block"
-      }
-    ]
-  }
+  ]
 }
 ```
 
-**Заменить плейсхолдеры:**
+**Заменить:**
 - `YOUR_UUID_HERE` → твой UUID
 - `YOUR_PRIVATE_KEY_HERE` → твой Private Key
 - `YOUR_SHORT_ID_HERE` → твой Short ID
 
-**Сохранить:** Ctrl+O, Enter, Ctrl+X
+Сохранить: `Ctrl+O`, `Enter`, `Ctrl+X`
 
----
-
-### Шаг 5: Запуск Xray
+### 7. Запуск Xray
 
 ```bash
-# Перезапуск сервиса
 systemctl restart xray
-
-# Проверка статуса
-systemctl status xray
-
-# Должно быть: active (running)
-
-# Проверка логов (если есть ошибки)
-journalctl -u xray -n 50 --no-pager
+systemctl enable xray
 ```
 
----
+Проверить статус:
+```bash
+systemctl status xray
+```
 
-### Шаг 6: Настройка файрвола
+Должно быть **active (running)**.
+
+### 8. Настройка firewall
 
 ```bash
-# Открыть порт 443 (HTTPS)
 ufw allow 443/tcp
-
-# Или альтернатива: высокий порт (47000+) для обхода ТСПУ
-# ufw allow 47000/tcp
-
-# Включить UFW
+ufw allow 22/tcp
 ufw enable
-
-# Проверка правил
-ufw status
 ```
 
----
+### 9. Создание VLESS URI для клиента
 
-### Шаг 7: Создание VLESS URI для клиента
-
-**Формат VLESS URI с Reality + Vision:**
-
+Формат URI:
 ```
-vless://YOUR_UUID@YOUR_VPS_IP:443?encryption=vision&flow=xtls-rprx-vision&security=reality&sni=icloud.com&fp=chrome&pbk=YOUR_PUBLIC_KEY&sid=YOUR_SHORT_ID&type=tcp#Nexa%20VPN
+vless://YOUR_UUID@YOUR_SERVER_IP:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.apple.com&fp=chrome&pbk=YOUR_PUBLIC_KEY&sid=YOUR_SHORT_ID&type=tcp#NexaVPN
 ```
 
 **Пример:**
 ```
-vless://abcdef12-3456-7890-abcd-ef1234567890@91.234.56.78:443?encryption=vision&flow=xtls-rprx-vision&security=reality&sni=icloud.com&fp=chrome&pbk=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY&sid=abcdef12&type=tcp#Nexa%20VPN
+vless://123e4567-e89b-12d3-a456-426614174000@91.234.56.78:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.apple.com&fp=chrome&pbk=YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY&sid=abcdef12&type=tcp#NexaVPN
 ```
 
-**Этот URI нужно:**
-1. Добавить в backend (для выдачи клиентам)
-2. Использовать для тестирования в приложении
+**Важно:** В URI используется **Public Key** (не Private)!
+
+### 10. Тестирование
+
+1. Скопировать VLESS URI
+2. Вставить в приложение Nexa VPN
+3. Нажать "Connect"
+4. Проверить что статус: **Connected**
+5. Проверить IP через https://api.ipify.org
+6. IP должен быть = IP твоего VPS
 
 ---
 
-## 🧪 ТЕСТИРОВАНИЕ
+## 🔧 Устранение проблем
 
-### Тест 1: Проверка сервера
+### Xray не запускается
 
 ```bash
-# На сервере: проверка что Xray слушает порт
-ss -tlnp | grep 443
-
-# Должно быть: LISTEN 0 4096 0.0.0.0:443
+journalctl -u xray -n 50 --no-pager
 ```
 
-### Тест 2: Проверка подключения из РФ
+Смотреть ошибки в логах.
 
-**На телефоне с приложением:**
-1. Вставить VLESS URI
-2. Нажать "Connect"
-3. Проверить что статус: `connected`
-4. Проверить IP через https://api.ipify.org
-5. IP должен быть = IP твоего VPS
+### Не могу подключиться
 
-**Если не работает:**
-- Проверить логи Xray на сервере: `journalctl -u xray -f`
-- Проверить что UUID, Public Key, Short ID совпадают
-- Проверить что порт 443 открыт
+1. Проверить что порт 443 открыт:
+   ```bash
+   ufw status
+   ```
 
-### Тест 3: Тестирование в разных регионах
+2. Проверить что Xray слушает:
+   ```bash
+   ss -tlnp | grep 443
+   ```
 
-**Попроси друзей протестировать из:**
-- Москва
-- Санкт-Петербург
-- Красноярск (Сибирь — "Сибирская блокировка")
-- Новосибирск
-- Другие регионы
+3. Проверить конфигурацию на валидность:
+   ```bash
+   xray -t -c /usr/local/etc/xray/config.json
+   ```
 
-**Критерий успеха:** Работает в 90%+ регионов
+### Slow speed
+
+1. Проверить скорость интернета на сервере:
+   ```bash
+   apt install speedtest-cli
+   speedtest-cli
+   ```
+
+2. Попробовать другой `dest` в realitySettings (например, `icloud.com:443`)
 
 ---
 
-## 🔧 АЛЬТЕРНАТИВНЫЕ КОНФИГУРАЦИИ
+## 📊 Мониторинг
 
-### Вариант 1: High Port (47000+)
-
-**Зачем:** 80% пакетов проходят через высокие порты (ТСПУ экономит ресурсы)
-
-**Изменения на сервере:**
-```json
-{
-  "inbounds": [
-    {
-      "port": 47000,  // Вместо 443
-      // ... остальное без изменений
-    }
-  ]
-}
-```
-
-**VLESS URI:**
-```
-vless://YOUR_UUID@YOUR_VPS_IP:47000?encryption=vision&flow=xtls-rprx-vision&security=reality&sni=icloud.com&fp=chrome&pbk=YOUR_PUBLIC_KEY&sid=YOUR_SHORT_ID&type=tcp#Nexa%20VPN
-```
-
----
-
-### Вариант 2: XHTTP транспорт
-
-**Зачем:** Маскировка под HTTP-трафик, обход поведенческого анализа
-
-**Изменения на сервере:**
-```json
-{
-  "inbounds": [
-    {
-      "port": 443,
-      "protocol": "vless",
-      "settings": {
-        "clients": [
-          {
-            "id": "YOUR_UUID",
-            "flow": "xtls-rprx-vision"
-          }
-        ],
-        "decryption": "none"
-      },
-      "streamSettings": {
-        "network": "xhttp",  // Вместо tcp
-        "security": "reality",
-        "realitySettings": {
-          // ... без изменений
-        },
-        "xhttpSettings": {
-          "mode": "auto",
-          "maxUploadSize": 1000000,
-          "maxConcurrentUploads": 1,  // Критично для обхода "Сибирской блокировки"
-          "extra": {
-            "path": "/"
-          }
-        }
-      }
-    }
-  ]
-}
-```
-
-**VLESS URI:**
-```
-vless://YOUR_UUID@YOUR_VPS_IP:443?encryption=vision&flow=xtls-rprx-vision&security=reality&sni=icloud.com&fp=chrome&pbk=YOUR_PUBLIC_KEY&sid=YOUR_SHORT_ID&type=xhttp#Nexa%20VPN
-```
-
----
-
-### Вариант 3: gRPC транспорт
-
-**Зачем:** Альтернатива XHTTP, хорошая стабильность
-
-**Изменения на сервере:**
-```json
-{
-  "inbounds": [
-    {
-      "port": 443,
-      "protocol": "vless",
-      "settings": {
-        "clients": [
-          {
-            "id": "YOUR_UUID",
-            "flow": "xtls-rprx-vision"
-          }
-        ],
-        "decryption": "none"
-      },
-      "streamSettings": {
-        "network": "grpc",  // Вместо tcp
-        "security": "reality",
-        "realitySettings": {
-          // ... без изменений
-        },
-        "grpcSettings": {
-          "serviceName": "grpcServiceName",
-          "multiMode": false
-        }
-      }
-    }
-  ]
-}
-```
-
-**VLESS URI:**
-```
-vless://YOUR_UUID@YOUR_VPS_IP:443?encryption=vision&flow=xtls-rprx-vision&security=reality&sni=icloud.com&fp=chrome&pbk=YOUR_PUBLIC_KEY&sid=YOUR_SHORT_ID&type=grpc&serviceName=grpcServiceName#Nexa%20VPN
-```
-
----
-
-## 🔒 БЕЗОПАСНОСТЬ
-
-### Обновление системы
+### Просмотр подключений
 
 ```bash
-# Автоматические обновления безопасности
-apt install unattended-upgrades
-dpkg-reconfigure -plow unattended-upgrades
+# Активные подключения
+ss -tnp | grep xray
 
-# Выбрать: Yes
-```
-
-### SSH защита
-
-```bash
-# Запретить вход по паролю (только ключи)
-nano /etc/ssh/sshd_config
-
-# Изменить:
-PasswordAuthentication no
-PermitRootLogin prohibit-password
-
-# Перезапуск SSH
-systemctl restart sshd
-```
-
-### Fail2Ban (защита от брутфорса)
-
-```bash
-# Установка
-apt install fail2ban
-
-# Конфигурация
-nano /etc/fail2ban/jail.local
-```
-
-```ini
-[sshd]
-enabled = true
-port = ssh
-filter = sshd
-logpath = /var/log/auth.log
-maxretry = 3
-bantime = 3600
-```
-
-```bash
-# Запуск
-systemctl enable fail2ban
-systemctl start fail2ban
-```
-
----
-
-## 📊 МОНИТОРИНГ
-
-### Проверка нагрузки
-
-```bash
-# CPU/RAM
-htop
-
-# Сетевая активность
+# Статистика трафика
 iftop -i eth0
-
-# Дисковое пространство
-df -h
 ```
 
-### Логи Xray
+### Логи
 
 ```bash
 # Реалтайм логи
 journalctl -u xray -f
 
 # Последние 100 строк
-journalctl -u xray -n 100 --no-pager
-
-# Ошибки
-journalctl -u xray -p err
+journalctl -u xray -n 100
 ```
 
-### Статистика подключений
+---
+
+## 🔄 Альтернативные конфигурации
+
+### Вариант 1: High Port (47000+)
+
+ТСПУ проверяет порт 443 глубже. Высокие порты обходят 80% проверок.
+
+Изменить в config.json:
+```json
+{
+  "inbounds": [
+    {
+      "port": 47000,
+      // ... остальное без изменений
+    }
+  ]
+}
+```
+
+URI:
+```
+vless://YOUR_UUID@YOUR_SERVER_IP:47000?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.apple.com&fp=chrome&pbk=YOUR_PUBLIC_KEY&sid=YOUR_SHORT_ID&type=tcp#NexaVPN
+```
+
+### Вариант 2: gRPC транспорт
+
+Альтернатива TCP, лучше работает в некоторых регионах.
+
+config.json:
+```json
+{
+  "streamSettings": {
+    "network": "grpc",
+    "grpcSettings": {
+      "serviceName": "grpcServiceName"
+    }
+  }
+}
+```
+
+URI:
+```
+vless://YOUR_UUID@YOUR_SERVER_IP:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.apple.com&fp=chrome&pbk=YOUR_PUBLIC_KEY&sid=YOUR_SHORT_ID&type=grpc&serviceName=grpcServiceName#NexaVPN
+```
+
+---
+
+## 🛡️ Безопасность
+
+### Сменить SSH порт
 
 ```bash
-# Активные соединения
-ss -tnp | grep xray
+nano /etc/ssh/sshd_config
+```
 
-# Количество подключений
-ss -tn | grep :443 | wc -l
+Изменить:
+```
+Port 2222
+```
+
+Открыть порт:
+```bash
+ufw allow 2222/tcp
+```
+
+Перезапустить SSH:
+```bash
+systemctl restart ssh
+```
+
+### Настроить fail2ban
+
+```bash
+apt install fail2ban -y
+systemctl enable fail2ban
+systemctl start fail2ban
+```
+
+### Регулярные обновления
+
+```bash
+# Автоматические обновления безопасности
+apt install unattended-upgrades -y
+dpkg-reconfigure -plow unattended-upgrades
 ```
 
 ---
 
-## 🔄 РОТАЦИЯ СЕРВЕРОВ
+## 📈 Масштабирование
 
-**Если сервер заблокирован:**
+### Добавление нескольких пользователей
 
-1. **Создать новый VPS** (Fornex/AdminVPS)
-2. **Установить Xray** (Шаги 2-5)
-3. **Сгенерировать новые ключи** (Шаг 3)
-4. **Обновить backend** с новым VLESS URI
-5. **Уведомить пользователей** через Telegram-канал
+Добавить больше clients в config.json:
+```json
+{
+  "clients": [
+    {
+      "id": "UUID_1",
+      "flow": "xtls-rprx-vision"
+    },
+    {
+      "id": "UUID_2",
+      "flow": "xtls-rprx-vision"
+    }
+  ]
+}
+```
 
-**Время миграции:** 1-2 часа
+### Добавление серверов в разных локациях
 
----
-
-## 📚 ДОПОЛНИТЕЛЬНЫЕ РЕСУРСЫ
-
-### Документация
-- [Xray-core official docs](https://xtls.github.io/en/)
-- [VLESS Protocol Specification](https://github.com/XTLS/Xray-core/discussions/716)
-- [Reality Protocol](https://github.com/XTLS/Xray-core/discussions/1692)
-
-### Мониторинг блокировок
-- [VPN Status](https://vpnstatus.site/protocols)
-- [Great Firewall Guide](https://greatfirewallguide.com)
-
-### Сообщество
-- Reddit: r/VPN, r/selfhosted
-- Telegram: @vpnru, @itsec
+Повторить инструкцию для нового VPS:
+- Финляндия (основной)
+- Нидерланды (резервный)
+- США (для обхода гео-блокировок)
 
 ---
 
-## ✅ ЧЕК-ЛИСТ
+## ✅ Чек-лист перед запуском
 
-**Перед запуском:**
-- [ ] VPS куплен (Fornex 199₽/мес)
-- [ ] SSH доступ работает
+- [ ] VPS арендован (Fornex или аналог)
+- [ ] Ubuntu 22.04 установлена
 - [ ] Xray-core установлен (версия >= 24.8.15)
-- [ ] Ключи сгенерированы (UUID, Private, Public, Short ID)
+- [ ] Ключи сгенерированы (UUID, Private Key, Public Key, Short ID)
 - [ ] Конфигурация настроена (/usr/local/etc/xray/config.json)
-- [ ] Xray запущен (systemctl status xray = active)
-- [ ] Порт 443 открыт (ufw allow 443/tcp)
+- [ ] Xray запущен и работает (systemctl status xray)
+- [ ] Firewall настроен (порт 443 открыт)
 - [ ] VLESS URI создан
-
-**После запуска:**
-- [ ] Протестировано из Москвы
-- [ ] Протестировано из СПб
-- [ ] Протестировано из Сибири
-- [ ] Протестировано из других регионов
-- [ ] Эффективность обхода >= 90%
-- [ ] VLESS URI добавлен в backend
+- [ ] Тест подключения успешен
+- [ ] IP через api.ipify.org совпадает с IP VPS
 
 ---
 
-**Дата обновления:** 3 сентября 2026  
-**Следующий пересмотр:** После массового внедрения ИИ-фильтрации РКН  
+## 🔗 Полезные ссылки
+
+- [Xray-core документация](https://xtls.github.io/)
+- [VLESS протокол](https://github.com/rprx/v2ray-vless)
+- [Reality протокол](https://github.com/XTLS/REALITY)
+- [Fornex VPS](https://fornex.com)
+
+---
+
+## 💰 Стоимость
+
+| Статья | Цена |
+|--------|------|
+| VPS Fornex VPS-1 | 199₽/мес |
+| Домен .ru (опционально) | 179₽/год |
+| **Итого** | **199₽/мес** |
+
+При 10 платящих пользователях (2490₽/мес) — **уже в плюсе!**
+
+---
+
+**Последнее обновление:** 3 сентября 2026  
 **Автор:** AI Infrastructure Engineer  
 **Версия:** 1.0
