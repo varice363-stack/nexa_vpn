@@ -45,9 +45,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonCopy => 'Copy';
 
   @override
-  String get commonCopied => 'Copied';
-
-  @override
   String get commonShare => 'Share';
 
   @override
@@ -80,11 +77,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Connect with a single tap. Nexa VPN works silently in the background and keeps your session alive.';
 
   @override
-  String get onboardingTitle2 => 'Military-grade encryption';
+  String get onboardingTitle2 => 'SOCKS5 Shield & zero logs';
 
   @override
   String get onboardingBody2 =>
-      'Your traffic is protected with the modern VLESS protocol over Xray REALITY.';
+      'The only VPN with password-protected SOCKS5 proxy. VLESS encryption, zero logs of your activity.';
 
   @override
   String get onboardingTitle3 => 'Blazing fast speeds';
@@ -119,6 +116,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get powerConnectionError => 'Connection error';
+
+  @override
+  String get powerReconnecting => 'Reconnecting…';
 
   @override
   String powerConnectedFor(String duration) {
@@ -358,15 +358,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonExpires => 'Expires';
 
   @override
-  String get bannerCarousel => 'Recommended';
-
-  @override
-  String bannerDuration(int seconds) => '${seconds}s';
-
-  @override
-  String get bannerTapToOpen => 'Tap to open';
-
-  @override
   String get profileTitle => 'Profile';
 
   @override
@@ -515,9 +506,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get vlessCompatible =>
       'Works with v2rayNG, Shadowrocket, sing-box and other clients.';
-
-  @override
-  String get vlessCopied => 'VLESS configuration copied';
 
   @override
   String get vlessNeverExpires => 'Never (lifetime)';
@@ -828,6 +816,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyPolicyTitle => 'Privacy Policy';
 
   @override
+  String get privacyLastUpdated => 'Last updated: September 1, 2026';
+
+  @override
+  String get privacyFullPolicyNotice =>
+      'This is a short summary. The full privacy policy is available via the link below.';
+
+  @override
+  String get privacyOpenFullPolicy => 'Open full policy';
+
+  @override
   String get serversSearchByName => 'Search by name or host';
 
   @override
@@ -837,10 +835,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accessKeysHeader => 'ACCESS KEYS';
 
   @override
-  String get accessNoActiveWarning => 'No active access — renew your subscription to activate a key.';
+  String get accessNoActiveWarning =>
+      'No active access — renew your subscription to activate a key.';
 
   @override
-  String get accessGenerateHintLong => 'Get access to generate your personal key — usable in the Nexa app and any compatible client.';
+  String get accessGenerateHintLong =>
+      'Get access to generate your personal key — usable in the Nexa app and any compatible client.';
 
   @override
   String get accessStatusActive => 'ACTIVE';
@@ -864,7 +864,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accessDevices => 'devices';
 
   @override
-  String get accessOfflineMessage => 'Cannot reach the server. Your access data will appear once the connection is back.';
+  String get accessOfflineMessage =>
+      'Cannot reach the server. Your access data will appear once the connection is back.';
 
   @override
   String get identityTitle => 'My Code';
@@ -885,13 +886,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get identitySaveNow => 'Save the code right now';
 
   @override
-  String get identitySaveBody => 'This is the only way to restore paid access on another phone. We don\'t know your email and can\'t restore the code: we simply don\'t have it.\n\nWrite it down on paper or save it in a password manager.';
+  String get identitySaveBody =>
+      'This is the only way to restore paid access on another phone. We don\'t know your email and can\'t restore the code: we simply don\'t have it.\n\nWrite it down on paper or save it in a password manager.';
 
   @override
   String get identityTransferTitle => 'Transferring access?';
 
   @override
-  String get identityTransferBody => 'If you have a code from a previous device, enter it — this code will be replaced.';
+  String get identityTransferBody =>
+      'If you have a code from a previous device, enter it — this code will be replaced.';
 
   @override
   String get identityEnterOther => 'Enter another code';
@@ -900,7 +903,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get identityDialogTitle => 'Enter another code';
 
   @override
-  String get identityDialogBody => 'Enter the code saved on another device. The current code will be replaced.';
+  String get identityDialogBody =>
+      'Enter the code saved on another device. The current code will be replaced.';
 
   @override
   String get identityApply => 'Apply';
@@ -921,19 +925,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumChoosePlan => 'CHOOSE YOUR PLAN';
 
   @override
-  String serversSwitchError(String error) => 'Failed to switch: $error';
+  String serversSwitchError(String error) {
+    return 'Failed to switch: $error';
+  }
 
   @override
   String get serversEmptyTitle => 'No servers yet';
 
   @override
-  String get serversEmptyBody => 'Servers appear here once you add a key or a provider subscription. Nothing is shown that you cannot connect to.';
+  String get serversEmptyBody =>
+      'Servers appear here once you add a key or a provider subscription. Nothing is shown that you cannot connect to.';
 
   @override
-  String serversReconnected(String label) => 'Reconnected via $label';
+  String serversReconnected(String label) {
+    return 'Reconnected via $label';
+  }
 
   @override
-  String serversSelected(String label) => 'Selected $label';
+  String serversSelected(String label) {
+    return 'Selected $label';
+  }
 
   @override
   String get serversAll => 'ALL SERVERS';
@@ -951,7 +962,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serversSelectedStatus => 'Selected';
 
   @override
-  String serversAvailable(int count) => '$count available from your key';
+  String serversAvailable(int count) {
+    return '$count available from your key';
+  }
 
   @override
   String get adminOwnerSection => 'OWNER';
@@ -966,7 +979,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminNoAccess => 'This account does not have admin rights';
 
   @override
-  String adminIssueFailed(String error) => 'Failed to issue code: $error';
+  String adminIssueFailed(String error) {
+    return 'Failed to issue code: $error';
+  }
 
   @override
   String get adminDurationForever => 'Forever';
@@ -981,10 +996,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminDuration1Year => '1 year';
 
   @override
-  String adminDurationDays(int count) => '$count days';
+  String adminDurationDays(int count) {
+    return '$count days';
+  }
 
   @override
-  String get adminOwnerOnly => 'This section is only available to the app owner.';
+  String get adminOwnerOnly =>
+      'This section is only available to the app owner.';
 
   @override
   String get adminAllKeys => 'All keys';
@@ -1014,7 +1032,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminCopyCode => 'Copy code';
 
   @override
-  String adminLoadFailed(String error) => 'Failed to load keys. Make sure the backend is running.\n$error';
+  String adminLoadFailed(String error) {
+    return 'Failed to load keys. Make sure the backend is running.\n$error';
+  }
 
   @override
   String get adminNoKeys => 'No keys yet.';
@@ -1035,10 +1055,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminKeyIssueHint => 'Create codes for sale and view all keys';
 
   @override
-  String get profileLoadError => 'Failed to load subscription data. Check your connection.';
+  String get profileLoadError =>
+      'Failed to load subscription data. Check your connection.';
 
   @override
-  String get notificationsLoadError => 'Failed to load notifications. Check your connection.';
+  String get notificationsLoadError =>
+      'Failed to load notifications. Check your connection.';
+
+  @override
+  String get commonCopied => 'Copied';
+
+  @override
+  String get vlessCopied => 'VLESS configuration copied';
 
   @override
   String get adminDashboard => 'Admin Dashboard';
@@ -1107,9 +1135,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonError => 'Error';
 
   @override
-  String get commonLoading => 'Loading...';
-
-  @override
   String get adminCreateBanner => 'Create Banner';
 
   @override
@@ -1135,4 +1160,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminBannerPlacement => 'Placement';
+
+  @override
+  String get commonLoading => 'Loading...';
 }

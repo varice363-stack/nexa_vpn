@@ -170,12 +170,6 @@ abstract class AppLocalizations {
   /// **'Copy'**
   String get commonCopy;
 
-  /// No description provided for @commonCopied.
-  ///
-  /// In en, this message translates to:
-  /// **'Copied'**
-  String get commonCopied;
-
   /// No description provided for @commonShare.
   ///
   /// In en, this message translates to:
@@ -239,13 +233,13 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingTitle2.
   ///
   /// In en, this message translates to:
-  /// **'Military-grade encryption'**
+  /// **'SOCKS5 Shield & zero logs'**
   String get onboardingTitle2;
 
   /// No description provided for @onboardingBody2.
   ///
   /// In en, this message translates to:
-  /// **'Your traffic is protected with the modern VLESS protocol over Xray REALITY.'**
+  /// **'The only VPN with password-protected SOCKS5 proxy. VLESS encryption, zero logs of your activity.'**
   String get onboardingBody2;
 
   /// No description provided for @onboardingTitle3.
@@ -313,6 +307,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connection error'**
   String get powerConnectionError;
+
+  /// No description provided for @powerReconnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting…'**
+  String get powerReconnecting;
 
   /// No description provided for @powerConnectedFor.
   ///
@@ -776,24 +776,6 @@ abstract class AppLocalizations {
   /// **'Expires'**
   String get commonExpires;
 
-  /// No description provided for @bannerCarousel.
-  ///
-  /// In en, this message translates to:
-  /// **'Recommended'**
-  String get bannerCarousel;
-
-  /// No description provided for @bannerDuration.
-  ///
-  /// In en, this message translates to:
-  /// **'{seconds}s'**
-  String bannerDuration(int seconds);
-
-  /// No description provided for @bannerTapToOpen.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap to open'**
-  String get bannerTapToOpen;
-
   /// No description provided for @profileTitle.
   ///
   /// In en, this message translates to:
@@ -1081,12 +1063,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Works with v2rayNG, Shadowrocket, sing-box and other clients.'**
   String get vlessCompatible;
-
-  /// No description provided for @vlessCopied.
-  ///
-  /// In en, this message translates to:
-  /// **'VLESS configuration copied'**
-  String get vlessCopied;
 
   /// No description provided for @vlessNeverExpires.
   ///
@@ -1634,6 +1610,24 @@ abstract class AppLocalizations {
   /// **'Privacy Policy'**
   String get privacyPolicyTitle;
 
+  /// No description provided for @privacyLastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated: September 1, 2026'**
+  String get privacyLastUpdated;
+
+  /// No description provided for @privacyFullPolicyNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a short summary. The full privacy policy is available via the link below.'**
+  String get privacyFullPolicyNotice;
+
+  /// No description provided for @privacyOpenFullPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Open full policy'**
+  String get privacyOpenFullPolicy;
+
   /// No description provided for @serversSearchByName.
   ///
   /// In en, this message translates to:
@@ -1886,127 +1880,383 @@ abstract class AppLocalizations {
   /// **'{count} available from your key'**
   String serversAvailable(int count);
 
+  /// No description provided for @adminOwnerSection.
+  ///
+  /// In en, this message translates to:
+  /// **'OWNER'**
   String get adminOwnerSection;
 
+  /// No description provided for @adminTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue access codes'**
   String get adminTitle;
 
+  /// No description provided for @adminSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create codes for sale and view all keys'**
   String get adminSubtitle;
 
+  /// No description provided for @adminNoAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'This account does not have admin rights'**
   String get adminNoAccess;
 
+  /// No description provided for @adminIssueFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to issue code: {error}'**
   String adminIssueFailed(String error);
 
+  /// No description provided for @adminDurationForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Forever'**
   String get adminDurationForever;
 
+  /// No description provided for @adminDuration30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'30 days'**
   String get adminDuration30Days;
 
+  /// No description provided for @adminDuration90Days.
+  ///
+  /// In en, this message translates to:
+  /// **'90 days'**
   String get adminDuration90Days;
 
+  /// No description provided for @adminDuration1Year.
+  ///
+  /// In en, this message translates to:
+  /// **'1 year'**
   String get adminDuration1Year;
 
+  /// No description provided for @adminDurationDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
   String adminDurationDays(int count);
 
+  /// No description provided for @adminOwnerOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'This section is only available to the app owner.'**
   String get adminOwnerOnly;
 
+  /// No description provided for @adminAllKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'All keys'**
   String get adminAllKeys;
 
+  /// No description provided for @adminRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
   String get adminRefresh;
 
+  /// No description provided for @adminNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (optional)'**
   String get adminNameLabel;
 
+  /// No description provided for @adminNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Client #1'**
   String get adminNameHint;
 
+  /// No description provided for @adminDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
   String get adminDuration;
 
+  /// No description provided for @adminIssuing.
+  ///
+  /// In en, this message translates to:
+  /// **'Issuing…'**
   String get adminIssuing;
 
+  /// No description provided for @adminIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue code'**
   String get adminIssue;
 
+  /// No description provided for @adminCodeIssued.
+  ///
+  /// In en, this message translates to:
+  /// **'Code issued — give it to the buyer'**
   String get adminCodeIssued;
 
+  /// No description provided for @adminCopyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code'**
   String get adminCopyCode;
 
+  /// No description provided for @adminLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load keys. Make sure the backend is running.\n{error}'**
   String adminLoadFailed(String error);
 
+  /// No description provided for @adminNoKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'No keys yet.'**
   String get adminNoKeys;
 
+  /// No description provided for @adminUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'until'**
   String get adminUntil;
 
+  /// No description provided for @adminLifetime.
+  ///
+  /// In en, this message translates to:
+  /// **'lifetime'**
   String get adminLifetime;
 
+  /// No description provided for @adminCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
   String get adminCopy;
 
+  /// No description provided for @adminKeyIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue keys'**
   String get adminKeyIssue;
 
+  /// No description provided for @adminKeyIssueHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create codes for sale and view all keys'**
   String get adminKeyIssueHint;
 
+  /// No description provided for @profileLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load subscription data. Check your connection.'**
   String get profileLoadError;
 
+  /// No description provided for @notificationsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load notifications. Check your connection.'**
   String get notificationsLoadError;
 
+  /// No description provided for @commonCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get commonCopied;
+
+  /// No description provided for @vlessCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'VLESS configuration copied'**
+  String get vlessCopied;
+
+  /// No description provided for @adminDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Dashboard'**
   String get adminDashboard;
 
+  /// No description provided for @adminDashboardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics & banner analytics'**
   String get adminDashboardSubtitle;
 
+  /// No description provided for @adminTabOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
   String get adminTabOverview;
 
+  /// No description provided for @adminTabBanners.
+  ///
+  /// In en, this message translates to:
+  /// **'Banners'**
   String get adminTabBanners;
 
+  /// No description provided for @adminTabAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics'**
   String get adminTabAnalytics;
 
+  /// No description provided for @adminOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
   String get adminOverview;
 
+  /// No description provided for @adminTotalUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Users'**
   String get adminTotalUsers;
 
+  /// No description provided for @adminNewToday.
+  ///
+  /// In en, this message translates to:
+  /// **'New Today'**
   String get adminNewToday;
 
+  /// No description provided for @adminActivePremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Premium'**
   String get adminActivePremium;
 
+  /// No description provided for @adminActiveServers.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Servers'**
   String get adminActiveServers;
 
+  /// No description provided for @adminRevenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Revenue'**
   String get adminRevenue;
 
+  /// No description provided for @adminTotalRevenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Revenue'**
   String get adminTotalRevenue;
 
+  /// No description provided for @adminBlockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked Users'**
   String get adminBlockedUsers;
 
+  /// No description provided for @adminPremiumUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Users'**
   String get adminPremiumUsers;
 
+  /// No description provided for @adminBannerTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'All Banners'**
   String get adminBannerTotals;
 
+  /// No description provided for @adminImpressions.
+  ///
+  /// In en, this message translates to:
+  /// **'Impressions'**
   String get adminImpressions;
 
+  /// No description provided for @adminClicks.
+  ///
+  /// In en, this message translates to:
+  /// **'Clicks'**
   String get adminClicks;
 
+  /// No description provided for @adminNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data available'**
   String get adminNoData;
 
+  /// No description provided for @adminNoBanners.
+  ///
+  /// In en, this message translates to:
+  /// **'No banners yet'**
   String get adminNoBanners;
 
+  /// No description provided for @adminAllBanners.
+  ///
+  /// In en, this message translates to:
+  /// **'Banner Performance'**
   String get adminAllBanners;
 
+  /// No description provided for @adminDailySignups.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Signups (last 7 days)'**
   String get adminDailySignups;
 
+  /// No description provided for @commonError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
   String get commonError;
 
-  String get commonLoading;
-
+  /// No description provided for @adminCreateBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Banner'**
   String get adminCreateBanner;
 
+  /// No description provided for @adminCreateBannerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new promotional banner'**
   String get adminCreateBannerSubtitle;
 
+  /// No description provided for @adminBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
   String get adminBannerTitle;
 
+  /// No description provided for @adminBannerDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
   String get adminBannerDescription;
 
+  /// No description provided for @adminBannerImageUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Image URL (optional)'**
   String get adminBannerImageUrl;
 
+  /// No description provided for @adminBannerButtonText.
+  ///
+  /// In en, this message translates to:
+  /// **'Button text (optional)'**
   String get adminBannerButtonText;
 
+  /// No description provided for @adminBannerTargetUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Target URL (optional)'**
   String get adminBannerTargetUrl;
 
+  /// No description provided for @adminBannerDisplayDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Display duration (seconds)'**
   String get adminBannerDisplayDuration;
 
+  /// No description provided for @adminBannerPlacement.
+  ///
+  /// In en, this message translates to:
+  /// **'Placement'**
   String get adminBannerPlacement;
+
+  /// No description provided for @commonLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get commonLoading;
 }
 
 class _AppLocalizationsDelegate

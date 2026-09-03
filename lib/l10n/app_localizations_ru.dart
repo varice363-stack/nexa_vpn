@@ -45,9 +45,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get commonCopy => 'Копировать';
 
   @override
-  String get commonCopied => 'Скопировано';
-
-  @override
   String get commonShare => 'Поделиться';
 
   @override
@@ -77,14 +74,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingBody1 =>
-      'Подключайтесь одним нажатием. Nexa VPN работает в фоне и сохраняет соединение активным.';
+      'Подключайтесь одним нажатием. Работает в фоне, сохраняет соединение активным.';
 
   @override
-  String get onboardingTitle2 => 'Современное шифрование';
+  String get onboardingTitle2 => 'SOCKS5 Shield и нулевые логи';
 
   @override
   String get onboardingBody2 =>
-      'Трафик защищён по протоколу VLESS поверх Xray REALITY.';
+      'Единственный VPN с парольной защитой SOCKS5-прокси. VLESS-шифрование, никаких логов вашей активности.';
 
   @override
   String get onboardingTitle3 => 'Высокая скорость';
@@ -119,6 +116,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get powerConnectionError => 'Ошибка подключения';
+
+  @override
+  String get powerReconnecting => 'Восстановление соединения…';
 
   @override
   String powerConnectedFor(String duration) {
@@ -362,15 +362,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get commonExpires => 'Истекает';
 
   @override
-  String get bannerCarousel => 'Рекомендации';
-
-  @override
-  String bannerDuration(int seconds) => '${seconds}с';
-
-  @override
-  String get bannerTapToOpen => 'Нажмите, чтобы открыть';
-
-  @override
   String get profileTitle => 'Профиль';
 
   @override
@@ -523,9 +514,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get vlessCompatible =>
       'Работает с v2rayNG, Shadowrocket, sing-box и другими клиентами.';
-
-  @override
-  String get vlessCopied => 'Конфигурация VLESS скопирована';
 
   @override
   String get vlessNeverExpires => 'Бессрочно';
@@ -836,6 +824,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get privacyPolicyTitle => 'Политика конфиденциальности';
 
   @override
+  String get privacyLastUpdated => 'Обновлено: 1 сентября 2026 г.';
+
+  @override
+  String get privacyFullPolicyNotice =>
+      'Это краткая версия. Полная политика конфиденциальности доступна по ссылке ниже.';
+
+  @override
+  String get privacyOpenFullPolicy => 'Открыть полную версию';
+
+  @override
   String get serversSearchByName => 'Поиск по имени или хосту';
 
   @override
@@ -845,10 +843,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get accessKeysHeader => 'КЛЮЧИ ДОСТУПА';
 
   @override
-  String get accessNoActiveWarning => 'Нет активного доступа — продлите подписку для активации ключа.';
+  String get accessNoActiveWarning =>
+      'Нет активного доступа — продлите подписку для активации ключа.';
 
   @override
-  String get accessGenerateHintLong => 'Получите доступ для создания персонального ключа — работает в приложении Nexa и любом совместимом клиенте.';
+  String get accessGenerateHintLong =>
+      'Получите доступ для создания персонального ключа — работает в приложении Nexa и любом совместимом клиенте.';
 
   @override
   String get accessStatusActive => 'АКТИВЕН';
@@ -872,7 +872,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get accessDevices => 'устройства';
 
   @override
-  String get accessOfflineMessage => 'Нет связи с сервером. Данные доступа появятся после восстановления соединения.';
+  String get accessOfflineMessage =>
+      'Нет связи с сервером. Данные доступа появятся после восстановления соединения.';
 
   @override
   String get identityTitle => 'Мой код';
@@ -893,13 +894,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get identitySaveNow => 'Сохраните код прямо сейчас';
 
   @override
-  String get identitySaveBody => 'Это единственный способ вернуть оплаченный доступ на другом телефоне. Мы не знаем вашей почты и не сможем восстановить код: у нас его просто нет.\n\nЗапишите его на бумаге или сохраните в менеджере паролей.';
+  String get identitySaveBody =>
+      'Это единственный способ вернуть оплаченный доступ на другом телефоне. Мы не знаем вашей почты и не сможем восстановить код: у нас его просто нет.\n\nЗапишите его на бумаге или сохраните в менеджере паролей.';
 
   @override
   String get identityTransferTitle => 'Переносите доступ?';
 
   @override
-  String get identityTransferBody => 'Если у вас есть код с прежнего устройства, введите его — этот код будет заменён.';
+  String get identityTransferBody =>
+      'Если у вас есть код с прежнего устройства, введите его — этот код будет заменён.';
 
   @override
   String get identityEnterOther => 'Ввести другой код';
@@ -908,7 +911,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get identityDialogTitle => 'Ввести другой код';
 
   @override
-  String get identityDialogBody => 'Введите код, сохранённый на другом устройстве. Текущий код будет заменён.';
+  String get identityDialogBody =>
+      'Введите код, сохранённый на другом устройстве. Текущий код будет заменён.';
 
   @override
   String get identityApply => 'Применить';
@@ -929,19 +933,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String get premiumChoosePlan => 'ВЫБЕРИТЕ ТАРИФ';
 
   @override
-  String serversSwitchError(String error) => 'Не удалось переключиться: $error';
+  String serversSwitchError(String error) {
+    return 'Не удалось переключиться: $error';
+  }
 
   @override
   String get serversEmptyTitle => 'Пока нет серверов';
 
   @override
-  String get serversEmptyBody => 'Серверы появятся здесь после добавления ключа или подписки провайдера. Показываются только те, к которым можно подключиться.';
+  String get serversEmptyBody =>
+      'Серверы появятся здесь после добавления ключа или подписки провайдера. Показываются только те, к которым можно подключиться.';
 
   @override
-  String serversReconnected(String label) => 'Переподключено через $label';
+  String serversReconnected(String label) {
+    return 'Переподключено через $label';
+  }
 
   @override
-  String serversSelected(String label) => 'Выбран $label';
+  String serversSelected(String label) {
+    return 'Выбран $label';
+  }
 
   @override
   String get serversAll => 'ВСЕ СЕРВЕРЫ';
@@ -959,7 +970,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get serversSelectedStatus => 'Выбрано';
 
   @override
-  String serversAvailable(int count) => 'Доступно $count из вашего ключа';
+  String serversAvailable(int count) {
+    return 'Доступно $count из вашего ключа';
+  }
 
   @override
   String get adminOwnerSection => 'ВЛАДЕЛЕЦ';
@@ -968,13 +981,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminTitle => 'Выпуск кодов доступа';
 
   @override
-  String get adminSubtitle => 'Создавайте коды для продажи и просматривайте все ключи';
+  String get adminSubtitle =>
+      'Создавайте коды для продажи и просматривайте все ключи';
 
   @override
   String get adminNoAccess => 'У этой учётной записи нет прав администратора';
 
   @override
-  String adminIssueFailed(String error) => 'Не удалось выпустить код: $error';
+  String adminIssueFailed(String error) {
+    return 'Не удалось выпустить код: $error';
+  }
 
   @override
   String get adminDurationForever => 'Навсегда';
@@ -989,10 +1005,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminDuration1Year => '1 год';
 
   @override
-  String adminDurationDays(int count) => '$count дней';
+  String adminDurationDays(int count) {
+    return '$count дней';
+  }
 
   @override
-  String get adminOwnerOnly => 'Этот раздел доступен только владельцу приложения.';
+  String get adminOwnerOnly =>
+      'Этот раздел доступен только владельцу приложения.';
 
   @override
   String get adminAllKeys => 'Все ключи';
@@ -1022,7 +1041,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminCopyCode => 'Копировать код';
 
   @override
-  String adminLoadFailed(String error) => 'Не удалось загрузить ключи. Проверьте что backend запущен.\n$error';
+  String adminLoadFailed(String error) {
+    return 'Не удалось загрузить ключи. Проверьте что backend запущен.\n$error';
+  }
 
   @override
   String get adminNoKeys => 'Ключей пока нет.';
@@ -1040,13 +1061,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminKeyIssue => 'Выпуск ключей';
 
   @override
-  String get adminKeyIssueHint => 'Создать коды на продажу и посмотреть все ключи';
+  String get adminKeyIssueHint =>
+      'Создать коды на продажу и посмотреть все ключи';
 
   @override
-  String get profileLoadError => 'Не удалось загрузить данные подписки. Проверьте подключение.';
+  String get profileLoadError =>
+      'Не удалось загрузить данные подписки. Проверьте подключение.';
 
   @override
-  String get notificationsLoadError => 'Не удалось загрузить уведомления. Проверьте подключение.';
+  String get notificationsLoadError =>
+      'Не удалось загрузить уведомления. Проверьте подключение.';
+
+  @override
+  String get commonCopied => 'Скопировано';
+
+  @override
+  String get vlessCopied => 'Конфигурация VLESS скопирована';
 
   @override
   String get adminDashboard => 'Панель управления';
@@ -1115,9 +1145,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get commonError => 'Ошибка';
 
   @override
-  String get commonLoading => 'Загрузка...';
-
-  @override
   String get adminCreateBanner => 'Создать баннер';
 
   @override
@@ -1143,4 +1170,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get adminBannerPlacement => 'Размещение';
+
+  @override
+  String get commonLoading => 'Загрузка...';
 }
