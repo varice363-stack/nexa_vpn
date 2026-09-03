@@ -5,19 +5,15 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/bootstrap_providers.dart';
 import '../../providers/consent_providers.dart';
-import '../../screens/access/my_access_screen.dart';
 import '../../screens/about/about_screen.dart';
 import '../../screens/faq/faq_screen.dart';
 import '../../screens/home/home_screen.dart';
-import '../../screens/notifications/notifications_screen.dart';
 import '../../screens/access/key_entry_screen.dart';
 import '../../screens/admin/admin_create_banner_screen.dart';
 import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/admin_keys_screen.dart';
 import '../../screens/consent/vpn_consent_screen.dart';
 import '../../screens/onboarding/onboarding_screen.dart';
-import '../../screens/payments/payment_history_screen.dart';
-import '../../screens/premium/premium_screen.dart';
 import '../../screens/privacy/privacy_screen.dart';
 import '../../screens/identity/identity_screen.dart';
 import '../../screens/profile/profile_screen.dart';
@@ -115,24 +111,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const KeyEntryScreen(),
       ),
       GoRoute(
-        path: '/access',
-        builder: (context, state) => const MyAccessScreen(),
-      ),
-      GoRoute(
-        path: '/payment-history',
-        builder: (context, state) => const PaymentHistoryScreen(),
-      ),
-      GoRoute(
-        path: '/premium',
-        builder: (context, state) => const PremiumScreen(),
-      ),
-      GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
-      ),
-      GoRoute(
-        path: '/notifications',
-        builder: (context, state) => const NotificationsScreen(),
       ),
       GoRoute(
         path: '/about',

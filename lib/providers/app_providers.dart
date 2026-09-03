@@ -12,7 +12,6 @@ import '../domain/repositories/auth_repository.dart';
 import '../domain/repositories/access_repository.dart';
 import '../domain/repositories/account_repository.dart';
 import '../domain/repositories/banner_repository.dart';
-import '../domain/repositories/billing_repository.dart';
 import '../domain/repositories/config_repository.dart';
 import '../domain/repositories/key_storage.dart';
 import '../domain/repositories/notification_repository.dart';
@@ -24,7 +23,6 @@ import '../repositories/admin_repository_impl.dart';
 import '../repositories/auth_repository_impl.dart';
 import '../repositories/account_repository_impl.dart';
 import '../repositories/banner_repository_impl.dart';
-import '../repositories/billing_repository_impl.dart';
 import '../repositories/notification_repository_impl.dart';
 import '../repositories/server_repository_impl.dart';
 import '../repositories/subscription_repository_impl.dart';
@@ -81,11 +79,6 @@ final authRepositoryProvider = Provider<AuthRepository>(
 /// Access keys (the platform's core product).
 final accessRepositoryProvider = Provider<AccessRepository>(
   (ref) => AccessRepositoryImpl(api: ref.watch(apiClientProvider)),
-);
-
-/// Billing (plans, checkout, transactions).
-final billingRepositoryProvider = Provider<BillingRepository>(
-  (ref) => BillingRepositoryImpl(api: ref.watch(apiClientProvider)),
 );
 
 /// Server catalog: backend API with local static fallback.
