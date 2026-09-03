@@ -28,6 +28,7 @@ import '../repositories/billing_repository_impl.dart';
 import '../repositories/notification_repository_impl.dart';
 import '../repositories/server_repository_impl.dart';
 import '../repositories/subscription_repository_impl.dart';
+import '../services/killswitch_service.dart';
 import '../services/api/api_client.dart';
 import '../services/api/api_config.dart';
 import '../services/api/token_storage.dart';
@@ -144,6 +145,15 @@ final loggerProvider = Provider<AppLogger>(
 final notificationServiceProvider = Provider<NotificationService>(
   (ref) {
     final service = NotificationService();
+    ref.onDispose(service.dispose);
+    return service;
+  },
+);
+
+/// Kill Switch service for blocking traffic when VPN drops.
+final killSwitchProvider = Provider<KillSwitchService>(
+  (ref) {
+    final service = KillSwitchService(logger: ref.watch(loggerProvider));
     ref.onDispose(service.dispose);
     return service;
   },

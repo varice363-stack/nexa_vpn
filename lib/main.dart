@@ -8,7 +8,10 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'app/app.dart';
 import 'firebase_options.dart';
 import 'providers/app_providers.dart';
+import 'providers/killswitch_providers.dart';
 import 'services/api/api_config.dart';
+import 'services/killswitch_service.dart';
+import 'core/utils/app_logger.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +21,17 @@ Future<void> main() async {
 
   // Local persistence is initialized once and injected via Riverpod override.
   final prefs = await SharedPreferences.getInstance();
+
+  // Initialize Kill Switch service (native platform channel)
+  try {
+    final killSwitchService = KillSwitchService(
+      logger: AppLogger(),
+    );
+    await killSwitchService.initialize();
+  } catch (e) {
+    // Non-fatal: Kill Switch just won't work on this platform
+    debugPrint('Kill Switch initialization skipped: $e');
+  }
 
   // Initialize Firebase in release mode only (to avoid spamming crash reports during development)
   if (kReleaseMode) {

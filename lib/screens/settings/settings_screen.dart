@@ -7,6 +7,7 @@ import '../../services/api/api_config.dart';
 
 import '../../models/app_settings.dart';
 import '../../models/vpn_config.dart';
+import '../../providers/killswitch_providers.dart';
 import '../../providers/locale_providers.dart';
 import '../../providers/settings_providers.dart';
 import '../../theme/app_colors.dart';
@@ -60,8 +61,18 @@ class SettingsScreen extends ConsumerWidget {
             title: l10n.settingsKillSwitch,
             subtitle: l10n.settingsKillSwitchHint,
             value: settings.killSwitch,
-            onChanged: (v) =>
-                ref.read(settingsProvider.notifier).setKillSwitch(v),
+            onChanged: (v) async {
+              // Update settings first
+              await ref.read(settingsProvider.notifier).setKillSwitch(v);
+              
+              // Enable/disable native Kill Switch service
+              final killSwitchService = ref.read(killSwitchServiceProvider);
+              if (v) {
+                await killSwitchService.enable();
+              } else {
+                await killSwitchService.disable();
+              }
+            },
           ),
           _ToggleRow(
             title: l10n.settingsNotifications,
