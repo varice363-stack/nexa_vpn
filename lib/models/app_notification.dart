@@ -14,6 +14,7 @@ class AppNotification {
     required this.title,
     required this.message,
     required this.createdAt,
+    this.body = '',
     this.icon = AppNotificationIcon.info,
     this.read = false,
   });
@@ -21,6 +22,7 @@ class AppNotification {
   final String id;
   final String title;
   final String message;
+  final String body;
   final DateTime createdAt;
   final AppNotificationIcon icon;
   final bool read;
@@ -29,6 +31,7 @@ class AppNotification {
     String? id,
     String? title,
     String? message,
+    String? body,
     DateTime? createdAt,
     AppNotificationIcon? icon,
     bool? read,
@@ -37,6 +40,7 @@ class AppNotification {
       id: id ?? this.id,
       title: title ?? this.title,
       message: message ?? this.message,
+      body: body ?? this.body,
       createdAt: createdAt ?? this.createdAt,
       icon: icon ?? this.icon,
       read: read ?? this.read,

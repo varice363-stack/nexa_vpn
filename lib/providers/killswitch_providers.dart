@@ -28,4 +28,4 @@ final killSwitchInitProvider = FutureProvider<void>(
 /// Kill Switch enabled state provider.
 ///
 /// Watches the Kill Switch enabled/disabled state.
-final killSwitchEnabledProvider = StateProvider<bool>((ref) => false);
+final killSwitchEnabledProvider = Provider<bool>((ref) => false);
