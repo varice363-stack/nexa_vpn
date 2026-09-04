@@ -100,7 +100,10 @@ class ConnectionNotifier extends Notifier<VpnStatus> {
   /// expected to send the user to the key screen instead.
   Future<void> toggle([ConnectionSource? source]) async {
     final current = state;
-    if (current == VpnStatus.connected || current == VpnStatus.connecting ||
+    // Отключаем VPN если оно в любом активном состоянии
+    if (current == VpnStatus.connected || 
+        current == VpnStatus.connecting ||
+        current == VpnStatus.disconnecting ||
         current == VpnStatus.reconnecting) {
       await disconnect();
       return;
