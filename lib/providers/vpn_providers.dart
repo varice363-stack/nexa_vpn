@@ -148,3 +148,14 @@ final livePingProvider = StreamProvider<int?>((ref) async* {
     yield await tunnel.measurePing();
   }
 });
+
+/// VPN performance metrics provider.
+/// Provides access to connection metrics for monitoring and diagnostics.
+final vpnMetricsProvider = Provider<VpnMetrics>((ref) {
+  final service = ref.watch(vpnServiceProvider);
+  if (service is VpnServiceImpl) {
+    return service.metrics;
+  }
+  // Return empty metrics if service is not VpnServiceImpl (e.g., in tests)
+  return const VpnMetrics();
+});

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,7 +47,7 @@ class HomePowerSection extends ConsumerWidget {
       children: [
         PowerButton(
           state: buttonState,
-          onTap: () {
+          onTap: () async {
             // No account gate here on purpose: a key the user already owns
             // must work on first launch, before any sign-up. Requiring an
             // account to connect would close the door the product depends on.
@@ -56,10 +57,43 @@ class HomePowerSection extends ConsumerWidget {
               context.push('/key');
               return;
             }
-            ref.read(connectionStateProvider.notifier).toggle(source);
+            
+            try {
+              await ref.read(connectionStateProvider.notifier).toggle(source);
+              
+              // Show success feedback
+              if (context.mounted) {
+                final status = ref.read(connectionStateProvider);
+                if (status == VpnStatus.connected) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.powerConnectedSuccessfully),
+                      backgroundColor: AppColors.success,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                  // Haptic feedback
+                  HapticFeedback.lightImpact();
+                }
+              }
+            } catch (e) {
+              // Show error feedback
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${l10n.powerConnectionError}: $e'),
+                    backgroundColor: AppColors.danger,
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+                // Haptic feedback for error
+                HapticFeedback.heavyImpact();
+              }
+            }
           },
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 12),
+        // Status text
         Text(
           statusText,
           style: TextStyle(
@@ -68,13 +102,34 @@ class HomePowerSection extends ConsumerWidget {
             color: statusColor,
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          (status == VpnStatus.connected || status == VpnStatus.reconnecting)
-              ? l10n.powerTapToDisconnect
-              : l10n.powerTapToConnect,
-          style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
-        ),
+        const SizedBox(height: 8),
+        // Connection progress indicator
+        if (status == VpnStatus.connecting || status == VpnStatus.reconnecting) ...[
+          const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.warning),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.serverConnectingTo(source?.label ?? 'server'),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ] else ...[
+          Text(
+            (status == VpnStatus.connected || status == VpnStatus.reconnecting)
+                ? l10n.powerTapToDisconnect
+                : l10n.powerTapToConnect,
+            style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
+          ),
+        ],
       ],
     );
   }

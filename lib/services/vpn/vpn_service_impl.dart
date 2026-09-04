@@ -10,6 +10,43 @@ import '../../models/connection_source.dart';
 import '../../models/vpn_config.dart';
 import '../../models/vpn_status.dart';
 
+/// Performance metrics for VPN connection.
+class VpnMetrics {
+  final Duration? connectionTime;
+  final int reconnectCount;
+  final DateTime? lastConnectedAt;
+  final DateTime? lastDisconnectedAt;
+  final int totalConnections;
+  final int totalDisconnections;
+
+  const VpnMetrics({
+    this.connectionTime,
+    this.reconnectCount = 0,
+    this.lastConnectedAt,
+    this.lastDisconnectedAt,
+    this.totalConnections = 0,
+    this.totalDisconnections = 0,
+  });
+
+  VpnMetrics copyWith({
+    Duration? connectionTime,
+    int? reconnectCount,
+    DateTime? lastConnectedAt,
+    DateTime? lastDisconnectedAt,
+    int? totalConnections,
+    int? totalDisconnections,
+  }) {
+    return VpnMetrics(
+      connectionTime: connectionTime ?? this.connectionTime,
+      reconnectCount: reconnectCount ?? this.reconnectCount,
+      lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
+      lastDisconnectedAt: lastDisconnectedAt ?? this.lastDisconnectedAt,
+      totalConnections: totalConnections ?? this.totalConnections,
+      totalDisconnections: totalDisconnections ?? this.totalDisconnections,
+    );
+  }
+}
+
 /// [VpnService] built on top of a [TunnelManager].
 ///
 /// Maps tunnel phases onto the public status stream and guards concurrent
@@ -40,6 +77,14 @@ class VpnServiceImpl implements VpnService {
   bool _pendingDisconnect = false;
   bool _autoReconnectEnabled = true;
   Timer? _reconnectDebounce;
+  
+  // Performance metrics
+  VpnMetrics _metrics = const VpnMetrics();
+  DateTime? _connectionStartTime;
+  int _currentReconnectCount = 0;
+
+  /// Get current VPN performance metrics
+  VpnMetrics get metrics => _metrics;
 
   @override
   VpnStatus get status => _status;
@@ -82,7 +127,13 @@ class VpnServiceImpl implements VpnService {
     final source = _activeSource;
     if (source == null) return;
 
-    _logger.info('Auto-reconnecting to ${source.label}…', source: 'vpn');
+    _currentReconnectCount++;
+    _logger.info('Auto-reconnecting to ${source.label} (attempt $_currentReconnectCount)…', source: 'vpn');
+    
+    // Update metrics
+    _metrics = _metrics.copyWith(
+      reconnectCount: _currentReconnectCount,
+    );
 
     try {
       // Stop current tunnel first
@@ -145,9 +196,19 @@ class VpnServiceImpl implements VpnService {
     _activeSource = source;
     _pendingDisconnect = false;
     _reconnectDebounce?.cancel();
+    _connectionStartTime = DateTime.now();
     try {
       await _tunnel.startTunnel(source, _configProvider());
-      _logger.info('Connected to ${source.label}', source: 'vpn');
+      final connectionTime = DateTime.now().difference(_connectionStartTime!);
+      _logger.info('Connected to ${source.label} in ${connectionTime.inMilliseconds}ms', source: 'vpn');
+      
+      // Update metrics
+      _metrics = _metrics.copyWith(
+        connectionTime: connectionTime,
+        lastConnectedAt: DateTime.now(),
+        totalConnections: _metrics.totalConnections + 1,
+      );
+      _currentReconnectCount = 0; // Reset reconnect count on successful connection
     } on AppException catch (e) {
       _logger.error('Tunnel failed: $e', source: 'vpn');
       rethrow;
@@ -166,6 +227,13 @@ class VpnServiceImpl implements VpnService {
     await _tunnel.stopTunnel();
     _activeSource = null;
     _logger.info('Disconnected', source: 'vpn');
+    
+    // Update metrics
+    _metrics = _metrics.copyWith(
+      lastDisconnectedAt: DateTime.now(),
+      totalDisconnections: _metrics.totalDisconnections + 1,
+    );
+    _connectionStartTime = null;
   }
 
   void dispose() {

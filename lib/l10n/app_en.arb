@@ -450,5 +450,21 @@
   "adminBannerTargetUrl": "Target URL (optional)",
   "adminBannerDisplayDuration": "Display duration (seconds)",
   "adminBannerPlacement": "Placement",
-  "commonLoading": "Loading..."
+  "commonLoading": "Loading...",
+  "powerConnectedSuccessfully": "Connected successfully",
+  "powerDisconnected": "Disconnected",
+  "serverConnectionFailed": "Connection failed",
+  "serverRetryAttempt": "Retry attempt {attempt} of {max}",
+  "@serverRetryAttempt": {
+    "placeholders": {
+      "attempt": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "serverConnectingTo": "Connecting to {server}...",
+  "@serverConnectingTo": {
+    "placeholders": {
+      "server": { "type": "String" }
+    }
+  }
 }

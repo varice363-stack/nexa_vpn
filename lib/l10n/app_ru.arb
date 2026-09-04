@@ -450,5 +450,21 @@
   "adminBannerTargetUrl": "Целевой URL (опционально)",
   "adminBannerDisplayDuration": "Длительность показа (секунды)",
   "adminBannerPlacement": "Размещение",
-  "commonLoading": "Загрузка..."
+  "commonLoading": "Загрузка...",
+  "powerConnectedSuccessfully": "Подключено успешно",
+  "powerDisconnected": "Отключено",
+  "serverConnectionFailed": "Ошибка подключения",
+  "serverRetryAttempt": "Попытка {attempt} из {max}",
+  "@serverRetryAttempt": {
+    "placeholders": {
+      "attempt": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "serverConnectingTo": "Подключение к {server}...",
+  "@serverConnectingTo": {
+    "placeholders": {
+      "server": { "type": "String" }
+    }
+  }
 }
