@@ -65,7 +65,6 @@ final apiClientProvider = Provider<ApiClient>(
   (ref) => ApiClient(
     tokenStorage: ref.watch(tokenStorageProvider),
     logger: ref.watch(loggerProvider),
-    baseUrl: ApiConfig.resolvedBaseUrl,
   ),
 );
 

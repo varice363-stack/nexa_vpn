@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../providers/vpn_providers.dart';
 import '../../providers/settings_providers.dart';
 import '../../providers/killswitch_providers.dart';
+import '../../providers/connection_source_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../models/vpn_status.dart';
 
