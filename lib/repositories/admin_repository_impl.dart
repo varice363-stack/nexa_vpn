@@ -1,8 +1,8 @@
-import '../../domain/repositories/admin_repository.dart';
-import '../../models/admin_dashboard.dart';
-import '../../models/analytics.dart';
-import '../../models/banner_stats.dart';
-import '../../services/api/api_client.dart';
+import '../domain/repositories/admin_repository.dart';
+import '../models/admin_dashboard.dart';
+import '../models/analytics.dart';
+import '../models/banner_stats.dart';
+import '../services/api/api_client.dart';
 
 /// Admin repository backed by the backend API.
 class AdminRepositoryImpl implements AdminRepository {

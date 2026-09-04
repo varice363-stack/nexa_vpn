@@ -12,8 +12,8 @@ class AppNotification {
   const AppNotification({
     required this.id,
     required this.title,
-    required this.message,
     required this.timestamp,
+    this.message = '',
     this.body = '',
     this.icon = AppNotificationIcon.info,
     this.read = false,
