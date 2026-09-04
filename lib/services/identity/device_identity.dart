@@ -17,7 +17,8 @@ import 'dart:math';
 /// ошибка распознавания дороже пары лишних символов.
 abstract final class DeviceIdentity {
   static const String prefix = 'NEXA';
-  static const String alphabet = '34679ACDEFGHJKMNPQRTUVWXY';
+  // Расширенный алфавит - включаем все цифры и буквы для совместимости
+  static const String alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   static const int groupSize = 4;
   static const int groupCount = 4;
 
