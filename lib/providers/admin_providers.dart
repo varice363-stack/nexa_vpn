@@ -11,7 +11,7 @@ import 'identity_providers.dart';
 /// Для debug-сборок (flutter run) используется значение по умолчанию.
 const String kOwnerCode = String.fromEnvironment(
   'OWNER_CODE',
-  defaultValue: 'NEXA-A378-AE41-889B-C158',
+  defaultValue: 'NEXA-A3C4-D6E7-9F9H-JK34',
 );
 
 /// Открыт ли раздел выпуска ключей на этом устройстве.
