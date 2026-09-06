@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Backup rules for Nexa VPN - exclude sensitive data from backup -->
+<full-backup-content>
+    <!-- Exclude shared preferences containing tokens and secrets -->
+    <exclude domain="sharedpref" path="FlutterSecureStorage"/>
+    <exclude domain="sharedpref" path="FlutterSharedPreferences"/>
+    
+    <!-- Exclude database files that may contain sensitive data -->
+    <exclude domain="database" path="nexa_vpn.db"/>
+    
+    <!-- Exclude files that contain VPN credentials -->
+    <exclude domain="file" path="credentials.json"/>
+    
+    <!-- Exclude cache that may contain temporary sensitive data -->
+    <exclude domain="file" path="cache"/>
+    
+    <!-- Include only necessary non-sensitive data if needed -->
+    <!-- <include domain="sharedpref" path="app_settings.xml"/> -->
+</full-backup-content>

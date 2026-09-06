@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../../core/utils/app_logger.dart';
 import '../../core/utils/retry.dart';
+import '../security/ssl_pinning_service.dart';
 import 'api_config.dart';
 import 'api_exception.dart';
 import 'token_storage.dart';
@@ -13,19 +14,23 @@ import 'token_storage.dart';
 ///
 /// Injects the stored JWT, decodes UTF-8 responses and maps every failure
 /// onto [ApiException] (network, timeout, HTTP status, malformed body).
+/// Implements SSL pinning for secure communication.
 class ApiClient {
   ApiClient({
     required TokenStorage tokenStorage,
     AppLogger? logger,
     http.Client? httpClient,
+    SslPinningService? sslPinningService,
   })  : _tokenStorage = tokenStorage,
         _logger = logger,
         _client = httpClient ?? http.Client(),
+        _sslPinningService = sslPinningService ?? SslPinningService(logger),
         _baseUrl = ApiConfig.resolvedBaseUrl;
 
   final TokenStorage _tokenStorage;
   final AppLogger? _logger;
   final http.Client _client;
+  final SslPinningService _sslPinningService;
   final String _baseUrl;
 
   Future<dynamic> get(String path) => _request('GET', path);
@@ -38,6 +43,18 @@ class ApiClient {
 
   Future<dynamic> _request(String method, String path, {Object? body}) async {
     final uri = Uri.parse('$_baseUrl$path');
+    
+    // Validate SSL certificate before making request
+    try {
+      await _sslPinningService.validateBeforeRequest(_baseUrl);
+    } on SslPinningValidationException catch (e) {
+      _logger?.error('SSL pinning validation failed: ${e.message}', source: 'api');
+      throw const ApiException(
+        'Connection security validation failed',
+        code: 'SSL_VALIDATION_FAILED',
+      );
+    }
+    
     final token = await _tokenStorage.read();
 
     final headers = <String, String>{

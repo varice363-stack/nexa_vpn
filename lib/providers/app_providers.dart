@@ -31,6 +31,8 @@ import '../services/api/api_client.dart';
 import '../services/api/api_config.dart';
 import '../services/api/token_storage.dart';
 import '../services/notification_service.dart';
+import '../services/security/ssl_pinning_service.dart';
+import '../services/security/security_service.dart';
 
 /// Injected in `main()` via ProviderScope override.
 final sharedPreferencesProvider = Provider<SharedPreferences>(
@@ -60,11 +62,17 @@ final tokenStorageProvider = Provider<TokenStorage>(
   ),
 );
 
+/// SSL pinning service for secure API communication.
+final sslPinningServiceProvider = Provider<SslPinningService>(
+  (ref) => SslPinningService(ref.watch(loggerProvider)),
+);
+
 /// HTTP client for the Nexa VPN backend.
 final apiClientProvider = Provider<ApiClient>(
   (ref) => ApiClient(
     tokenStorage: ref.watch(tokenStorageProvider),
     logger: ref.watch(loggerProvider),
+    sslPinningService: ref.watch(sslPinningServiceProvider),
   ),
 );
 
@@ -149,4 +157,9 @@ final killSwitchProvider = Provider<KillSwitchService>(
     ref.onDispose(service.dispose);
     return service;
   },
+);
+
+/// Master security service for comprehensive app protection.
+final securityServiceProvider = Provider<SecurityService>(
+  (ref) => SecurityService(ref.watch(loggerProvider)),
 );

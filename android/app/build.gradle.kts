@@ -69,12 +69,9 @@ android {
                 // Not Play-uploadable. See android/KEYSTORE.md.
                 signingConfigs.getByName("debug")
             }
-            // Code shrinking is OFF by default: it cannot be verified in this
-            // environment, and a broken release build is worse than a larger
-            // APK. Rules are ready in proguard-rules.pro — flip both flags to
-            // true once you can test `flutter build appbundle --release`.
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // Code shrinking is ON for release builds - obfuscates and minimizes APK
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

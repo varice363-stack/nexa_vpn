@@ -11,6 +11,7 @@ import 'providers/app_providers.dart';
 import 'providers/killswitch_providers.dart';
 import 'services/api/api_config.dart';
 import 'services/killswitch_service.dart';
+import 'services/security/security_service.dart';
 import 'core/utils/app_logger.dart';
 
 Future<void> main() async {
@@ -31,6 +32,26 @@ Future<void> main() async {
   } catch (e) {
     // Non-fatal: Kill Switch just won't work on this platform
     debugPrint('Kill Switch initialization skipped: $e');
+  }
+
+  // Run security checks in release mode
+  if (kReleaseMode) {
+    final logger = AppLogger();
+    final securityService = SecurityService(logger);
+    
+    try {
+      final securityResult = await securityService.runStartupChecks();
+      debugPrint('Security checks: $securityResult');
+      
+      if (!securityResult.passed) {
+        // Log failed checks but don't block app startup
+        // (root detection shows warning UI, debugger/tamper already terminated)
+        logger.warning('Some security checks failed');
+      }
+    } catch (e) {
+      logger.error('Security checks failed with exception', error: e);
+      // Don't block app startup on security check errors
+    }
   }
 
   // Initialize Firebase in release mode only (to avoid spamming crash reports during development)
