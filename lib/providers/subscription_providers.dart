@@ -35,8 +35,15 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   /// replace with `in_app_purchase` / RevenueCat once the backend exposes
   /// a purchase/verify endpoint. Today the state is persisted locally.
   Future<void> subscribe(PremiumPlan plan) async {
+    // Determine tier from plan id
+    final tier = plan.id.contains('premium')
+        ? SubscriptionTier.premium
+        : plan.id.contains('standard')
+            ? SubscriptionTier.standard
+            : SubscriptionTier.free;
+
     final next = SubscriptionState(
-      tier: SubscriptionTier.premium,
+      tier: tier,
       planId: plan.id,
       expiresAt: plan.isLifetime
           ? null
@@ -45,8 +52,12 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     state = AsyncData(next);
     await ref.read(configRepositoryProvider).saveSubscription(next);
     ref.read(notificationServiceProvider).push(
-          title: 'Welcome to Premium',
-          body: '${plan.name} plan is now active. Enjoy unlimited access.',
+          title: tier == SubscriptionTier.free
+              ? 'Free plan activated'
+              : 'Welcome to ${tier.name}',
+          body: tier == SubscriptionTier.free
+              ? 'You have 3 GB of free traffic per month.'
+              : '${plan.name} plan is now active. Enjoy unlimited access.',
           icon: AppNotificationIcon.promo,
         );
   }

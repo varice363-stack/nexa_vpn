@@ -6,7 +6,7 @@ import '../services/api/api_exception.dart';
 /// [SubscriptionRepository] backed by the Nexa VPN API.
 ///
 /// Maps the backend subscription list onto the client [SubscriptionState]:
-/// any ACTIVE subscription → premium tier.
+/// plan name determines tier (standard or premium).
 class SubscriptionRepositoryImpl implements SubscriptionRepository {
   SubscriptionRepositoryImpl({required ApiClient api}) : _api = api;
 
@@ -23,10 +23,18 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
     for (final item in data) {
       final json = Map<String, Object?>.from(item as Map);
       if (json['status'] == 'ACTIVE') {
-        final plan = (json['plan'] as String?)?.toLowerCase();
+        final plan = (json['plan'] as String?)?.toLowerCase() ?? '';
         final expiresAt = json['expiresAt'] as String?;
+
+        // Determine tier from plan name
+        final tier = plan.contains('premium')
+            ? SubscriptionTier.premium
+            : plan.contains('standard')
+                ? SubscriptionTier.standard
+                : SubscriptionTier.free;
+
         return SubscriptionState(
-          tier: SubscriptionTier.premium,
+          tier: tier,
           planId: plan,
           expiresAt: expiresAt == null
               ? null

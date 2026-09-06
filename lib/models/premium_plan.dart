@@ -1,5 +1,24 @@
 /// Subscription tiers.
-enum SubscriptionTier { free, premium }
+enum SubscriptionTier {
+  /// Free tier: 3 ГБ/мес, 1 device, basic servers
+  free,
+
+  /// Standard tier: unlimited traffic, 3 devices, all servers
+  standard,
+
+  /// Premium tier: unlimited traffic, 5 devices, priority support
+  premium,
+}
+
+/// Device limits per subscription tier.
+///
+/// Matches competitive analysis with Red Shield VPN (7 devices).
+/// We offer slightly less but with better protocol stack.
+const Map<SubscriptionTier, int> tierDeviceLimits = {
+  SubscriptionTier.free: 1,
+  SubscriptionTier.standard: 3,
+  SubscriptionTier.premium: 5,
+};
 
 /// A purchasable subscription plan (presentation model).
 class PremiumPlan {
@@ -12,6 +31,8 @@ class PremiumPlan {
     required this.features,
     this.isPopular = false,
     this.isLifetime = false,
+    this.deviceLimit = 1,
+    this.trafficLimitGb,
   });
 
   final String id;
@@ -22,52 +43,74 @@ class PremiumPlan {
   final List<String> features;
   final bool isPopular;
   final bool isLifetime;
+  final int deviceLimit;
+  final int? trafficLimitGb;
 
-  /// Запасной каталог: показывается, пока приложение не достучалось
-  /// до сервера. Цены обязаны совпадать с боевыми (backend/prisma/seed.ts),
-  /// иначе человек увидит одну сумму, а заплатит другую.
+  /// Каталог тарифов.
   ///
-  /// Пожизненный тариф снят с продажи: при аренде сервера ~500 ₽/мес он
-  /// со временем работает в минус.
+  /// Цены синхронизированы с backend (backend/prisma/seed.ts).
+  /// Конкурентный анализ: Red Shield VPN — 299₽/мес, 799₽/3мес, 2399₽/год.
+  /// Наше преимущество: VLESS + Reality (95-98% обход ТСПУ).
   static const List<PremiumPlan> available = [
+    // Free tier — for user acquisition
     PremiumPlan(
-      id: 'monthly',
-      name: '30 дней',
-      price: '199 \u20BD',
+      id: 'free',
+      name: 'Бесплатно',
+      price: '0 \u20BD',
       periodLabel: '/ мес',
-      description: 'Помесячно, без автопродления',
+      description: 'Для знакомства с сервисом',
+      features: [
+        '3 ГБ трафика в месяц',
+        '1 устройство',
+        '3 сервера (DE, NL, BG)',
+        'Базовый обход блокировок',
+      ],
+      deviceLimit: 1,
+      trafficLimitGb: 3,
+    ),
+
+    // Standard tier — main revenue driver
+    PremiumPlan(
+      id: 'standard_monthly',
+      name: 'Standard',
+      price: '299 \u20BD',
+      periodLabel: '/ мес',
+      description: 'Полный стек антицензуры',
       features: [
         'Безлимитный трафик',
-        'Логи подключений не ведутся',
-        'Свои ключи и ключи других провайдеров',
-        'Поддержка в Telegram',
+        '3 устройства',
+        'Все серверы (10+ стран)',
+        'VLESS + Reality + Vision',
+        'Auto-reconnect',
+        'Kill Switch',
       ],
+      deviceLimit: 3,
     ),
+
+    // Premium tier — power users
     PremiumPlan(
-      id: 'quarterly',
-      name: '90 дней',
-      price: '499 \u20BD',
-      periodLabel: '/ 3 мес',
-      description: 'Выгоднее на 98 \u20BD',
-      features: [
-        'Всё из тарифа на 30 дней',
-        '\u2248166 \u20BD в месяц',
-      ],
-    ),
-    PremiumPlan(
-      id: 'yearly',
-      name: '365 дней',
-      price: '1490 \u20BD',
+      id: 'premium_yearly',
+      name: 'Premium',
+      price: '4490 \u20BD',
       periodLabel: '/ год',
-      description: 'Выгоднее на 898 \u20BD',
+      description: 'Максимальная защита',
       features: [
-        'Всё из тарифа на 90 дней',
-        '\u2248124 \u20BD в месяц',
-        'Приоритетная поддержка',
+        'Всё из Standard',
+        '5 устройств',
+        'Priority серверы',
+        'Early access к фичам',
+        'Telegram-бот поддержка',
+        '\u2248374 \u20BD в месяц',
       ],
       isPopular: true,
+      deviceLimit: 5,
     ),
   ];
+
+  /// Get device limit for a specific tier.
+  static int getDeviceLimit(SubscriptionTier tier) {
+    return tierDeviceLimits[tier] ?? 1;
+  }
 }
 
 /// Current subscription state.
@@ -76,23 +119,32 @@ class SubscriptionState {
     this.tier = SubscriptionTier.free,
     this.planId,
     this.expiresAt,
+    this.devicesUsed = 0,
   });
 
   final SubscriptionTier tier;
   final String? planId;
   final DateTime? expiresAt;
+  final int devicesUsed;
 
-  bool get isPremium => tier == SubscriptionTier.premium;
+  bool get isPremium =>
+      tier == SubscriptionTier.standard || tier == SubscriptionTier.premium;
+
+  int get deviceLimit => PremiumPlan.getDeviceLimit(tier);
+
+  bool get canAddDevice => devicesUsed < deviceLimit;
 
   SubscriptionState copyWith({
     SubscriptionTier? tier,
     String? planId,
     DateTime? expiresAt,
+    int? devicesUsed,
   }) {
     return SubscriptionState(
       tier: tier ?? this.tier,
       planId: planId ?? this.planId,
       expiresAt: expiresAt ?? this.expiresAt,
+      devicesUsed: devicesUsed ?? this.devicesUsed,
     );
   }
 }

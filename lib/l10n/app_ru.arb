@@ -466,5 +466,53 @@
     "placeholders": {
       "server": { "type": "String" }
     }
-  }
+  },
+  "devicesTitle": "Устройства",
+  "devicesSubtitle": "Управляйте подключёнными устройствами",
+  "devicesLimit": "Лимит устройств",
+  "devicesNoConnections": "Пока нет подключённых устройств",
+  "devicesLimitReached": "Достигнут лимит устройств",
+  "devicesSlotsAvailable": "{count} слотов свободно",
+  "@devicesSlotsAvailable": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "devicesJustNow": "Только что",
+  "devicesMinutesAgo": "{minutes} мин. назад",
+  "@devicesMinutesAgo": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "devicesHoursAgo": "{hours} ч. назад",
+  "@devicesHoursAgo": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "devicesDaysAgo": "{days} дн. назад",
+  "@devicesDaysAgo": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "devicesDisconnect": "Отключить устройство",
+  "devicesDisconnectTitle": "Отключить устройство?",
+  "devicesDisconnectBody": "Устройство {name} будет отключено от аккаунта.",
+  "@devicesDisconnectBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "devicesDisconnected": "Устройство {name} отключено",
+  "@devicesDisconnected": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "devicesEmpty": "Вы ещё не подключали устройства. Подключитесь через приложение, и оно появится здесь.",
+  "devicesUpgradeTitle": "Нужно больше устройств?",
+  "devicesUpgradeBody": "Перейдите на Premium для подключения до 5 устройств одновременно.",
+  "devicesUpgradeButton": "Обновить тариф"
 }

@@ -65,9 +65,11 @@ class ConfigRepositoryImpl implements ConfigRepository {
   @override
   Future<SubscriptionState> getSubscription() async {
     final tierName = _local.subscriptionTier;
-    final tier = tierName == SubscriptionTier.premium.name
-        ? SubscriptionTier.premium
-        : SubscriptionTier.free;
+    final tier = switch (tierName) {
+      'standard' => SubscriptionTier.standard,
+      'premium' => SubscriptionTier.premium,
+      _ => SubscriptionTier.free,
+    };
     final expiry = _local.subscriptionExpiry;
     return SubscriptionState(
       tier: tier,

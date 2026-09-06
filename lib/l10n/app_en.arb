@@ -466,5 +466,53 @@
     "placeholders": {
       "server": { "type": "String" }
     }
-  }
+  },
+  "devicesTitle": "Devices",
+  "devicesSubtitle": "Manage your connected devices",
+  "devicesLimit": "Device limit",
+  "devicesNoConnections": "No devices connected yet",
+  "devicesLimitReached": "Device limit reached",
+  "devicesSlotsAvailable": "{count} slots available",
+  "@devicesSlotsAvailable": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "devicesJustNow": "Just now",
+  "devicesMinutesAgo": "{minutes} min ago",
+  "@devicesMinutesAgo": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "devicesHoursAgo": "{hours} hours ago",
+  "@devicesHoursAgo": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "devicesDaysAgo": "{days} days ago",
+  "@devicesDaysAgo": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "devicesDisconnect": "Disconnect device",
+  "devicesDisconnectTitle": "Disconnect device?",
+  "devicesDisconnectBody": "Device {name} will be disconnected from your account.",
+  "@devicesDisconnectBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "devicesDisconnected": "Device {name} disconnected",
+  "@devicesDisconnected": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "devicesEmpty": "You haven't connected any devices yet. Connect through the app and it will appear here.",
+  "devicesUpgradeTitle": "Need more devices?",
+  "devicesUpgradeBody": "Upgrade to Premium to connect up to 5 devices simultaneously.",
+  "devicesUpgradeButton": "Upgrade plan"
 }
