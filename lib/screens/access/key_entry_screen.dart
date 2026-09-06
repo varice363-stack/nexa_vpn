@@ -89,13 +89,8 @@ class _KeyEntryScreenState extends ConsumerState<KeyEntryScreen> {
       return;
     }
     if (!input.isValid) {
-      final lower = _controller.text.trim().toLowerCase();
-      final otherScheme = ['vmess://', 'trojan://', 'ss://', 'socks://']
-          .any(lower.startsWith);
       if (!mounted) return;
-      setState(() => _error = otherScheme
-          ? l10n.keyEntryErrorUnsupportedScheme
-          : l10n.keyEntryErrorUnknown);
+      setState(() => _error = l10n.keyEntryErrorUnknown);
       return;
     }
 
@@ -326,6 +321,8 @@ class _KindChip extends StatelessWidget {
     final isNexa = input.kind == KeyInputKind.nexaCode;
     final color = isNexa ? AppColors.premium : AppColors.primaryBright;
 
+    // Detect protocol type from URI scheme
+    final uriScheme = input.value.toLowerCase().split('://').first;
     final (icon, label) = switch (input.kind) {
       KeyInputKind.nexaCode => (
           Icons.workspace_premium_rounded,
@@ -335,7 +332,14 @@ class _KindChip extends StatelessWidget {
           Icons.cloud_download_rounded,
           l10n.keyEntryDetectedSubscription,
         ),
-      _ => (Icons.public_rounded, l10n.keyEntryDetectedVless),
+      KeyInputKind.vlessUri => switch (uriScheme) {
+          'vmess' => (Icons.security_rounded, 'VMess'),
+          'trojan' => (Icons.shield_rounded, 'Trojan'),
+          'ss' => (Icons.lock_rounded, 'Shadowsocks'),
+          'socks' => (Icons.lan_rounded, 'SOCKS'),
+          _ => (Icons.public_rounded, l10n.keyEntryDetectedVless),
+        },
+      _ => (Icons.error_rounded, l10n.keyEntryErrorUnknown),
     };
 
     return Container(

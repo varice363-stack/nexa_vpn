@@ -59,7 +59,13 @@ class ConnectionSource {
   String get host => Uri.tryParse(uri)?.host ?? '—';
 
   /// Whether this source can actually be dialled right now.
-  bool get isUsable => !isExpired && uri.startsWith('vless://');
+  bool get isUsable => !isExpired && (
+    uri.startsWith('vless://') ||
+    uri.startsWith('vmess://') ||
+    uri.startsWith('trojan://') ||
+    uri.startsWith('ss://') ||
+    uri.startsWith('socks://')
+  );
 
   /// Builds a source from a Nexa access key.
   ///

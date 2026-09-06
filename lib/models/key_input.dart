@@ -72,9 +72,23 @@ class KeyInput {
       return KeyInput._(KeyInputKind.vlessUri, trimmed, label: label);
     }
 
-    // Other proxy schemes are recognised only to give a precise error —
-    // the tunnel engine speaks VLESS.
-    for (final scheme in ['vmess://', 'trojan://', 'ss://', 'socks://']) {
+    // Support all Xray/V2Ray protocols - flutter_vless handles them all!
+    if (lower.startsWith('vmess://') || 
+        lower.startsWith('trojan://') || 
+        lower.startsWith('ss://') || 
+        lower.startsWith('socks://')) {
+      final uri = Uri.tryParse(trimmed);
+      if (uri == null || uri.host.isEmpty) {
+        return KeyInput._(KeyInputKind.unknown, trimmed);
+      }
+      final label = uri.fragment.isEmpty
+          ? null
+          : Uri.decodeComponent(uri.fragment);
+      return KeyInput._(KeyInputKind.vlessUri, trimmed, label: label);
+    }
+
+    // Only give error for truly unsupported schemes
+    for (final scheme in ['http://', 'https://', 'ftp://']) {
       if (lower.startsWith(scheme)) {
         return KeyInput._(KeyInputKind.unknown, trimmed);
       }

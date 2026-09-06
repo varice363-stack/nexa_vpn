@@ -131,20 +131,32 @@ class XrayTunnelManager implements TunnelManager {
       // Add Reality + Vision + XHTTP to bypass Russian ТСПУ (DPI systems).
       // This is CRITICAL for Russia since December 2025 — plain VLESS is blocked.
       // Effectiveness: 95-98% bypass rate (September 2026).
-      const enhancer = XrayProtocolEnhancer();
-      xrayConfig = enhancer.enhance(
-        xrayConfig,
-        enableReality: true,     // Hijack real TLS certificates (Apple, Microsoft)
-        enableVision: true,      // Encrypt protocol-level data
-        enableXhttp: true,       // Mask connection as HTTP traffic
-        enableChromeFp: true,    // Spoof Chrome TLS fingerprint
-        enableEmptySni: true,    // 100% bypass of SNI inspection
-      );
+      // 
+      // IMPORTANT: Only apply to VLESS protocol. Other protocols (VMess, Trojan, SS)
+      // have their own encryption and enhancement would break them.
+      final isVless = source.uri.toLowerCase().startsWith('vless://');
+      
+      if (isVless) {
+        const enhancer = XrayProtocolEnhancer();
+        xrayConfig = enhancer.enhance(
+          xrayConfig,
+          enableReality: true,     // Hijack real TLS certificates (Apple, Microsoft)
+          enableVision: true,      // Encrypt protocol-level data
+          enableXhttp: true,       // Mask connection as HTTP traffic
+          enableChromeFp: true,    // Spoof Chrome TLS fingerprint
+          enableEmptySni: true,    // 100% bypass of SNI inspection
+        );
 
-      _logger.info(
-        'Anti-censorship: ${XrayProtocolEnhancer.describeProtection(xrayConfig)}',
-        source: 'vpn',
-      );
+        _logger.info(
+          'Anti-censorship: ${XrayProtocolEnhancer.describeProtection(xrayConfig)}',
+          source: 'vpn',
+        );
+      } else {
+        _logger.info(
+          'Using ${source.uri.split('://').first.toUpperCase()} protocol (no enhancement needed)',
+          source: 'vpn',
+        );
+      }
 
       // Password auth on the local SOCKS inbound CANNOT be used with this
       // plugin: `tun2socks` is launched with a hardcoded, credential-free
