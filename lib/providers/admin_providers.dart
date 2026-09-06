@@ -11,7 +11,7 @@ import 'identity_providers.dart';
 /// Для debug-сборок (flutter run) используется значение по умолчанию.
 const String kOwnerCode = String.fromEnvironment(
   'OWNER_CODE',
-  defaultValue: 'NEXA-ADMIN-2026',
+  defaultValue: 'NEXA-66AB-AV3H-9HSJ-R8VZ',
 );
 
 /// Состояние разблокировки админки.
