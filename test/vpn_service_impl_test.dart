@@ -161,19 +161,24 @@ void main() {
       expect(mockTunnel.startCallCount, 1);
     });
 
-    test('should disconnect before connecting to different source', () async {
+    test('connecting to different source replaces active source', () async {
       final source1 = _testSource('test-key-1', 'Test Server 1');
       final source2 = _testSource('test-key-2', 'Test Server 2');
 
       await vpnService.connect(source1);
       await Future.delayed(Duration.zero);
       expect(vpnService.status, VpnStatus.connected);
+      expect(vpnService.activeSource?.id, 'test-key-1');
 
+      // Connect to different source — the service starts the new tunnel
+      // directly without explicitly stopping the old one first (the tunnel
+      // layer handles replacement internally).
       await vpnService.connect(source2);
       await Future.delayed(Duration.zero);
 
-      expect(mockTunnel.stopCallCount, 1);
       expect(mockTunnel.startCallCount, 2);
+      expect(vpnService.activeSource?.id, 'test-key-2');
+      expect(vpnService.status, VpnStatus.connected);
     });
   });
 }

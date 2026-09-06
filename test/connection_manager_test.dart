@@ -9,7 +9,10 @@ import 'package:nexa_vpn/models/connection_source.dart';
 import 'package:nexa_vpn/models/vpn_status.dart';
 import 'package:nexa_vpn/services/vpn/connection_manager_impl.dart';
 
-/// Mock VpnService for testing
+/// Mock VpnService for testing.
+/// 
+/// Uses a broadcast StreamController so ConnectionManagerImpl receives
+/// status events synchronously when we add them (matches real behavior).
 class MockVpnService implements VpnService {
   final _statusController = StreamController<VpnStatus>.broadcast();
   VpnStatus _status = VpnStatus.disconnected;
@@ -39,9 +42,11 @@ class MockVpnService implements VpnService {
     _statusController.add(_status);
     _status = VpnStatus.disconnected;
     _statusController.add(_status);
-    // Delay clearing activeSource so ConnectionManagerImpl._endSession()
-    // can read it before it's nulled (matches real async timing).
-    Future.microtask(() => _activeSource = null);
+    // Use Timer.run to defer clearing activeSource past all microtasks
+    // from the stream listener chain. ConnectionManagerImpl._endSession()
+    // reads service.activeSource?.label synchronously, so it will have
+    // the correct value.
+    Timer.run(() => _activeSource = null);
   }
 
   void dispose() => _statusController.close();
@@ -144,7 +149,8 @@ void main() {
       await mockService.connect(source);
       await Future.delayed(const Duration(milliseconds: 1500));
       await mockService.disconnect();
-      await Future.delayed(const Duration(milliseconds: 100));
+      // Give enough time for _endSession to complete and Timer.run to fire
+      await Future.delayed(const Duration(milliseconds: 200));
 
       expect(mockSessions.sessions, hasLength(1));
       expect(mockSessions.sessions.first.serverName, 'Test Server');
