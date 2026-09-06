@@ -3,6 +3,7 @@ import 'package:nexa_vpn/services/vpn/vpn_service_impl.dart';
 import 'package:nexa_vpn/domain/services/tunnel_manager.dart';
 import 'package:nexa_vpn/models/connection_source.dart';
 import 'package:nexa_vpn/models/vpn_config.dart';
+import 'package:nexa_vpn/models/vpn_status.dart';
 import 'package:nexa_vpn/core/utils/app_logger.dart';
 
 /// Mock tunnel manager for metrics testing
@@ -41,6 +42,8 @@ ConnectionSource _testSource(String id) {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('VpnMetrics', () {
     late MockTunnelManager mockTunnel;
     late VpnServiceImpl vpnService;

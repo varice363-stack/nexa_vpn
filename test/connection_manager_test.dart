@@ -39,7 +39,9 @@ class MockVpnService implements VpnService {
     _statusController.add(_status);
     _status = VpnStatus.disconnected;
     _statusController.add(_status);
-    _activeSource = null;
+    // Delay clearing activeSource so ConnectionManagerImpl._endSession()
+    // can read it before it's nulled (matches real async timing).
+    Future.microtask(() => _activeSource = null);
   }
 
   void dispose() => _statusController.close();

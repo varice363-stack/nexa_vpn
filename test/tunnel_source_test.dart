@@ -97,6 +97,8 @@ ConnectionSource _ours() => const ConnectionSource(
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('an imported key reaches the tunnel with its URI intact', () async {
     final h = _build();
     final key = _imported();
