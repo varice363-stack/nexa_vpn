@@ -188,7 +188,7 @@ class ProfileScreen extends ConsumerWidget {
                 letterSpacing: 1.5,
               ),
               decoration: InputDecoration(
-                hintText: 'NEXA-XXXX-XXXX-XXXX-XXXX',
+                hintText: 'NEXA-ADMIN-2026',
                 hintStyle: const TextStyle(
                   color: AppColors.textTertiary,
                   fontFamily: 'monospace',

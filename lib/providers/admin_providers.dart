@@ -6,12 +6,12 @@ import 'identity_providers.dart';
 ///
 /// Задаётся при сборке, в исходники не попадает:
 ///
-///   flutter build apk --dart-define=OWNER_CODE=NEXA-XXXX-XXXX-XXXX-XXXX
+///   flutter build apk --dart-define=OWNER_CODE=NEXA-ADMIN-2026
 ///
 /// Для debug-сборок (flutter run) используется значение по умолчанию.
 const String kOwnerCode = String.fromEnvironment(
   'OWNER_CODE',
-  defaultValue: 'NEXA-A3C4-D6E7-9F9H-JK34',
+  defaultValue: 'NEXA-ADMIN-2026',
 );
 
 /// Состояние разблокировки админки.
