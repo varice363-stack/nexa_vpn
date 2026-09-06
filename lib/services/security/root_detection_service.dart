@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'app_logger.dart';
+import '../../core/utils/app_logger.dart';
 
 /// Root/jailbreak detection service.
 ///
@@ -37,7 +37,7 @@ class RootDetectionService {
       final bool? isRooted = await _channel.invokeMethod('isRooted');
       return isRooted ?? false;
     } on PlatformException catch (e) {
-      _logger.warning('Android root detection failed', error: e);
+      _logger.warn('Android root detection failed', error: e);
       return _checkAndroidRootFallback();
     }
   }
@@ -59,7 +59,7 @@ class RootDetectionService {
 
     for (final file in rootFiles) {
       if (File(file).existsSync()) {
-        _logger.warning('Root indicator found: $file');
+        _logger.warn('Root indicator found: $file');
         return Future.value(true);
       }
     }
@@ -71,7 +71,7 @@ class RootDetectionService {
       final bool? isJailbroken = await _channel.invokeMethod('isJailbroken');
       return isJailbroken ?? false;
     } on PlatformException catch (e) {
-      _logger.warning('iOS jailbreak detection failed', error: e);
+      _logger.warn('iOS jailbreak detection failed', error: e);
       return _checkIOSJailbreakFallback();
     }
   }
@@ -90,7 +90,7 @@ class RootDetectionService {
 
     for (final path in jailbreakPaths) {
       if (File(path).existsSync()) {
-        _logger.warning('Jailbreak indicator found: $path');
+        _logger.warn('Jailbreak indicator found: $path');
         return Future.value(true);
       }
     }
@@ -99,7 +99,7 @@ class RootDetectionService {
 
   /// Show warning dialog if device is rooted.
   Future<void> showRootWarning() async {
-    _logger.warning('Device is rooted/jailbroken - security risk!');
+    _logger.warn('Device is rooted/jailbroken - security risk!');
     // UI will handle showing the warning dialog
   }
 }

@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'app_logger.dart';
+import '../../core/utils/app_logger.dart';
 import 'root_detection_service.dart';
 import 'debugger_detection_service.dart';
 import 'anti_tamper_service.dart';
@@ -38,7 +38,7 @@ class SecurityService {
     // Check 2: Root/jailbreak detection
     final isRooted = await _rootDetection.isRooted();
     if (isRooted) {
-      _logger.warning('Device is rooted/jailbroken');
+      _logger.warn('Device is rooted/jailbroken');
       await _rootDetection.showRootWarning();
     }
     results.add(SecurityCheck(
@@ -50,7 +50,7 @@ class SecurityService {
     // Check 3: Anti-tamper validation
     final isTampered = !await _antiTamper.validateIntegrity();
     if (isTampered) {
-      _logger.critical('App integrity check failed - possible tampering');
+      _logger.error('App integrity check failed - possible tampering');
       await _antiTamper.terminateIfTampered();
     }
     results.add(SecurityCheck(
@@ -63,7 +63,7 @@ class SecurityService {
     if (!kDebugMode) {
       final isEmulator = await _antiTamper.isEmulator();
       if (isEmulator) {
-        _logger.warning('App running on emulator in production');
+        _logger.warn('App running on emulator in production');
       }
       results.add(SecurityCheck(
         'emulator',

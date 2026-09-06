@@ -1,8 +1,7 @@
-import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'app_logger.dart';
+import '../../core/utils/app_logger.dart';
 
 /// Debugger detection service.
 ///
@@ -18,9 +17,9 @@ class DebuggerDetectionService {
   bool isDebuggerAttached() {
     if (kIsWeb) return false;
     
-    // Dart debugger detection
-    if (Debugger.isDebuggerConnected) {
-      _logger.error('Debugger detected (Dart)');
+    // Flutter debug mode detection
+    if (kDebugMode) {
+      _logger.info('Debug mode detected');
       return true;
     }
 
@@ -47,7 +46,7 @@ class DebuggerDetectionService {
   /// Terminate app if debugger is detected.
   void terminateIfDebuggerDetected() {
     if (isDebuggerAttached()) {
-      _logger.critical('Terminating app due to debugger detection');
+      _logger.error('Terminating app due to debugger detection');
       // Give logger time to write
       Future.delayed(const Duration(milliseconds: 100), () {
         exit(0);

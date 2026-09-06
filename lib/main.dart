@@ -46,7 +46,7 @@ Future<void> main() async {
       if (!securityResult.passed) {
         // Log failed checks but don't block app startup
         // (root detection shows warning UI, debugger/tamper already terminated)
-        logger.warning('Some security checks failed');
+        logger.warn('Some security checks failed');
       }
     } catch (e) {
       logger.error('Security checks failed with exception', error: e);

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:crypto/crypto.dart';
-import '../core/utils/app_logger.dart';
+import '../../core/utils/app_logger.dart';
 
 /// SSL Pinning service for secure API communication.
 ///
@@ -39,7 +39,7 @@ class SslPinningService {
     try {
       final pins = _knownPins[hostname];
       if (pins == null || pins.isEmpty) {
-        _logger.warning('No SSL pins configured for $hostname');
+        _logger.warn('No SSL pins configured for $hostname');
         return false;
       }
 

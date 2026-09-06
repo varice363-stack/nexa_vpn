@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 /// Result of a SOCKS5 port scan
 class Socks5ScanResult {
@@ -121,7 +122,7 @@ class Socks5Scanner {
       // Ждём ответ сервера с таймаутом
       final response = await socket.first.timeout(
         const Duration(seconds: 1),
-        onTimeout: () => <int>[],
+        onTimeout: () => Uint8List(0),
       );
 
       if (response.length < 2) {

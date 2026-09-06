@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'app_logger.dart';
+import '../../core/utils/app_logger.dart';
 
 /// Anti-tampering service.
 ///
@@ -49,7 +49,7 @@ class AntiTamperService {
       final String? signature = await _channel.invokeMethod('getApkSignature');
       
       if (signature == null) {
-        _logger.warning('Could not retrieve APK signature');
+        _logger.warn('Could not retrieve APK signature');
         return false;
       }
 
@@ -57,7 +57,7 @@ class AntiTamperService {
       final isValid = signature == _expectedAndroidSignature;
       
       if (!isValid) {
-        _logger.critical(
+        _logger.error(
           'APK signature mismatch! '
           'Expected: $_expectedAndroidSignature, '
           'Got: $signature'
@@ -79,7 +79,7 @@ class AntiTamperService {
       final String? signature = await _channel.invokeMethod('getBundleSignature');
       
       if (signature == null) {
-        _logger.warning('Could not retrieve bundle signature');
+        _logger.warn('Could not retrieve bundle signature');
         return false;
       }
 
@@ -87,7 +87,7 @@ class AntiTamperService {
       final isValid = signature == _expectedIOSSignature;
       
       if (!isValid) {
-        _logger.critical(
+        _logger.error(
           'Bundle signature mismatch! '
           'Expected: $_expectedIOSSignature, '
           'Got: $signature'
@@ -109,7 +109,7 @@ class AntiTamperService {
       final bool? isEmulator = await _channel.invokeMethod('isEmulator');
       return isEmulator ?? false;
     } catch (e) {
-      _logger.warning('Emulator detection failed', error: e);
+      _logger.warn('Emulator detection failed', error: e);
       return false;
     }
   }
@@ -118,7 +118,7 @@ class AntiTamperService {
   Future<void> terminateIfTampered() async {
     final isValid = await validateIntegrity();
     if (!isValid) {
-      _logger.critical('Terminating app due to integrity check failure');
+      _logger.error('Terminating app due to integrity check failure');
       // Give logger time to write
       await Future.delayed(const Duration(milliseconds: 100));
       exit(0);
