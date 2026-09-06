@@ -48,7 +48,7 @@ dependencies:
   http: ^1.2.0
   
   # SSL pinning for secure API communication
-  flutter_ssl_pinning: ^2.1.0
+  crypto: ^3.0.3
 
   # QR rendering (TASK #010 — VLESS config)
   qr_flutter: ^4.1.0

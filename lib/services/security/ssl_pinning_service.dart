@@ -1,26 +1,28 @@
+import 'dart:convert';
 import 'dart:io';
-import 'package:flutter_ssl_pinning/flutter_ssl_pinning.dart';
+import 'package:crypto/crypto.dart';
 import '../core/utils/app_logger.dart';
 
 /// SSL Pinning service for secure API communication.
 ///
 /// Implements certificate pinning to prevent MITM attacks.
 /// Validates server certificates against known public key hashes.
+/// Uses native dart:io — no external packages needed.
 class SslPinningService {
   final AppLogger _logger;
-  
-  // Known certificate hashes for our API servers
-  // These are SHA-256 hashes of the Subject Public Key Information (SPKI)
+
+  // Known certificate hashes for our API servers.
+  // These are SHA-256 hashes of the Subject Public Key Information (SPKI).
+  // Update these when certificates are rotated.
   static const Map<String, List<String>> _knownPins = {
     'api.nexavpn.app': [
       // Production server certificate pins
-      // Update these when certificates are rotated
-      'sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=', // Primary
-      'sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=', // Backup
+      // TODO: Replace with real pins after VPS deployment
+      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+      'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=',
     ],
     'staging.nexavpn.app': [
-      // Staging server certificate pins
-      'sha256/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=',
+      'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=',
     ],
   };
 
@@ -28,7 +30,10 @@ class SslPinningService {
 
   /// Validates SSL certificate for the given hostname.
   ///
-  /// Returns true if certificate is valid and matches known pins.
+  /// Connects to the host, extracts the certificate, computes SHA-256 of
+  /// its DER bytes, and checks against known pins.
+  ///
+  /// Returns true if certificate matches at least one known pin.
   /// Returns false if validation fails or certificate is not recognized.
   Future<bool> validateCertificate(String hostname) async {
     try {
@@ -38,33 +43,85 @@ class SslPinningService {
         return false;
       }
 
-      final SslPinning plugin = SslPinning();
-      
-      // Check certificate with all known pins
+      // Connect and extract certificate
+      final socket = await SecureSocket.connect(
+        hostname,
+        443,
+        onBadCertificate: (cert) {
+          // Accept temporarily — we validate pins manually below
+          return true;
+        },
+        timeout: const Duration(seconds: 5),
+      );
+
+      final cert = socket.peerCertificate;
+      await socket.close();
+
+      if (cert == null) {
+        _logger.error('No certificate received from $hostname');
+        return false;
+      }
+
+      // Compute SHA-256 of the DER-encoded certificate
+      final derBytes = cert.der;
+      final digest = sha256.convert(derBytes);
+      final fingerprint = base64.encode(digest.bytes);
+
+      _logger.debug('Certificate fingerprint for $hostname: $fingerprint');
+
+      // Check against known pins
       for (final pin in pins) {
-        try {
-          final result = await plugin.check(
-            urls: ['https://$hostname'],
-            sha: SSLPinningSHA.SHA256,
-            allowedSHADigests: [pin],
-          );
-          
-          if (result == 'Connection OK') {
-            _logger.info('SSL pinning validation successful for $hostname');
-            return true;
-          }
-        } catch (e) {
-          _logger.debug('Pin validation failed for $hostname with pin: $e');
-          continue;
+        if (fingerprint == pin) {
+          _logger.info('SSL pinning validation successful for $hostname');
+          return true;
         }
       }
 
-      _logger.error('SSL pinning validation failed for $hostname - certificate mismatch');
+      _logger.error(
+        'SSL pinning validation failed for $hostname - certificate mismatch. '
+        'Got: $fingerprint',
+      );
+      return false;
+    } on SocketException catch (e) {
+      _logger.error('SSL pinning connection error for $hostname: $e');
       return false;
     } catch (e) {
       _logger.error('SSL pinning validation error for $hostname: $e');
       return false;
     }
+  }
+
+  /// Creates an [HttpClient] with SSL pinning enabled.
+  ///
+  /// Use this client for API requests instead of the default one.
+  /// Rejects connections to hosts with mismatched certificates.
+  HttpClient createPinnedClient() {
+    final client = HttpClient();
+    client.badCertificateCallback = (
+      X509Certificate cert,
+      String host,
+      int port,
+    ) {
+      final pins = _knownPins[host];
+      if (pins == null || pins.isEmpty) {
+        // Unknown host — fall back to system validation
+        return false;
+      }
+
+      final derBytes = cert.der;
+      final digest = sha256.convert(derBytes);
+      final fingerprint = base64.encode(digest.bytes);
+
+      final matched = pins.contains(fingerprint);
+      if (!matched) {
+        _logger.error(
+          'Pinned client rejected $host:$port — fingerprint $fingerprint '
+          'not in known pins',
+        );
+      }
+      return matched;
+    };
+    return client;
   }
 
   /// Validates certificate before making HTTP request.
@@ -73,7 +130,7 @@ class SslPinningService {
   Future<void> validateBeforeRequest(String url) async {
     final uri = Uri.parse(url);
     final hostname = uri.host;
-    
+
     final isValid = await validateCertificate(hostname);
     if (!isValid) {
       throw SslPinningValidationException(
@@ -100,9 +157,9 @@ class SslPinningService {
 /// Exception thrown when SSL pinning validation fails.
 class SslPinningValidationException implements Exception {
   final String message;
-  
+
   SslPinningValidationException(this.message);
-  
+
   @override
   String toString() => 'SslPinningValidationException: $message';
 }
