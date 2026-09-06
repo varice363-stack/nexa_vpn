@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -54,6 +56,12 @@ class _FakeBannerRepository implements BannerRepository {
 
   @override
   Future<void> deactivateBanner(String bannerId) async {}
+
+  @override
+  Future<void> uploadBannerImage({
+    required String bannerId,
+    required File imageFile,
+  }) async {}
 }
 
 PromoBanner _banner({

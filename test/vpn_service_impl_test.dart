@@ -38,6 +38,18 @@ class MockTunnelManager implements TunnelManager {
   Future<int?> measurePing() async {
     return 50; // Mock ping
   }
+
+  @override
+  TunnelPhase get phase => _currentPhase;
+}
+
+ConnectionSource _testSource(String id, [String label = 'Test Server']) {
+  return ConnectionSource(
+    id: id,
+    label: label,
+    uri: 'vless://test@example.com:443',
+    origin: ConnectionOrigin.imported,
+  );
 }
 
 void main() {
@@ -61,11 +73,7 @@ void main() {
     });
 
     test('connect should call tunnel.startTunnel', () async {
-      final source = ConnectionSource(
-        id: 'test-key',
-        label: 'Test Server',
-        uri: 'vless://test@example.com:443',
-      );
+      final source = _testSource('test-key');
 
       await vpnService.connect(source);
 
@@ -73,11 +81,7 @@ void main() {
     });
 
     test('disconnect should call tunnel.stopTunnel', () async {
-      final source = ConnectionSource(
-        id: 'test-key',
-        label: 'Test Server',
-        uri: 'vless://test@example.com:443',
-      );
+      final source = _testSource('test-key');
 
       await vpnService.connect(source);
       await vpnService.disconnect();
@@ -86,11 +90,7 @@ void main() {
     });
 
     test('metrics should track connection time', () async {
-      final source = ConnectionSource(
-        id: 'test-key',
-        label: 'Test Server',
-        uri: 'vless://test@example.com:443',
-      );
+      final source = _testSource('test-key');
 
       await vpnService.connect(source);
 
@@ -99,11 +99,7 @@ void main() {
     });
 
     test('metrics should track disconnection', () async {
-      final source = ConnectionSource(
-        id: 'test-key',
-        label: 'Test Server',
-        uri: 'vless://test@example.com:443',
-      );
+      final source = _testSource('test-key');
 
       await vpnService.connect(source);
       await vpnService.disconnect();
@@ -113,11 +109,7 @@ void main() {
     });
 
     test('metrics should reset reconnect count on successful connection', () async {
-      final source = ConnectionSource(
-        id: 'test-key',
-        label: 'Test Server',
-        uri: 'vless://test@example.com:443',
-      );
+      final source = _testSource('test-key');
 
       await vpnService.connect(source);
       expect(vpnService.metrics.reconnectCount, 0);
@@ -125,11 +117,7 @@ void main() {
 
     test('connect should throw when tunnel fails', () async {
       mockTunnel.shouldFail = true;
-      final source = ConnectionSource(
-        id: 'test-key',
-        label: 'Test Server',
-        uri: 'vless://test@example.com:443',
-      );
+      final source = _testSource('test-key');
 
       expect(
         () => vpnService.connect(source),
@@ -138,11 +126,7 @@ void main() {
     });
 
     test('should not connect if already connected to same source', () async {
-      final source = ConnectionSource(
-        id: 'test-key',
-        label: 'Test Server',
-        uri: 'vless://test@example.com:443',
-      );
+      final source = _testSource('test-key');
 
       await vpnService.connect(source);
       await vpnService.connect(source);
@@ -151,16 +135,8 @@ void main() {
     });
 
     test('should disconnect before connecting to different source', () async {
-      final source1 = ConnectionSource(
-        id: 'test-key-1',
-        label: 'Test Server 1',
-        uri: 'vless://test1@example.com:443',
-      );
-      final source2 = ConnectionSource(
-        id: 'test-key-2',
-        label: 'Test Server 2',
-        uri: 'vless://test2@example.com:443',
-      );
+      final source1 = _testSource('test-key-1', 'Test Server 1');
+      final source2 = _testSource('test-key-2', 'Test Server 2');
 
       await vpnService.connect(source1);
       await vpnService.connect(source2);

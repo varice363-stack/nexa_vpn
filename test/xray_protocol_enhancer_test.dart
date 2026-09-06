@@ -46,7 +46,7 @@ void main() {
         enableReality: true,
         enableVision: false,
         enableXhttp: false,
-        enableChromeFp: false,
+        enableChromeFp: true,
         enableEmptySni: false,
       );
 

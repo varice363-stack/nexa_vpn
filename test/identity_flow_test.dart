@@ -57,6 +57,7 @@ Future<void> _pumpScreen(
         keyStorageProvider.overrideWithValue(storage),
       ],
       child: const MaterialApp(
+        locale: Locale('ru'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: IdentityScreen(),

@@ -21,6 +21,7 @@ class HomePowerSection extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final status = ref.watch(connectionStateProvider);
     final stats = ref.watch(connectionStatsProvider).value;
+    final source = ref.watch(activeSourceProvider);
 
     final PowerButtonState buttonState = switch (status) {
       VpnStatus.disconnected => PowerButtonState.disconnected,
