@@ -37,7 +37,7 @@ class HomePowerSection extends ConsumerWidget {
       VpnStatus.connecting => (AppColors.warning, l10n.powerConnecting),
       VpnStatus.connected => (
           AppColors.success,
-          'Connected • ${Formatters.duration(stats?.duration ?? Duration.zero)}',
+          'Подключено • ${Formatters.duration(stats?.duration ?? Duration.zero)}',
         ),
       VpnStatus.disconnecting => (AppColors.warning, l10n.powerDisconnecting),
       VpnStatus.reconnecting => (AppColors.warning, l10n.powerReconnecting),

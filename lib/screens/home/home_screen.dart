@@ -8,6 +8,7 @@ import 'widgets/home_access_section.dart';
 import 'widgets/home_banner_section.dart';
 import 'widgets/home_header.dart';
 import 'widgets/home_power_section.dart';
+import 'widgets/home_socks5_shield_section.dart';
 import 'widgets/home_stats_section.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -28,12 +29,16 @@ class HomeScreen extends ConsumerWidget {
                 children: [
                   _staggered(0, const HomeHeader()),
                   const SizedBox(height: 18),
-                  _staggered(2, const HomeAccessSection()),
-                  const SizedBox(height: 24),
-                  _staggered(3, const HomePowerSection()),
+                  // ГЛАВНАЯ ФИШКА — SOCKS5 Shield на первом месте
+                  _staggered(1, const HomeSocks5ShieldSection()),
+                  const SizedBox(height: 18),
+                  _staggered(2, const HomePowerSection()),
+                  const SizedBox(height: 18),
+                  _staggered(3, const HomeAccessSection()),
                   const SizedBox(height: 24),
                   _staggered(4, const HomeStatsSection()),
                   const SizedBox(height: 16),
+                  // Место для баннеров партнёрских программ
                   _staggered(5, const HomeBannerSection()),
                 ],
               ),

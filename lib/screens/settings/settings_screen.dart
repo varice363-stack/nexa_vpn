@@ -89,7 +89,7 @@ class SettingsScreen extends ConsumerWidget {
             onChanged: (v) =>
                 ref.read(settingsProvider.notifier).setAutoConnect(v),
           ),
-          SectionHeader(title: 'Backend'),
+          SectionHeader(title: 'Сервер'),
           _BackendUrlRow(ref: ref),
           SectionHeader(title: l10n.settingsSectionApp),
           _LanguageRow(

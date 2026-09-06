@@ -7,10 +7,10 @@ import '../../widgets/common/glass_container.dart';
 import '../../widgets/security/socks5_shield_indicator.dart';
 import '../../services/security/socks5_scanner.dart';
 
-/// Screen that explains and demonstrates SOCKS5 Shield protection
+/// Экран SOCKS5 Shield — уникальная фишка приложения.
 ///
-/// This is a UNIQUE FEATURE — no other VPN app has this.
-/// Use it to educate users and demonstrate security value.
+/// Это ЕДИНСТВЕННЫЙ VPN, который защищает локальный SOCKS5 прокси
+/// паролем. Ни одно другое приложение этого не делает.
 class Socks5ShieldScreen extends ConsumerStatefulWidget {
   const Socks5ShieldScreen({super.key});
 
@@ -60,11 +60,11 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
   Widget build(BuildContext context) {
     return AppPage(
       title: 'SOCKS5 Shield',
-      subtitle: 'Exclusive protection',
+      subtitle: 'Эксклюзивная защита',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Hero section with shield indicator
+          // Главный блок с индикатором защиты
           GlassContainer(
             borderRadius: BorderRadius.circular(20),
             padding: const EdgeInsets.all(24),
@@ -77,8 +77,8 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Your SOCKS5 is protected',
-                  style: TextStyle(
+                  'Ваш SOCKS5 защищён',
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -86,8 +86,8 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'Nexa VPN is the only VPN that secures your local SOCKS5 proxy',
+                const Text(
+                  'Nexa VPN — единственный VPN, который защищает\nлокальный SOCKS5 прокси паролем',
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.textSecondary,
@@ -100,44 +100,47 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
 
           const SizedBox(height: 24),
 
-          // What is SOCKS5?
+          // Что такое SOCKS5?
           _buildInfoCard(
             icon: Icons.question_answer_rounded,
-            title: 'What is SOCKS5?',
+            title: 'Что такое SOCKS5?',
             description:
-                'SOCKS5 is a local proxy that routes your traffic through VPN. '
-                'Every VPN app creates one, but most leave it unprotected.',
+                'SOCKS5 — это локальный прокси, через который VPN пропускает '
+                'весь ваш трафик. Каждое VPN-приложение создаёт такой прокси, '
+                'но большинство оставляет его без защиты.',
           ),
 
           const SizedBox(height: 12),
 
-          // Why it matters
+          // В чём риск?
           _buildInfoCard(
             icon: Icons.warning_amber_rounded,
-            title: 'The Security Risk',
+            title: 'В чём опасность?',
             description:
-                'An unprotected SOCKS5 lets ANY app on your device bypass VPN '
-                'and expose your real IP. This includes spyware and malware.',
+                'Незащищённый SOCKS5 позволяет ЛЮБОМУ приложению на вашем '
+                'устройстве обойти VPN и раскрыть ваш настоящий IP-адрес. '
+                'Это могут использовать шпионы и вредоносные программы.',
           ),
 
           const SizedBox(height: 12),
 
-          // How we protect
+          // Как мы защищаем
           _buildInfoCard(
             icon: Icons.shield_rounded,
-            title: 'Nexa Shield Protection',
+            title: 'Защита Nexa Shield',
             description:
-                'We add password authentication to SOCKS5 and disable UDP. '
-                'Each session gets a unique, random password.',
+                'Мы добавляем парольную аутентификацию к SOCKS5 и отключаем UDP. '
+                'Каждая сессия получает уникальный случайный пароль, '
+                'который знает только ваше устройство.',
             highlight: true,
           ),
 
           const SizedBox(height: 24),
 
-          // Scan button
+          // Результаты сканирования
           if (_scanResults != null) ...[
-            Text(
-              'Device Scan Results',
+            const Text(
+              'Результаты проверки устройства',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -145,11 +148,63 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
               ),
             ),
             const SizedBox(height: 12),
+            // Сводка
+            Builder(
+              builder: (context) {
+                final openPorts = _scanResults!.where((r) => r.isOpen).length;
+                final vulnPorts = _scanResults!.where((r) => r.isVulnerable).length;
+                if (vulnPorts == 0) {
+                  return GlassContainer(
+                    borderRadius: BorderRadius.circular(12),
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Все порты безопасны ($openPorts из ${_scanResults!.length} проверены)',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.green,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                return GlassContainer(
+                  borderRadius: BorderRadius.circular(12),
+                  padding: const EdgeInsets.all(12),
+                  color: Colors.red.withValues(alpha: 0.05),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.dangerous, color: Colors.red, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Обнаружено $vulnPorts уязвимых порта! Требуется защита.',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.red,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
             ..._scanResults!.map((result) => _buildPortResult(result)),
             const SizedBox(height: 16),
           ],
 
-          // Scan button
+          // Ошибка сканирования
           if (_scanError != null) ...[
             const SizedBox(height: 12),
             GlassContainer(
@@ -162,7 +217,7 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Scan failed: $_scanError',
+                      'Ошибка проверки: $_scanError',
                       style: const TextStyle(fontSize: 12, color: Colors.red),
                     ),
                   ),
@@ -171,7 +226,7 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
             ),
           ],
 
-          // Scan button
+          // Кнопка повторного сканирования
           OutlinedButton.icon(
             onPressed: _isScanning ? null : _scan,
             icon: _isScanning
@@ -181,10 +236,10 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.search_rounded),
-            label: Text(_isScanning ? 'Scanning...' : 'Scan Device'),
+            label: Text(_isScanning ? 'Проверяем...' : 'Проверить устройство'),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              side: BorderSide(color: AppColors.primary),
+              side: const BorderSide(color: AppColors.primary),
             ),
           ),
         ],
@@ -225,7 +280,7 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary,
                   ),
@@ -241,6 +296,7 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
   Widget _buildPortResult(Socks5ScanResult result) {
     final isVulnerable = result.isVulnerable;
     final isClosed = !result.isOpen;
+    final isProtected = result.isOpen && result.isAuthenticated;
 
     return GlassContainer(
       borderRadius: BorderRadius.circular(12),
@@ -251,14 +307,14 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
           Icon(
             isClosed
                 ? Icons.check_circle_rounded
-                : isVulnerable
-                    ? Icons.dangerous_rounded
-                    : Icons.shield_rounded,
+                : isProtected
+                    ? Icons.shield_rounded
+                    : Icons.dangerous_rounded,
             color: isClosed
                 ? Colors.green
-                : isVulnerable
-                    ? Colors.red
-                    : Colors.blue,
+                : isProtected
+                    ? Colors.blue
+                    : Colors.red,
             size: 20,
           ),
           const SizedBox(width: 12),
@@ -267,8 +323,8 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Port ${result.port}',
-                  style: TextStyle(
+                  'Порт ${result.port}',
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -277,7 +333,7 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
                 if (result.processName != null)
                   Text(
                     result.processName!,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,
                     ),
@@ -287,18 +343,18 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
           ),
           Text(
             isClosed
-                ? 'Closed'
-                : isVulnerable
-                    ? 'Vulnerable'
-                    : 'Protected',
+                ? 'Закрыт ✓'
+                : isProtected
+                    ? 'Защищён'
+                    : 'Уязвим!',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: isClosed
                   ? Colors.green
-                  : isVulnerable
-                      ? Colors.red
-                      : Colors.blue,
+                  : isProtected
+                      ? Colors.blue
+                      : Colors.red,
             ),
           ),
         ],

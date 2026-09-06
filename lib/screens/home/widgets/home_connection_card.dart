@@ -24,7 +24,7 @@ class HomeConnectionCard extends ConsumerWidget {
         const Padding(
           padding: EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
-            'Current server',
+            'Текущий сервер',
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w600,

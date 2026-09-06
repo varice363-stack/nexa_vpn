@@ -24,12 +24,12 @@ class DevicesScreen extends ConsumerWidget {
 
     return subscription.when(
       loading: () => const AppPage(
-        title: 'Devices',
+        title: 'Устройства',
         child: Center(child: CircularProgressIndicator()),
       ),
       error: (e, _) => AppPage(
-        title: 'Devices',
-        child: Center(child: Text('Error: $e')),
+        title: 'Устройства',
+        child: Center(child: Text('Ошибка: $e')),
       ),
       data: (state) => _DevicesContent(state: state),
     );
@@ -258,7 +258,7 @@ class _DeviceCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
-                  'Active',
+                  'Активно',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,

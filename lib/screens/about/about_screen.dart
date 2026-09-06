@@ -100,7 +100,7 @@ class AboutScreen extends ConsumerWidget {
           const SizedBox(height: 20),
           const Center(
             child: Text(
-              'Made with care for your privacy.\n'
+              'С заботой о вашей приватности.\n'
               '© 2026 Nexa VPN',
               textAlign: TextAlign.center,
               style: TextStyle(

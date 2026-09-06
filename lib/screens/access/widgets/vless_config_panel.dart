@@ -70,8 +70,7 @@ class VlessConfigPanel extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Works with v2rayNG, Shadowrocket, sing-box and other '
-                'VLESS clients.',
+                'Работает с v2rayNG, Shadowrocket, sing-box и другими\nVLESS/V2Ray клиентами.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
@@ -138,8 +137,7 @@ class VlessConfigPanel extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   const Text(
-                    'The assigned server is not ready yet. Please check back '
-                    'shortly.',
+                    'Назначенный сервер пока не готов. Проверьте позже.',
                     style: TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,
@@ -189,7 +187,7 @@ class VlessConfigPanel extends StatelessWidget {
             value: key_.expiresAt == null
                 ? l10n.vlessNeverExpires
                 : '${Formatters.shortDate(key_.expiresAt!)}'
-                    '${key_.daysLeft != null ? ' (${key_.daysLeft} d left)' : ''}',
+                    '${key_.daysLeft != null ? ' (осталось ${key_.daysLeft} дн.)' : ''}',
           ),
           if (hasConfig) ...[
             const SizedBox(height: 8),

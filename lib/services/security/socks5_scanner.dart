@@ -15,13 +15,18 @@ class Socks5ScanResult {
   final bool isAuthenticated;
   final String? processName;
 
+  /// Уязвим = порт открыт И не требует аутентификации.
   bool get isVulnerable => isOpen && !isAuthenticated;
 }
 
-/// Scans for vulnerable SOCKS5 proxies on the device
+/// Сканирует порты устройства на предмет уязвимых SOCKS5 прокси.
 ///
-/// This checks common SOCKS5 ports (1080, 10807, 10808, etc.) and reports
-/// if any are open without authentication — a security risk.
+/// Проверяет распространённые порты (1080, 10807, 10808 и др.) и определяет:
+/// - открыт ли порт
+/// - требует ли он аутентификацию (безопасно) или нет (уязвимо)
+///
+/// Использует настоящий SOCKS5 handshake: отправляет приветствие без авторизации
+/// и анализирует ответ сервера.
 class Socks5Scanner {
   const Socks5Scanner();
 
@@ -53,18 +58,17 @@ class Socks5Scanner {
   Future<Socks5ScanResult> _checkPort(int port) async {
     Socket? socket;
     try {
-      // Try to connect with a short timeout
+      // Подключаемся с коротким таймаутом
       socket = await Socket.connect(
         '127.0.0.1',
         port,
         timeout: const Duration(seconds: 1),
-      );
+      ).timeout(const Duration(seconds: 1));
 
-      // Port is open — now check if it requires auth
-      // For SOCKS5, we'd need to send a handshake and check response
-      // For simplicity, we'll mark it as potentially vulnerable
-      // A real implementation would do the full SOCKS5 handshake
-      final isAuthenticated = await _checkAuthentication(socket, port);
+      // Порт открыт — делаем настоящий SOCKS5 handshake для проверки авторизации
+      final isAuthenticated = await _checkAuthentication(socket);
+
+      await socket.close();
 
       return Socks5ScanResult(
         port: port,
@@ -73,38 +77,104 @@ class Socks5Scanner {
         processName: await _getProcessName(port),
       );
     } on SocketException {
-      // Port is closed — good!
+      // Порт закрыт — безопасно!
       return Socks5ScanResult(
         port: port,
         isOpen: false,
-        isAuthenticated: true,
+        isAuthenticated: true, // закрытый порт = нет риска
       );
     } on TimeoutException {
-      // Connection timed out — likely closed or filtered
+      // Таймаут — скорее всего закрыт или фильтруется
       return Socks5ScanResult(
         port: port,
         isOpen: false,
         isAuthenticated: true,
       );
-    } finally {
+    } catch (e) {
+      // Любая другая ошибка — считаем порт безопасным
       await socket?.close();
+      return Socks5ScanResult(
+        port: port,
+        isOpen: false,
+        isAuthenticated: true,
+      );
     }
   }
 
-  /// Check if SOCKS5 proxy requires authentication
-  Future<bool> _checkAuthentication(Socket socket, int port) async {
-    // Simplified check — in production, do full SOCKS5 handshake
-    // For now, assume if port is open on localhost, it might be vulnerable
-    // unless it's our own hardened proxy
-    return false; // Assume vulnerable for now
+  /// Настоящий SOCKS5 handshake для проверки аутентификации.
+  ///
+  /// Протокол SOCKS5 (RFC 1928):
+  /// 1. Клиент отправляет: [0x05, N_methods, method_1, method_2, ...]
+  ///    где method 0x00 = No Auth, 0x02 = Username/Password
+  /// 2. Сервер отвечает: [0x05, selected_method]
+  ///    где 0x00 = No Auth (УЯЗВИМО!), 0x02 = Username/Password (безопасно),
+  ///         0xFF = No acceptable methods (не SOCKS5 или не принимает)
+  Future<bool> _checkAuthentication(Socket socket) async {
+    try {
+      // Отправляем SOCKS5 greeting: версион 5, предлагаем NO AUTH (0x00)
+      // Если сервер примет NO AUTH (ответит 0x05 0x00) — он уязвим
+      // Если потребует другой метод — он защищён
+      final greeting = [0x05, 0x01, 0x00]; // VER=5, NMETHODS=1, METHODS=[NO AUTH]
+      socket.add(greeting);
+      await socket.flush();
+
+      // Ждём ответ сервера с таймаутом
+      final response = await socket.first.timeout(
+        const Duration(seconds: 1),
+        onTimeout: () => <int>[],
+      );
+
+      if (response.length < 2) {
+        // Не получили нормальный SOCKS5 ответ
+        // Это может быть не SOCKS5 прокси вообще — считаем безопасным
+        return true;
+      }
+
+      final selectedMethod = response[1];
+
+      switch (selectedMethod) {
+        case 0x00:
+          // Сервер принял NO AUTH — порт уязвим!
+          return false;
+        case 0x02:
+          // Сервер требует Username/Password — защищён
+          return true;
+        case 0xFF:
+          // Нет приемлемых методов — не SOCKS5 или закрыт для нас
+          return true;
+        default:
+          // Другие методы (GSSAPI и т.д.) — есть какая-то аутентификация
+          return true;
+      }
+    } catch (e) {
+      // Ошибка при handshake — считаем безопасным (не можем подтвердить уязвимость)
+      return true;
+    }
   }
 
   /// Try to identify which process is listening on the port
   Future<String?> _getProcessName(int port) async {
-    // This would require platform-specific code
-    // On Android: use `netstat` or `/proc/net/tcp`
-    // On iOS: restricted, cannot access this info
-    return null;
+    // Android: можно использовать Process.run('netstat', ['-tlnp'])
+    // но это требует root или специальных разрешений.
+    // Для обычного пользователя — просто идентифицируем по номеру порта.
+    switch (port) {
+      case 1080:
+        return 'SOCKS5 стандартный';
+      case 10807:
+        return 'Xray / V2Ray';
+      case 10808:
+        return 'V2Ray (альт.)';
+      case 10809:
+        return 'Sing-box';
+      case 7890:
+      case 7891:
+        return 'Clash';
+      case 20170:
+      case 20171:
+        return 'Clash (альт.)';
+      default:
+        return null;
+    }
   }
 
   /// Count vulnerable ports

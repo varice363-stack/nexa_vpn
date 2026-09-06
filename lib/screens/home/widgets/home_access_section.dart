@@ -211,10 +211,10 @@ class HomeAccessSection extends ConsumerWidget {
 
   String _subtitle(AppLocalizations l10n, AccessKey? activeKey, int keys, int devices) {
     if (activeKey != null) {
-      return '${activeKey.name} · $devices ${devices == 1 ? 'device' : 'devices'}';
+      return '${activeKey.name} · $devices ${devices == 1 ? 'устройство' : 'устройств'}';
     }
     if (keys > 0) {
-      return '$keys ${keys == 1 ? 'key' : 'keys'} — no active key';
+      return '$keys ${keys == 1 ? 'ключ' : (keys < 5 ? 'ключа' : 'ключей')} — нет активного';
     }
     return l10n.accessGenerateHint;
   }

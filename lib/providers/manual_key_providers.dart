@@ -35,7 +35,7 @@ class ManualKey {
 
   factory ManualKey.fromJson(Map<String, Object?> json) => ManualKey(
         uri: json['uri'] as String,
-        label: json['label'] as String? ?? 'Imported key',
+        label: json['label'] as String? ?? 'Импортированный ключ',
         addedAt:
             DateTime.tryParse(json['addedAt'] as String? ?? '') ?? DateTime.now(),
       );
@@ -72,7 +72,7 @@ class ManualKeysNotifier extends Notifier<List<ManualKey>> {
       uri: input.value,
       label: input.label?.trim().isNotEmpty == true
           ? input.label!.trim()
-          : (Uri.tryParse(input.value)?.host ?? 'Imported key'),
+          : (Uri.tryParse(input.value)?.host ?? 'Импортированный ключ'),
       addedAt: DateTime.now(),
     );
     state = [key, ...without];
@@ -96,7 +96,7 @@ class ManualKeysNotifier extends Notifier<List<ManualKey>> {
         ManualKey(
           uri: p.uri,
           label: p.label.trim().isEmpty
-              ? (Uri.tryParse(p.uri)?.host ?? 'Imported key')
+              ? (Uri.tryParse(p.uri)?.host ?? 'Импортированный ключ')
               : p.label.trim(),
           addedAt: now,
         ),

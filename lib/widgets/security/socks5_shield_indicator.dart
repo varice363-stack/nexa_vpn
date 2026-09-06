@@ -67,11 +67,11 @@ class Socks5ShieldIndicator extends StatelessWidget {
   (IconData, Color, String) _getStatusInfo() {
     switch (status) {
       case Socks5ShieldStatus.protected:
-        return (Icons.shield_rounded, Colors.green, 'SOCKS5 Shielded');
+        return (Icons.shield_rounded, Colors.green, 'SOCKS5 защищён');
       case Socks5ShieldStatus.vulnerable:
-        return (Icons.shield_outlined, Colors.red, 'SOCKS5 Exposed');
+        return (Icons.shield_outlined, Colors.red, 'SOCKS5 уязвим');
       case Socks5ShieldStatus.unknown:
-        return (Icons.help_outline, Colors.grey, 'Status Unknown');
+        return (Icons.help_outline, Colors.grey, 'Статус неизвестен');
     }
   }
 }

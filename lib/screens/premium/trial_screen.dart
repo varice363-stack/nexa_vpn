@@ -51,12 +51,12 @@ class TrialScreen extends ConsumerWidget {
         );
       },
       loading: () => const AppPage(
-        title: 'Trial',
+        title: 'Пробный период',
         child: Center(child: CircularProgressIndicator()),
       ),
       error: (error, stack) => AppPage(
-        title: 'Trial',
-        child: Center(child: Text('Error: $error')),
+        title: 'Пробный период',
+        child: Center(child: Text('Ошибка: $error')),
       ),
     );
   }

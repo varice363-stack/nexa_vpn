@@ -73,7 +73,7 @@ class ConnectionNotifier extends Notifier<VpnStatus> {
                 true;
         if (notificationsEnabled) {
           ref.read(notificationServiceProvider).push(
-                title: 'Connected',
+                title: 'Подключено',
                 body: 'Tunnel is active via '
                     '${service.activeSource?.label ?? 'selected key'}',
                 icon: AppNotificationIcon.connection,

@@ -14,16 +14,58 @@ const String kOwnerCode = String.fromEnvironment(
   defaultValue: 'NEXA-A3C4-D6E7-9F9H-JK34',
 );
 
+/// Состояние разблокировки админки.
+/// Управляется через диалог ввода кода владельца на экране профиля.
+final _adminUnlockedState = StateProvider<bool>(false);
+
 /// Открыт ли раздел выпуска ключей на этом устройстве.
 ///
-/// Раньше проверялась роль в аккаунте. Аккаунтов больше нет, поэтому
-/// признак владельца — совпадение кода устройства с кодом, заданным
-/// при сборке. Ключ хранится в Android Keystore и наружу не уходит.
+/// Работает через ручной ввод кода владельца:
+/// 1. Пользователь нажимает "Войти как админ" в профиле
+/// 2. Вводит код OWNER_CODE (задаётся при сборке)
+/// 3. Если код верный — админка разблокирована
+///
+/// Также автоматически разблокируется, если код устройства совпадает
+/// с OWNER_CODE (для отладки через --dart-define).
 final adminUnlockedProvider = Provider<bool>((ref) {
-  if (kOwnerCode.isEmpty) return false;
+  // Проверяем ручную разблокировку через диалог
+  final manualUnlock = ref.watch(_adminUnlockedState);
+  if (manualUnlock) return true;
 
+  // Автоматическая разблокировка — для debug-сборок, где OWNER_CODE совпадает
+  // с кодом устройства (удобно при разработке)
+  if (kOwnerCode.isEmpty) return false;
   final code = ref.watch(identityProvider).value;
   if (code == null) return false;
+  if (code == kOwnerCode) return true;
 
-  return code == kOwnerCode;
+  return false;
 });
+
+/// Провайдер для управления состоянием админки (ввод кода).
+final adminUnlockControllerProvider =
+    Provider<AdminUnlockController>((ref) => AdminUnlockController(ref));
+
+class AdminUnlockController {
+  AdminUnlockController(this._ref);
+  final Ref _ref;
+
+  /// Попытка разблокировать админку по коду владельца.
+  /// Возвращает true если код верный.
+  bool tryUnlock(String enteredCode) {
+    final normalised = enteredCode.trim().toUpperCase();
+    if (normalised == kOwnerCode) {
+      _ref.read(_adminUnlockedState.notifier).state = true;
+      return true;
+    }
+    return false;
+  }
+
+  /// Заблокировать админку.
+  void lock() {
+    _ref.read(_adminUnlockedState.notifier).state = false;
+  }
+
+  /// Текущее состояние.
+  bool get isUnlocked => _ref.read(_adminUnlockedState);
+}

@@ -11,7 +11,7 @@ import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/glass_list_tile.dart';
 import '../../widgets/common/section_header.dart';
 
-/// Profile hub: identity, quick access to settings and features.
+/// Профиль: код устройства, настройки, поддержка, админка.
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
@@ -25,7 +25,7 @@ class ProfileScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Код устройства вместо аккаунта: почты и пароля больше нет.
+          // Код устройства
           _IdentityCodeCard(
             title: l10n.profileMyCode,
             onTap: () => context.push('/identity'),
@@ -39,11 +39,11 @@ class ProfileScreen extends ConsumerWidget {
             onTap: () => context.push('/settings'),
           ),
           const SizedBox(height: 20),
-          SectionHeader(title: 'SECURITY'),
+          SectionHeader(title: 'БЕЗОПАСНОСТЬ'),
           GlassListTile(
             icon: Icons.shield_rounded,
             title: 'SOCKS5 Shield',
-            subtitle: 'Exclusive: Your SOCKS5 is password-protected',
+            subtitle: 'Эксклюзив: ваш SOCKS5 защищён паролем',
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -51,7 +51,7 @@ class ProfileScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Text(
-                'UNIQUE',
+                'УНИКУМ',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
@@ -72,13 +72,13 @@ class ProfileScreen extends ConsumerWidget {
           GlassListTile(
             icon: Icons.help_rounded,
             title: l10n.faqTitle,
-            subtitle: 'Frequently asked questions',
+            subtitle: 'Часто задаваемые вопросы',
             onTap: () => context.push('/faq'),
           ),
           GlassListTile(
             icon: Icons.privacy_tip_rounded,
             title: l10n.privacyPolicyTitle,
-            subtitle: 'GDPR & 152-ФЗ compliant',
+            subtitle: 'Соответствует GDPR и 152-ФЗ',
             onTap: () => context.push('/privacy'),
           ),
           GlassListTile(
@@ -87,9 +87,13 @@ class ProfileScreen extends ConsumerWidget {
             subtitle: l10n.profileAboutHint,
             onTap: () => context.push('/about'),
           ),
-          // Раздел владельца. Виден, только если код этого устройства
-          // совпадает с кодом, заданным при сборке (--dart-define=OWNER_CODE).
-          // Обычный человек не должен даже знать, что выпуск ключей есть.
+          // Скрытая админка — видна только после ввода кода владельца.
+          // Показывается кнопка "Войти как админ" для всех пользователей.
+          if (!ref.watch(adminUnlockedProvider)) ...[
+            const SizedBox(height: 30),
+            _AdminEntryTile(onTap: () => _showAdminLoginDialog(context, ref)),
+          ],
+          // Раздел владельца — виден только после успешного ввода кода.
           if (ref.watch(adminUnlockedProvider)) ...[
             const SizedBox(height: 20),
             SectionHeader(title: l10n.adminOwnerSection),
@@ -105,19 +109,181 @@ class ProfileScreen extends ConsumerWidget {
               subtitle: l10n.adminKeyIssueHint,
               onTap: () => context.push('/admin/keys'),
             ),
+            GlassListTile(
+              icon: Icons.add_photo_alternate_rounded,
+              title: 'Создать баннер',
+              subtitle: 'Добавить рекламный баннер для партнёров',
+              onTap: () => context.push('/admin/create-banner'),
+            ),
+            const SizedBox(height: 12),
+            // Кнопка выхода из админки
+            GestureDetector(
+              onTap: () {
+                ref.read(adminUnlockControllerProvider).lock();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Режим администратора отключён'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                alignment: Alignment.center,
+                child: const Text(
+                  'Выйти из режима администратора',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textTertiary,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ),
           ],
+        ],
+      ),
+    );
+  }
+
+  void _showAdminLoginDialog(BuildContext context, WidgetRef ref) {
+    final controller = TextEditingController();
+    final scaffold = ScaffoldMessenger.of(context);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+        ),
+        title: const Text(
+          'Вход для администратора',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Введите код владельца, чтобы получить доступ к панели управления.',
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 15,
+                color: AppColors.textPrimary,
+                letterSpacing: 1.5,
+              ),
+              decoration: InputDecoration(
+                hintText: 'NEXA-XXXX-XXXX-XXXX-XXXX',
+                hintStyle: const TextStyle(
+                  color: AppColors.textTertiary,
+                  fontFamily: 'monospace',
+                ),
+                filled: true,
+                fillColor: AppColors.surface.withValues(alpha: 0.5),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text(
+              'Отмена',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final success = ref.read(adminUnlockControllerProvider).tryUnlock(controller.text);
+              Navigator.of(dialogContext).pop();
+              if (success) {
+                scaffold.showSnackBar(
+                  const SnackBar(
+                    content: Text('✅ Доступ администратора получен!'),
+                    backgroundColor: AppColors.success,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              } else {
+                scaffold.showSnackBar(
+                  const SnackBar(
+                    content: Text('❌ Неверный код владельца'),
+                    backgroundColor: AppColors.danger,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text(
+              'Войти',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-/// Guest identity card with a sign-in CTA.
-/// Карточка кода устройства — то, что заменило блок аккаунта.
-///
-/// Показывает не сам код целиком, а лишь первую группу: полный код живёт
-/// на отдельном экране, чтобы его нельзя было подсмотреть мельком через
-/// плечо.
+/// Кнопка "Войти как админ" — скрытая, незаметная.
+class _AdminEntryTile extends StatelessWidget {
+  const _AdminEntryTile({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        alignment: Alignment.center,
+        child: Text(
+          'Технический доступ',
+          style: TextStyle(
+            fontSize: 12,
+            color: AppColors.textTertiary.withValues(alpha: 0.5),
+            decoration: TextDecoration.underline,
+            decorationColor: AppColors.textTertiary.withValues(alpha: 0.3),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Карточка кода устройства.
 class _IdentityCodeCard extends ConsumerWidget {
   const _IdentityCodeCard({required this.title, required this.onTap});
 
