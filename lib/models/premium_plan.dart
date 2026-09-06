@@ -31,6 +31,8 @@ class PremiumPlan {
     required this.features,
     this.isPopular = false,
     this.isLifetime = false,
+    this.isTrial = false,
+    this.trialDays = 0,
     this.deviceLimit = 1,
     this.trafficLimitGb,
   });
@@ -43,6 +45,8 @@ class PremiumPlan {
   final List<String> features;
   final bool isPopular;
   final bool isLifetime;
+  final bool isTrial;
+  final int trialDays;
   final int deviceLimit;
   final int? trafficLimitGb;
 
@@ -52,21 +56,24 @@ class PremiumPlan {
   /// Конкурентный анализ: Red Shield VPN — 299₽/мес, 799₽/3мес, 2399₽/год.
   /// Наше преимущество: VLESS + Reality (95-98% обход ТСПУ).
   static const List<PremiumPlan> available = [
-    // Free tier — for user acquisition
+    // Trial — 7 days free (highest conversion, like Official VPN)
     PremiumPlan(
-      id: 'free',
-      name: 'Бесплатно',
+      id: 'trial',
+      name: 'Пробный период',
       price: '0 \u20BD',
-      periodLabel: '/ мес',
-      description: 'Для знакомства с сервисом',
+      periodLabel: '/ 7 дней',
+      description: 'Полный доступ без ограничений',
       features: [
-        '3 ГБ трафика в месяц',
-        '1 устройство',
-        '3 сервера (DE, NL, BG)',
-        'Базовый обход блокировок',
+        '7 дней бесплатно',
+        'Безлимитный трафик',
+        '3 устройства',
+        'Все серверы',
+        'VLESS + Reality + Vision',
+        'Без привязки карты',
       ],
-      deviceLimit: 1,
-      trafficLimitGb: 3,
+      isTrial: true,
+      trialDays: 7,
+      deviceLimit: 3,
     ),
 
     // Standard tier — main revenue driver
@@ -120,12 +127,14 @@ class SubscriptionState {
     this.planId,
     this.expiresAt,
     this.devicesUsed = 0,
+    this.isTrialActive = false,
   });
 
   final SubscriptionTier tier;
   final String? planId;
   final DateTime? expiresAt;
   final int devicesUsed;
+  final bool isTrialActive;
 
   bool get isPremium =>
       tier == SubscriptionTier.standard || tier == SubscriptionTier.premium;
@@ -134,17 +143,39 @@ class SubscriptionState {
 
   bool get canAddDevice => devicesUsed < deviceLimit;
 
+  /// Check if trial is still active.
+  bool get isTrialValid {
+    if (!isTrialActive || expiresAt == null) return false;
+    return DateTime.now().isBefore(expiresAt!);
+  }
+
+  /// Days remaining in trial.
+  int get trialDaysLeft {
+    if (!isTrialValid || expiresAt == null) return 0;
+    final diff = expiresAt!.difference(DateTime.now());
+    return diff.inDays.clamp(0, 7);
+  }
+
+  /// Hours remaining in trial (for more precise countdown).
+  int get trialHoursLeft {
+    if (!isTrialValid || expiresAt == null) return 0;
+    final diff = expiresAt!.difference(DateTime.now());
+    return diff.inHours.clamp(0, 168); // 7 days * 24 hours
+  }
+
   SubscriptionState copyWith({
     SubscriptionTier? tier,
     String? planId,
     DateTime? expiresAt,
     int? devicesUsed,
+    bool? isTrialActive,
   }) {
     return SubscriptionState(
       tier: tier ?? this.tier,
       planId: planId ?? this.planId,
       expiresAt: expiresAt ?? this.expiresAt,
       devicesUsed: devicesUsed ?? this.devicesUsed,
+      isTrialActive: isTrialActive ?? this.isTrialActive,
     );
   }
 }

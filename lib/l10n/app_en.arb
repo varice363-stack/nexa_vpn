@@ -514,5 +514,47 @@
   "devicesEmpty": "You haven't connected any devices yet. Connect through the app and it will appear here.",
   "devicesUpgradeTitle": "Need more devices?",
   "devicesUpgradeBody": "Upgrade to Premium to connect up to 5 devices simultaneously.",
-  "devicesUpgradeButton": "Upgrade plan"
+  "devicesUpgradeButton": "Upgrade plan",
+  
+  "trialTitle": "Free Trial",
+  "trialSubtitle": "Try Nexa VPN for free",
+  "trialBenefitTitle": "7 days free",
+  "trialBenefitSubtitle": "Full access to all features without restrictions",
+  "trialPeriod7Days": "7-day trial period",
+  "trialFeatureUnlimited": "Unlimited traffic",
+  "trialFeatureAllServers": "Access to all servers",
+  "trialFeature3Devices": "Connect up to 3 devices",
+  "trialFeatureFullProtection": "Full VLESS + Reality protection",
+  "trialActivateButton": "Activate free trial",
+  "trialNoPayment": "No credit card required",
+  "trialViewAllPlans": "View all plans",
+  "trialActivated": "Trial activated!",
+  "trialActivatedBody": "You have {days} days of full access without restrictions",
+  "@trialActivatedBody": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "trialActiveTitle": "Trial is active",
+  "trialActiveSubtitle": "Enjoy full access",
+  "trialDaysLeft": "{days} {days, plural, =1{day} other{days}}",
+  "@trialDaysLeft": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "trialHoursLeft": "{hours} {hours, plural, =1{hour} other{hours}}",
+  "@trialHoursLeft": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "trialRemaining": "remaining",
+  "trialActiveFeatures": "What's included:",
+  "trialUpgradeTitle": "Don't want to limit yourself?",
+  "trialUpgradeSubtitle": "Upgrade to a paid plan and get even more features",
+  "trialUpgradeButton": "Choose a plan",
+  "subscriptionActivated": "Subscription activated",
+  "planNowActive": "plan is now active",
+  "freePlanActivated": "You have 3 GB of free traffic per month"
 }

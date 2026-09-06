@@ -514,5 +514,47 @@
   "devicesEmpty": "Вы ещё не подключали устройства. Подключитесь через приложение, и оно появится здесь.",
   "devicesUpgradeTitle": "Нужно больше устройств?",
   "devicesUpgradeBody": "Перейдите на Premium для подключения до 5 устройств одновременно.",
-  "devicesUpgradeButton": "Обновить тариф"
+  "devicesUpgradeButton": "Обновить тариф",
+  
+  "trialTitle": "Пробный период",
+  "trialSubtitle": "Попробуйте Nexa VPN бесплатно",
+  "trialBenefitTitle": "7 дней бесплатно",
+  "trialBenefitSubtitle": "Полный доступ ко всем функциям без ограничений",
+  "trialPeriod7Days": "Пробный период 7 дней",
+  "trialFeatureUnlimited": "Безлимитный трафик",
+  "trialFeatureAllServers": "Доступ ко всем серверам",
+  "trialFeature3Devices": "Подключение до 3 устройств",
+  "trialFeatureFullProtection": "Полная защита VLESS + Reality",
+  "trialActivateButton": "Активировать пробный период",
+  "trialNoPayment": "Привязка карты не требуется",
+  "trialViewAllPlans": "Посмотреть все тарифы",
+  "trialActivated": "Пробный период активирован!",
+  "trialActivatedBody": "У вас {days} дней полного доступа без ограничений",
+  "@trialActivatedBody": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "trialActiveTitle": "Пробный период активен",
+  "trialActiveSubtitle": "Наслаждайтесь полным доступом",
+  "trialDaysLeft": "{days} {days, plural, =1{день} other{дней}}",
+  "@trialDaysLeft": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "trialHoursLeft": "{hours} {hours, plural, =1{час} other{часов}}",
+  "@trialHoursLeft": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "trialRemaining": "осталось",
+  "trialActiveFeatures": "Что включено:",
+  "trialUpgradeTitle": "Не хотите ограничивать себя?",
+  "trialUpgradeSubtitle": "Перейдите на платный тариф и получите ещё больше возможностей",
+  "trialUpgradeButton": "Выбрать тариф",
+  "subscriptionActivated": "Подписка активирована",
+  "planNowActive": "тариф теперь активен",
+  "freePlanActivated": "У вас 3 ГБ бесплатного трафика в месяц"
 }

@@ -29,7 +29,34 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     }
   }
 
-  /// Simulated purchase.
+  /// Activate trial period (7 days free).
+  ///
+  /// Gives full access to Standard tier features for 7 days.
+  /// No payment method required — maximizes conversion.
+  Future<void> activateTrial() async {
+    final trialPlan = PremiumPlan.available.firstWhere(
+      (plan) => plan.isTrial,
+      orElse: () => throw Exception('Trial plan not found'),
+    );
+
+    final next = SubscriptionState(
+      tier: SubscriptionTier.standard,
+      planId: trialPlan.id,
+      expiresAt: DateTime.now().add(Duration(days: trialPlan.trialDays)),
+      isTrialActive: true,
+    );
+
+    state = AsyncData(next);
+    await ref.read(configRepositoryProvider).saveSubscription(next);
+
+    ref.read(notificationServiceProvider).push(
+          title: 'Пробный период активирован',
+          body: 'У вас ${trialPlan.trialDays} дней полного доступа без ограничений',
+          icon: AppNotificationIcon.promo,
+        );
+  }
+
+  /// Subscribe to a paid plan.
   ///
   /// BILLING INTEGRATION (TODO — external infrastructure):
   /// replace with `in_app_purchase` / RevenueCat once the backend exposes
@@ -48,9 +75,12 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
       expiresAt: plan.isLifetime
           ? null
           : DateTime.now().add(const Duration(days: 30)),
+      isTrialActive: false, // Paid subscription replaces trial
     );
+
     state = AsyncData(next);
     await ref.read(configRepositoryProvider).saveSubscription(next);
+
     ref.read(notificationServiceProvider).push(
           title: tier == SubscriptionTier.free
               ? 'Free plan activated'

@@ -71,16 +71,19 @@ class ConfigRepositoryImpl implements ConfigRepository {
       _ => SubscriptionTier.free,
     };
     final expiry = _local.subscriptionExpiry;
+    final isTrial = _local.getBool('subscription.is_trial');
     return SubscriptionState(
       tier: tier,
       planId: _local.subscriptionPlan,
       expiresAt: expiry == null ? null : DateTime.tryParse(expiry),
+      isTrialActive: isTrial,
     );
   }
 
   @override
   Future<void> saveSubscription(SubscriptionState state) async {
     await _local.setString('subscription.tier', state.tier.name);
+    await _local.setBool('subscription.is_trial', state.isTrialActive);
     if (state.planId != null) {
       await _local.setString('subscription.plan', state.planId!);
     }
