@@ -12,7 +12,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appName => 'Morok VPN';
 
   @override
-  String get appTagline => 'Private • Secure • Fast';
+  String get appTagline => 'Dissolve into the mist';
 
   @override
   String get navHome => 'Home';
