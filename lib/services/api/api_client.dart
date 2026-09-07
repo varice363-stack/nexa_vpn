@@ -10,7 +10,7 @@ import 'api_config.dart';
 import 'api_exception.dart';
 import 'token_storage.dart';
 
-/// Minimal JSON HTTP client for the Nexa VPN backend.
+/// Minimal JSON HTTP client for the Morok VPN backend.
 ///
 /// Injects the stored JWT, decodes UTF-8 responses and maps every failure
 /// onto [ApiException] (network, timeout, HTTP status, malformed body).

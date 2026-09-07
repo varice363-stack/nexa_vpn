@@ -19,7 +19,7 @@ import '../../widgets/common/glass_container.dart';
 /// "I have a key" — the fastest path to a working connection.
 ///
 /// Accepts three things on purpose:
-///  * a Nexa code (NEXA-XXXX-XXXX), redeemed through the backend;
+///  * a Morok code (NEXA-XXXX-XXXX), redeemed through the backend;
 ///  * a third-party `vless://` link, stored locally and never uploaded;
 ///  * an `https://` subscription link, which most providers hand out instead
 ///    of a bare share link — fetched on the device, contents never uploaded.
@@ -129,7 +129,7 @@ class _KeyEntryScreenState extends ConsumerState<KeyEntryScreen> {
         if (!mounted) return;
         _controller.clear();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.keyEntrySuccessNexa)),
+          SnackBar(content: Text(l10n.keyEntrySuccessMorok)),
         );
         context.go('/access');
       }
@@ -318,15 +318,15 @@ class _KindChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isNexa = input.kind == KeyInputKind.nexaCode;
-    final color = isNexa ? AppColors.premium : AppColors.primaryBright;
+    final isMorok = input.kind == KeyInputKind.nexaCode;
+    final color = isMorok ? AppColors.premium : AppColors.primaryBright;
 
     // Detect protocol type from URI scheme
     final uriScheme = input.value.toLowerCase().split('://').first;
     final (icon, label) = switch (input.kind) {
       KeyInputKind.nexaCode => (
           Icons.workspace_premium_rounded,
-          l10n.keyEntryDetectedNexa,
+          l10n.keyEntryDetectedMorok,
         ),
       KeyInputKind.subscriptionUrl => (
           Icons.cloud_download_rounded,

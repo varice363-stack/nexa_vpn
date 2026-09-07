@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Central design tokens for the Nexa VPN dark glassmorphism UI.
+/// Central design tokens for the Morok VPN dark glassmorphism UI.
+///
+/// Цветовая палитра вдохновлена туманом и мистикой:
+/// бирюзовое свечение (#22D3EE) на тёмном фоне.
 abstract final class AppColors {
   // ── Backgrounds ──────────────────────────────────────────────────────────
   static const Color background = Color(0xFF05070F);
@@ -12,13 +15,13 @@ abstract final class AppColors {
   static const Color glassFillStrong = Color(0x21FFFFFF); // 13% white
   static const Color glassBorder = Color(0x1FFFFFFF); // 12% white
 
-  // ── Accent ───────────────────────────────────────────────────────────────
-  static const Color primary = Color(0xFF3D8BFF);
-  static const Color primaryBright = Color(0xFF6FB1FF);
+  // ── Accent — MOROK: бирюзовое свечение в тумане ────────────────────────
+  static const Color primary = Color(0xFF22D3EE);
+  static const Color primaryBright = Color(0xFF67E8F9);
   static const Color secondary = Color(0xFF8B5CF6);
   static const Color cyan = Color(0xFF22D3EE);
 
-  // ── Status ───────────────────────────────────────────────────────────────
+  // ── Status ──────────────────────────────────────────────────────────────
   static const Color success = Color(0xFF34D399);
   static const Color warning = Color(0xFFFBBF24);
   static const Color danger = Color(0xFFF87171);
@@ -42,13 +45,13 @@ abstract final class AppColors {
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF3D8BFF), Color(0xFF7C5CFF)],
+    colors: [Color(0xFF22D3EE), Color(0xFF0EA5E9)],
   );
 
   static const LinearGradient connectedGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF34D399), Color(0xFF0EA5E9)],
+    colors: [Color(0xFF34D399), Color(0xFF22D3EE)],
   );
 
   static const LinearGradient premiumGradient = LinearGradient(

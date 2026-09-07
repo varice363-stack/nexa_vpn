@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'Nexa VPN';
+  String get appName => 'Morok VPN';
 
   @override
   String get appTagline => 'Private • Secure • Fast';
@@ -74,7 +74,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingBody1 =>
-      'Connect with a single tap. Nexa VPN works silently in the background and keeps your session alive.';
+      'Connect with a single tap. Morok VPN works silently in the background and keeps your session alive.';
 
   @override
   String get onboardingTitle2 => 'SOCKS5 Shield & zero logs';
@@ -147,7 +147,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accessNoActiveKey => 'No active key';
 
   @override
-  String get accessGenerateHint => 'Generate a key to use Nexa on any device';
+  String get accessGenerateHint => 'Generate a key to use Morok on any device';
 
   @override
   String get accessGetAccess => 'Get access';
@@ -301,7 +301,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLogsCleared => 'Logs cleared';
 
   @override
-  String get settingsAbout => 'About Nexa VPN';
+  String get settingsAbout => 'About Morok VPN';
 
   @override
   String get settingsAboutHint => 'Version, privacy policy, changelog';
@@ -381,7 +381,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Upgrade for unlimited data and 4K streaming';
 
   @override
-  String get profileNexaPremium => 'Nexa Premium';
+  String get profileMorokPremium => 'Morok Premium';
 
   @override
   String get profileMyAccess => 'My Access';
@@ -665,7 +665,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your payment history will appear here after the first purchase.';
 
   @override
-  String get consentTitle => 'How Nexa VPN uses your connection';
+  String get consentTitle => 'How Morok VPN uses your connection';
 
   @override
   String get consentIntro =>
@@ -676,7 +676,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get consentPoint1Body =>
-      'Nexa VPN uses the Android VpnService to route your device traffic through a server you choose. Android will ask you to allow this the first time you connect.';
+      'Morok VPN uses the Android VpnService to route your device traffic through a server you choose. Android will ask you to allow this the first time you connect.';
 
   @override
   String get consentPoint2Title => 'Your traffic is encrypted';
@@ -716,7 +716,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keyEntrySubtitle =>
-      'Enter a Nexa code, a vless:// link, or a subscription link from any provider';
+      'Enter a Morok code, a vless:// link, or a subscription link from any provider';
 
   @override
   String get keyEntryHint => 'NEXA-XXXX-XXXX, vless://… or https://…';
@@ -740,7 +740,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get keyEntryNoKeyYet => 'Don\'t have a key?';
 
   @override
-  String get keyEntryDetectedNexa => 'Nexa access code';
+  String get keyEntryDetectedMorok => 'Morok access code';
 
   @override
   String get keyEntryDetectedVless => 'External VLESS key';
@@ -770,7 +770,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'This code is already used on another device.';
 
   @override
-  String get keyEntrySuccessNexa => 'Access activated';
+  String get keyEntrySuccessMorok => 'Access activated';
 
   @override
   String get keyEntrySuccessVless => 'Key imported';
@@ -786,7 +786,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keyEntryLocalOnly =>
-      'Stored on this device only — never sent to Nexa servers.';
+      'Stored on this device only — never sent to Morok servers.';
 
   @override
   String get keyEntryDetectedSubscription => 'Provider subscription';
@@ -840,7 +840,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accessGenerateHintLong =>
-      'Get access to generate your personal key — usable in the Nexa app and any compatible client.';
+      'Get access to generate your personal key — usable in the Morok app and any compatible client.';
 
   @override
   String get accessStatusActive => 'ACTIVE';

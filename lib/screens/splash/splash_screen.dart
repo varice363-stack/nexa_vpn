@@ -58,7 +58,7 @@ class SplashScreen extends ConsumerWidget {
                   .fadeIn(duration: 500.ms),
               const SizedBox(height: 24),
               const Text(
-                'Nexa VPN',
+                'Morok VPN',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,

@@ -44,7 +44,7 @@ class NotificationNotifier extends AsyncNotifier<List<AppNotification>> {
     // Welcome seed on first run, so the screen is never empty.
     if (_local.isEmpty && _remote.isEmpty) {
       service.push(
-        title: 'Welcome to Nexa VPN',
+        title: 'Welcome to Morok VPN',
         body: 'Your connection is protected. Pick a server to get started.',
         icon: AppNotificationIcon.security,
       );

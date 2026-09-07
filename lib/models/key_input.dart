@@ -1,6 +1,6 @@
 /// What the user pasted into the "I have a key" field.
 enum KeyInputKind {
-  /// A Nexa redemption code: NEXA-XXXX-XXXX. Resolved via the backend.
+  /// A Morok redemption code: NEXA-XXXX-XXXX. Resolved via the backend.
   nexaCode,
 
   /// A third-party `vless://` share link. Used locally, never sent to us.

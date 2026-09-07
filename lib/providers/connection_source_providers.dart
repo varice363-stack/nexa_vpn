@@ -11,7 +11,7 @@ const _activeSourceKey = 'nexa_active_source';
 
 /// Every connection the user can pick, both origins merged.
 ///
-/// Nexa keys come first — they are ours and carry an expiry we can show —
+/// Morok keys come first — they are ours and carry an expiry we can show —
 /// followed by imported links in the order they were added. Keys without a
 /// usable config are dropped rather than shown as dead entries.
 final connectionSourcesProvider = Provider<List<ConnectionSource>>((ref) {

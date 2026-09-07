@@ -3,7 +3,7 @@ import '../models/app_notification.dart';
 import '../services/api/api_client.dart';
 import '../services/api/api_exception.dart';
 
-/// [NotificationRepository] backed by the Nexa VPN API.
+/// [NotificationRepository] backed by the Morok VPN API.
 ///
 /// Maps the backend `Notification` (title/body/type/read/createdAt) onto
 /// the existing client [AppNotification] model — no new model needed.

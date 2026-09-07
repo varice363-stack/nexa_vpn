@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'Nexa VPN'**
+  /// **'Morok VPN'**
   String get appName;
 
   /// No description provided for @appTagline.
@@ -227,7 +227,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingBody1.
   ///
   /// In en, this message translates to:
-  /// **'Connect with a single tap. Nexa VPN works silently in the background and keeps your session alive.'**
+  /// **'Connect with a single tap. Morok VPN works silently in the background and keeps your session alive.'**
   String get onboardingBody1;
 
   /// No description provided for @onboardingTitle2.
@@ -365,7 +365,7 @@ abstract class AppLocalizations {
   /// No description provided for @accessGenerateHint.
   ///
   /// In en, this message translates to:
-  /// **'Generate a key to use Nexa on any device'**
+  /// **'Generate a key to use Morok on any device'**
   String get accessGenerateHint;
 
   /// No description provided for @accessGetAccess.
@@ -665,7 +665,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAbout.
   ///
   /// In en, this message translates to:
-  /// **'About Nexa VPN'**
+  /// **'About Morok VPN'**
   String get settingsAbout;
 
   /// No description provided for @settingsAboutHint.
@@ -818,11 +818,11 @@ abstract class AppLocalizations {
   /// **'Upgrade for unlimited data and 4K streaming'**
   String get profileUpgradeHint;
 
-  /// No description provided for @profileNexaPremium.
+  /// No description provided for @profileMorokPremium.
   ///
   /// In en, this message translates to:
-  /// **'Nexa Premium'**
-  String get profileNexaPremium;
+  /// **'Morok Premium'**
+  String get profileMorokPremium;
 
   /// No description provided for @profileMyAccess.
   ///
@@ -1349,7 +1349,7 @@ abstract class AppLocalizations {
   /// No description provided for @consentTitle.
   ///
   /// In en, this message translates to:
-  /// **'How Nexa VPN uses your connection'**
+  /// **'How Morok VPN uses your connection'**
   String get consentTitle;
 
   /// No description provided for @consentIntro.
@@ -1367,7 +1367,7 @@ abstract class AppLocalizations {
   /// No description provided for @consentPoint1Body.
   ///
   /// In en, this message translates to:
-  /// **'Nexa VPN uses the Android VpnService to route your device traffic through a server you choose. Android will ask you to allow this the first time you connect.'**
+  /// **'Morok VPN uses the Android VpnService to route your device traffic through a server you choose. Android will ask you to allow this the first time you connect.'**
   String get consentPoint1Body;
 
   /// No description provided for @consentPoint2Title.
@@ -1439,7 +1439,7 @@ abstract class AppLocalizations {
   /// No description provided for @keyEntrySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Enter a Nexa code, a vless:// link, or a subscription link from any provider'**
+  /// **'Enter a Morok code, a vless:// link, or a subscription link from any provider'**
   String get keyEntrySubtitle;
 
   /// No description provided for @keyEntryHint.
@@ -1484,11 +1484,11 @@ abstract class AppLocalizations {
   /// **'Don\'t have a key?'**
   String get keyEntryNoKeyYet;
 
-  /// No description provided for @keyEntryDetectedNexa.
+  /// No description provided for @keyEntryDetectedMorok.
   ///
   /// In en, this message translates to:
-  /// **'Nexa access code'**
-  String get keyEntryDetectedNexa;
+  /// **'Morok access code'**
+  String get keyEntryDetectedMorok;
 
   /// No description provided for @keyEntryDetectedVless.
   ///
@@ -1538,11 +1538,11 @@ abstract class AppLocalizations {
   /// **'This code is already used on another device.'**
   String get keyEntryErrorUsed;
 
-  /// No description provided for @keyEntrySuccessNexa.
+  /// No description provided for @keyEntrySuccessMorok.
   ///
   /// In en, this message translates to:
   /// **'Access activated'**
-  String get keyEntrySuccessNexa;
+  String get keyEntrySuccessMorok;
 
   /// No description provided for @keyEntrySuccessVless.
   ///
@@ -1571,7 +1571,7 @@ abstract class AppLocalizations {
   /// No description provided for @keyEntryLocalOnly.
   ///
   /// In en, this message translates to:
-  /// **'Stored on this device only — never sent to Nexa servers.'**
+  /// **'Stored on this device only — never sent to Morok servers.'**
   String get keyEntryLocalOnly;
 
   /// No description provided for @keyEntryDetectedSubscription.
@@ -1655,7 +1655,7 @@ abstract class AppLocalizations {
   /// No description provided for @accessGenerateHintLong.
   ///
   /// In en, this message translates to:
-  /// **'Get access to generate your personal key — usable in the Nexa app and any compatible client.'**
+  /// **'Get access to generate your personal key — usable in the Morok app and any compatible client.'**
   String get accessGenerateHintLong;
 
   /// No description provided for @accessStatusActive.

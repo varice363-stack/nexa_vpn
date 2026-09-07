@@ -3,7 +3,7 @@ import '../models/access_key.dart';
 import '../services/api/api_client.dart';
 import '../services/api/api_exception.dart';
 
-/// [AccessRepository] backed by the Nexa VPN API.
+/// [AccessRepository] backed by the Morok VPN API.
 class AccessRepositoryImpl implements AccessRepository {
   AccessRepositoryImpl({required ApiClient api}) : _api = api;
 

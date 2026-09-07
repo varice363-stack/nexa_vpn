@@ -13,7 +13,7 @@ import '../../core/utils/app_logger.dart';
 /// Prevents modified/repackaged apps from running.
 class AntiTamperService {
   final AppLogger _logger;
-  static const _channel = MethodChannel('com.nexavpn.security');
+  static const _channel = MethodChannel('com.morokvpn.security');
 
   // Expected signatures (update these with your actual release signatures)
   static const String _expectedAndroidSignature = 

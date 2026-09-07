@@ -3,7 +3,7 @@ import '../models/premium_plan.dart';
 import '../services/api/api_client.dart';
 import '../services/api/api_exception.dart';
 
-/// [SubscriptionRepository] backed by the Nexa VPN API.
+/// [SubscriptionRepository] backed by the Morok VPN API.
 ///
 /// Maps the backend subscription list onto the client [SubscriptionState]:
 /// plan name determines tier (standard or premium).

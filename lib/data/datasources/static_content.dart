@@ -9,7 +9,7 @@ abstract final class StaticContent {
       question: 'Is my traffic encrypted?',
       answer: 'Yes. All traffic is encapsulated in an encrypted tunnel using '
           'the protocol selected in Settings (WireGuard, OpenVPN or IKEv2). '
-          'Nexa VPN operates a strict no-logs policy: we never store traffic '
+          'Morok VPN operates a strict no-logs policy: we never store traffic '
           'content, DNS queries or browsing history.',
     ),
     FaqEntry(
@@ -33,7 +33,7 @@ abstract final class StaticContent {
           'throughput.',
     ),
     FaqEntry(
-      question: 'Can I use Nexa VPN for streaming?',
+      question: 'Can I use Morok VPN for streaming?',
       answer: 'Yes. Premium servers are optimized for 4K streaming. If a '
           'streaming service blocks a location, try a nearby city or contact '
           'support.',
@@ -63,7 +63,7 @@ abstract final class StaticContent {
 
   static const List<(String, String)> privacySections = [
     ('1. Information we process',
-        'Nexa VPN is designed as a no-logs service. We do not track your '
+        'Morok VPN is designed as a no-logs service. We do not track your '
         'browsing activity, DNS queries, or the content of your traffic. '
         'The only data processed locally is your account identity and '
         'device preferences, which never leave your device.'),
@@ -77,7 +77,7 @@ abstract final class StaticContent {
         'not logged, stored or shared.'),
     ('4. Payments',
         'Payments are processed by the app store (App Store / Google Play). '
-        'Nexa VPN never receives or stores your payment details.'),
+        'Morok VPN never receives or stores your payment details.'),
     ('5. Third parties',
         'We do not sell personal data. We do not use third-party advertising '
         'trackers in the app.'),
@@ -86,6 +86,6 @@ abstract final class StaticContent {
         'in the app under About → Privacy Policy.'),
   ];
 
-  static const String supportEmail = 'support@nexavpn.app';
-  static const String supportTelegram = '@nexavpn_support';
+  static const String supportEmail = 'support@morokvpn.app';
+  static const String supportTelegram = '@morokvpn_support';
 }

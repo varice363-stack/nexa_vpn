@@ -33,7 +33,7 @@ class ConnectionSource {
 
   /// Stable identity, unique across both origins.
   ///
-  /// Nexa keys use `nexa:<keyId>`; imported links use `imported:<uri>` —
+  /// Morok keys use `nexa:<keyId>`; imported links use `imported:<uri>` —
   /// the URI itself, because that is what makes an imported key unique
   /// (re-importing the same link must not create a second entry).
   final String id;
@@ -46,13 +46,13 @@ class ConnectionSource {
 
   final ConnectionOrigin origin;
 
-  /// Known only for Nexa keys; imported links carry no expiry we can trust.
+  /// Known only for Morok keys; imported links carry no expiry we can trust.
   final DateTime? expiresAt;
 
-  /// Server-side status for Nexa keys (revoked / expired).
+  /// Server-side status for Morok keys (revoked / expired).
   final bool isExpired;
 
-  bool get isNexa => origin == ConnectionOrigin.nexa;
+  bool get isMorok => origin == ConnectionOrigin.nexa;
   bool get isImported => origin == ConnectionOrigin.imported;
 
   /// Host of the endpoint, used to tell two entries apart in lists.
@@ -67,7 +67,7 @@ class ConnectionSource {
     uri.startsWith('socks://')
   );
 
-  /// Builds a source from a Nexa access key.
+  /// Builds a source from a Morok access key.
   ///
   /// Returns null when the key has no config yet: a key without a
   /// `configUri` cannot be connected to, and offering it would produce a

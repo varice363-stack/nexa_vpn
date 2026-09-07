@@ -9,7 +9,7 @@ import '../../core/utils/app_logger.dart';
 /// Debuggers can be used to reverse engineer and modify app behavior.
 class DebuggerDetectionService {
   final AppLogger _logger;
-  static const _channel = MethodChannel('com.nexavpn.security');
+  static const _channel = MethodChannel('com.morokvpn.security');
 
   DebuggerDetectionService(this._logger);
 

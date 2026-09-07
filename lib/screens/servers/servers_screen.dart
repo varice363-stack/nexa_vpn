@@ -263,11 +263,11 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
         child: Row(
           children: [
             Icon(
-              source.isNexa
+              source.isMorok
                   ? Icons.workspace_premium_rounded
                   : Icons.public_rounded,
               size: 17,
-              color: source.isNexa
+              color: source.isMorok
                   ? AppColors.premium
                   : AppColors.primaryBright,
             ),

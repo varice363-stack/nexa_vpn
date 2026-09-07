@@ -1,6 +1,6 @@
 /// Access key — the platform's core product (mirror of the backend
 /// AccessKey contract). The key grants access and can be used by the
-/// Nexa app or any compatible VLESS client.
+/// Morok app or any compatible VLESS client.
 class AccessKey {
   const AccessKey({
     required this.id,

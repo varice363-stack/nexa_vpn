@@ -122,7 +122,7 @@ const _demoBanners = [
   PromoBanner(
     id: 'demo-partner-1',
     title: '🔥 Партнёрская программа',
-    description: 'Зарабатывайте с Nexa VPN! Приглашайте друзей и получайте 30% от каждой оплаты.',
+    description: 'Зарабатывайте с Morok VPN! Приглашайте друзей и получайте 30% от каждой оплаты.',
     placement: BannerPlacement.home,
     active: true,
     displayDuration: 30,

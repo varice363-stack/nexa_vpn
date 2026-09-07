@@ -10,7 +10,7 @@ import '../services/api/api_config.dart';
 import '../services/api/api_exception.dart';
 import '../services/api/token_storage.dart';
 
-/// [BannerRepository] backed by the Nexa VPN API.
+/// [BannerRepository] backed by the Morok VPN API.
 class BannerRepositoryImpl implements BannerRepository {
   BannerRepositoryImpl({
     required ApiClient api,

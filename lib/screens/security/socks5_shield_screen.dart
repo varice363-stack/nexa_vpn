@@ -87,7 +87,7 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Nexa VPN — единственный VPN, который защищает\nлокальный SOCKS5 прокси паролем',
+                  'Morok VPN — единственный VPN, который защищает\nлокальный SOCKS5 прокси паролем',
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.textSecondary,
@@ -127,7 +127,7 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
           // Как мы защищаем
           _buildInfoCard(
             icon: Icons.shield_rounded,
-            title: 'Защита Nexa Shield',
+            title: 'Защита Morok Shield',
             description:
                 'Мы добавляем парольную аутентификацию к SOCKS5 и отключаем UDP. '
                 'Каждая сессия получает уникальный случайный пароль, '

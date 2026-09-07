@@ -8,7 +8,7 @@ abstract class AccessRepository {
   /// GET /provisioning/active — the current active key, or null.
   Future<AccessKey?> getActiveKey();
 
-  /// POST /provisioning/redeem — activates a Nexa code.
+  /// POST /provisioning/redeem — activates a Morok code.
   ///
   /// Public on the backend: no account is required, which is the whole
   /// point of the code flow.

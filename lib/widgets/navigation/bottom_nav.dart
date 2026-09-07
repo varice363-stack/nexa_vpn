@@ -27,7 +27,7 @@ class AppShell extends StatelessWidget {
       child: Scaffold(
         extendBody: true,
         body: navigationShell,
-        bottomNavigationBar: NexaBottomNav(
+        bottomNavigationBar: MorokBottomNav(
           currentIndex: navigationShell.currentIndex,
           onDestinationSelected: (index) => navigationShell.goBranch(
             index,
@@ -56,8 +56,8 @@ List<_NavItemData> _navItemsOf(BuildContext context) {
   ];
 }
 
-class NexaBottomNav extends StatelessWidget {
-  const NexaBottomNav({
+class MorokBottomNav extends StatelessWidget {
+  const MorokBottomNav({
     super.key,
     required this.currentIndex,
     required this.onDestinationSelected,

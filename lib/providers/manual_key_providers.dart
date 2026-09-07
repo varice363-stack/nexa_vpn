@@ -11,7 +11,7 @@ const _manualKeyStoreKey = 'nexa_manual_keys';
 /// A VLESS configuration the user pasted in by hand.
 ///
 /// These belong to other providers, so they are stored on the device only
-/// and never sent to the Nexa backend — uploading someone else's server
+/// and never sent to the Morok backend — uploading someone else's server
 /// credentials would be indefensible.
 class ManualKey {
   const ManualKey({

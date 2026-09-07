@@ -47,7 +47,7 @@ class AboutScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 14),
                 const Text(
-                  'Nexa VPN',
+                  'Morok VPN',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
@@ -101,7 +101,7 @@ class AboutScreen extends ConsumerWidget {
           const Center(
             child: Text(
               'С заботой о вашей приватности.\n'
-              '© 2026 Nexa VPN',
+              '© 2026 Morok VPN',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 11.5,

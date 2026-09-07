@@ -67,7 +67,7 @@ final sslPinningServiceProvider = Provider<SslPinningService>(
   (ref) => SslPinningService(ref.watch(loggerProvider)),
 );
 
-/// HTTP client for the Nexa VPN backend.
+/// HTTP client for the Morok VPN backend.
 final apiClientProvider = Provider<ApiClient>(
   (ref) => ApiClient(
     tokenStorage: ref.watch(tokenStorageProvider),

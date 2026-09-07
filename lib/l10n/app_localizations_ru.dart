@@ -9,7 +9,7 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get appName => 'Nexa VPN';
+  String get appName => 'Morok VPN';
 
   @override
   String get appTagline => 'Приватно • Безопасно • Быстро';
@@ -148,7 +148,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get accessGenerateHint =>
-      'Создайте ключ, чтобы пользоваться Nexa на любом устройстве';
+      'Создайте ключ, чтобы пользоваться Morok на любом устройстве';
 
   @override
   String get accessGetAccess => 'Получить доступ';
@@ -304,7 +304,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsLogsCleared => 'Журнал очищен';
 
   @override
-  String get settingsAbout => 'О приложении Nexa VPN';
+  String get settingsAbout => 'О приложении Morok VPN';
 
   @override
   String get settingsAboutHint =>
@@ -385,7 +385,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Оформите Premium для безлимита и качества 4K';
 
   @override
-  String get profileNexaPremium => 'Nexa Premium';
+  String get profileMorokPremium => 'Morok Premium';
 
   @override
   String get profileMyAccess => 'Мой доступ';
@@ -671,7 +671,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'История платежей появится здесь после первой покупки.';
 
   @override
-  String get consentTitle => 'Как Nexa VPN работает с вашим соединением';
+  String get consentTitle => 'Как Morok VPN работает с вашим соединением';
 
   @override
   String get consentIntro =>
@@ -682,7 +682,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get consentPoint1Body =>
-      'Nexa VPN использует системный интерфейс Android VpnService, чтобы направлять трафик устройства через выбранный вами сервер. При первом подключении Android запросит на это разрешение.';
+      'Morok VPN использует системный интерфейс Android VpnService, чтобы направлять трафик устройства через выбранный вами сервер. При первом подключении Android запросит на это разрешение.';
 
   @override
   String get consentPoint2Title => 'Трафик шифруется';
@@ -722,7 +722,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get keyEntrySubtitle =>
-      'Введите код Nexa, ссылку vless:// или ссылку на подписку от любого провайдера';
+      'Введите код Morok, ссылку vless:// или ссылку на подписку от любого провайдера';
 
   @override
   String get keyEntryHint => 'NEXA-XXXX-XXXX, vless://… или https://…';
@@ -746,7 +746,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get keyEntryNoKeyYet => 'Нет ключа?';
 
   @override
-  String get keyEntryDetectedNexa => 'Код доступа Nexa';
+  String get keyEntryDetectedMorok => 'Код доступа Morok';
 
   @override
   String get keyEntryDetectedVless => 'Внешний ключ VLESS';
@@ -777,7 +777,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Этот код уже используется на другом устройстве.';
 
   @override
-  String get keyEntrySuccessNexa => 'Доступ активирован';
+  String get keyEntrySuccessMorok => 'Доступ активирован';
 
   @override
   String get keyEntrySuccessVless => 'Ключ добавлен';
@@ -793,7 +793,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get keyEntryLocalOnly =>
-      'Хранится только на этом устройстве — на серверы Nexa не передаётся.';
+      'Хранится только на этом устройстве — на серверы Morok не передаётся.';
 
   @override
   String get keyEntryDetectedSubscription => 'Подписка провайдера';
@@ -848,7 +848,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get accessGenerateHintLong =>
-      'Получите доступ для создания персонального ключа — работает в приложении Nexa и любом совместимом клиенте.';
+      'Получите доступ для создания персонального ключа — работает в приложении Morok и любом совместимом клиенте.';
 
   @override
   String get accessStatusActive => 'АКТИВЕН';

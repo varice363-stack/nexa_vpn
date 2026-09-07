@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛡️ Nexa VPN
+# 🛡️ Morok VPN
 
 **VPN нового поколения для Android**
 
@@ -70,7 +70,7 @@ Material 3 дизайн с glassmorphism стилем. Интуитивно по
    ```
 
 3. **Установите приложение**
-   - Откройте скачанный файл `nexa_vpn.apk`
+   - Откройте скачанный файл `morok_vpn.apk`
    - Нажмите "Установить"
 
 4. **Запустите и настройте**
@@ -147,7 +147,7 @@ Material 3 дизайн с glassmorphism стилем. Интуитивно по
 
 ## 🔐 Безопасность
 
-Nexa VPN использует комплексную многоуровневую защиту:
+Morok VPN использует комплексную многоуровневую защиту:
 
 ### Сетевая безопасность
 - **SSL Pinning** — защита от MITM атак, валидация сертификатов сервера
@@ -185,7 +185,7 @@ Nexa VPN использует комплексную многоуровневу�
 ## 🤝 Поддержка
 
 ### Контакты
-- **Telegram:** [@nexa_vpn_support](https://t.me/nexa_vpn_support)
+- **Telegram:** [@morok_vpn_support](https://t.me/morok_vpn_support)
 - **Email:** [support@nexavpn.app](mailto:support@nexavpn.app)
 
 ### Сообщить о проблеме

@@ -1,7 +1,7 @@
 import '../domain/repositories/account_repository.dart';
 import '../services/api/api_client.dart';
 
-/// [AccountRepository] backed by the Nexa VPN API.
+/// [AccountRepository] backed by the Morok VPN API.
 class AccountRepositoryImpl implements AccountRepository {
   AccountRepositoryImpl({required ApiClient api}) : _api = api;
 

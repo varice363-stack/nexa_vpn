@@ -30,7 +30,7 @@ class VlessConfigPanel extends StatelessWidget {
   Future<void> _share() async {
     final uri = key_.configUri;
     if (uri == null) return;
-    await Share.share(uri, subject: 'Nexa VPN — VLESS config');
+    await Share.share(uri, subject: 'Morok VPN — VLESS config');
   }
 
   void _showQr(BuildContext context) {

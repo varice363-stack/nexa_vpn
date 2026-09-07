@@ -44,7 +44,7 @@ class SubscriptionFetcher {
         uri,
         // Some panels serve an HTML landing page unless the request looks
         // like a proxy client.
-        headers: const {'User-Agent': 'Nexa/1.0'},
+        headers: const {'User-Agent': 'Morok/1.0'},
       ).timeout(_timeout);
     } catch (e) {
       throw AppException(

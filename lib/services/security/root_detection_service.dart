@@ -9,7 +9,7 @@ import '../../core/utils/app_logger.dart';
 /// Rooted devices pose security risks as they can bypass app sandboxing.
 class RootDetectionService {
   final AppLogger _logger;
-  static const _channel = MethodChannel('com.nexavpn.security');
+  static const _channel = MethodChannel('com.morokvpn.security');
 
   RootDetectionService(this._logger);
 

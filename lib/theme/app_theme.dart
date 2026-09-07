@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
-/// Material 3 dark theme for Nexa VPN.
+/// Material 3 dark theme for Morok VPN.
 abstract final class AppTheme {
   static ThemeData get dark {
     const colorScheme = ColorScheme.dark(

@@ -15,13 +15,13 @@ class SslPinningService {
   // These are SHA-256 hashes of the Subject Public Key Information (SPKI).
   // Update these when certificates are rotated.
   static const Map<String, List<String>> _knownPins = {
-    'api.nexavpn.app': [
+    'api.morokvpn.app': [
       // Production server certificate pins
       // TODO: Replace with real pins after VPS deployment
       'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
       'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=',
     ],
-    'staging.nexavpn.app': [
+    'staging.morokvpn.app': [
       'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=',
     ],
   };

@@ -38,7 +38,7 @@ class HomeHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Nexa VPN',
+                'Morok VPN',
                 style: TextStyle(
                   fontSize: 19,
                   fontWeight: FontWeight.w700,

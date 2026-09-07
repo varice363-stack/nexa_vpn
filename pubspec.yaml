@@ -1,5 +1,5 @@
-name: nexa_vpn
-description: Nexa VPN — production-grade VPN client. Clean Architecture, Riverpod, GoRouter, Material 3, glassmorphism dark UI.
+name: morok_vpn
+description: Morok VPN — production-grade VPN client. Clean Architecture, Riverpod, GoRouter, Material 3, glassmorphism dark UI with teal mist accents.
 publish_to: 'none'
 
 version: 1.0.0+1

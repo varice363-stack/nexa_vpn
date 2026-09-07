@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Backend API configuration.
 abstract final class ApiConfig {
-  /// Base URL of the Nexa VPN backend.
+  /// Base URL of the Morok VPN backend.
   ///
   /// Override at build time:
   ///   flutter run --dart-define=API_BASE_URL=http://192.168.1.50:3000/api

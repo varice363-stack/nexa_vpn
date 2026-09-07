@@ -15,7 +15,7 @@ class KillSwitchService {
 
   final AppLogger _logger;
   static const MethodChannel _channel =
-      MethodChannel('com.nexavpn.killswitch');
+      MethodChannel('com.morokvpn.killswitch');
 
   bool _isEnabled = false;
   bool _isSupported = false;

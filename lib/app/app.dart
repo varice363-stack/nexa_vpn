@@ -7,8 +7,8 @@ import '../theme/app_theme.dart';
 import 'router/app_router.dart';
 
 /// Root application widget.
-class NexaVpnApp extends ConsumerWidget {
-  const NexaVpnApp({super.key});
+class MorokVpnApp extends ConsumerWidget {
+  const MorokVpnApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -16,7 +16,7 @@ class NexaVpnApp extends ConsumerWidget {
     final locale = ref.watch(localeProvider).toLocale;
 
     return MaterialApp.router(
-      title: 'Nexa VPN',
+      title: 'Morok VPN',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       locale: locale,

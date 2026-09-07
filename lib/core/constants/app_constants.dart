@@ -1,6 +1,6 @@
 /// Application-wide constants.
 abstract final class AppConstants {
-  static const String appName = 'Nexa VPN';
+  static const String appName = 'Morok VPN';
   static const String appVersion = '1.0.0';
 
   /// Fallback virtual IP shown while the tunnel is simulated.
