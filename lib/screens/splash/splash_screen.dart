@@ -264,22 +264,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       .animate()
                       .fadeIn(delay: 900.ms, duration: 800.ms),
 
-                  const SizedBox(height: 16),
-
-                  // Слоган
-                  Text(
-                    l10n.appTagline,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                      letterSpacing: 2,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  )
-                      .animate()
-                      .fadeIn(delay: 1200.ms, duration: 1000.ms),
-
-                  const SizedBox(height: 60),
+                  const SizedBox(height: 80),
 
                   // Индикатор загрузки
                   SizedBox(
