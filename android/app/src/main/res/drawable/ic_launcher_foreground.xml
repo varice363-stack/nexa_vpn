@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MOROK VPN adaptive-icon foreground.
+  Viewport: 108×108 dp (Android adaptive-icon spec).
+  Safe zone: 72×72 dp centred — the "M" glyph sits inside it.
+  Colour: brand teal #22D3EE so it pops on the dark #05070F background.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Bold geometric "M" glyph, centred in the 108×108 viewport.
+         The outer silhouette spans roughly x 27-81 (54 dp) and y 30-78 (48 dp),
+         well inside the 18-90 safe zone. -->
+    <path
+        android:fillColor="#22D3EE"
+        android:pathData="
+            M 27,78
+            L 27,30
+            L 39,30
+            L 54,54
+            L 69,30
+            L 81,30
+            L 81,78
+            L 70,78
+            L 70,48
+            L 58,66
+            L 50,66
+            L 38,48
+            L 38,78
+            Z"
+        android:strokeWidth="0" />
+
+    <!-- Subtle teal glow / mist accent below the M, matching the splash screen -->
+    <path
+        android:fillColor="#22D3EE"
+        android:fillAlpha="0.15"
+        android:pathData="
+            M 30,78
+            Q 54,88
+            78,78
+            Q 54,82
+            30,78
+            Z"
+        android:strokeWidth="0" />
+</vector>
