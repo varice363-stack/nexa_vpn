@@ -75,3 +75,7 @@ flutter:
 
   # Generates AppLocalizations from lib/l10n/*.arb (see l10n.yaml)
   generate: true
+
+  # Assets
+  assets:
+    - assets/images/
