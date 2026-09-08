@@ -334,7 +334,7 @@ class MistBackgroundPainter extends CustomPainter {
 
       final paint = Paint()
         ..color = AppColors.primary.withValues(alpha: particle.opacity * opacity)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, particle.size);
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, particle.size);
 
       canvas.drawCircle(Offset(x, y), particle.size, paint);
     }

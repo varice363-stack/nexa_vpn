@@ -37,7 +37,7 @@ class RootDetectionService {
       final bool? isRooted = await _channel.invokeMethod('isRooted');
       return isRooted ?? false;
     } on PlatformException catch (e) {
-      _logger.warn('Android root detection failed', error: e);
+      _logger.error('Android root detection failed', source: 'security');
       return _checkAndroidRootFallback();
     }
   }
@@ -71,7 +71,7 @@ class RootDetectionService {
       final bool? isJailbroken = await _channel.invokeMethod('isJailbroken');
       return isJailbroken ?? false;
     } on PlatformException catch (e) {
-      _logger.warn('iOS jailbreak detection failed', error: e);
+      _logger.error('iOS jailbreak detection failed', source: 'security');
       return _checkIOSJailbreakFallback();
     }
   }

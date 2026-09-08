@@ -109,7 +109,7 @@ class AntiTamperService {
       final bool? isEmulator = await _channel.invokeMethod('isEmulator');
       return isEmulator ?? false;
     } catch (e) {
-      _logger.warn('Emulator detection failed', error: e);
+      _logger.error('Emulator detection failed', source: 'security');
       return false;
     }
   }

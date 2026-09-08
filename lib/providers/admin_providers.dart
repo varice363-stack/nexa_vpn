@@ -16,7 +16,9 @@ const String kOwnerCode = String.fromEnvironment(
 
 /// Состояние разблокировки админки.
 /// Управляется через диалог ввода кода владельца на экране профиля.
-final _adminUnlockedState = StateProvider<bool>((ref) => false);
+final _adminUnlockedState = StateProvider<bool>((ref) {
+  return false;
+});
 
 /// Открыт ли раздел выпуска ключей на этом устройстве.
 ///

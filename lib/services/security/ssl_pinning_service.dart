@@ -9,7 +9,7 @@ import '../../core/utils/app_logger.dart';
 /// Validates server certificates against known public key hashes.
 /// Uses native dart:io — no external packages needed.
 class SslPinningService {
-  final AppLogger _logger;
+  final AppLogger? _logger;
 
   // Known certificate hashes for our API servers.
   // These are SHA-256 hashes of the Subject Public Key Information (SPKI).
@@ -39,7 +39,7 @@ class SslPinningService {
     try {
       final pins = _knownPins[hostname];
       if (pins == null || pins.isEmpty) {
-        _logger.warn('No SSL pins configured for $hostname');
+        _logger?.warn('No SSL pins configured for $hostname');
         return false;
       }
 
@@ -58,7 +58,7 @@ class SslPinningService {
       await socket.close();
 
       if (cert == null) {
-        _logger.error('No certificate received from $hostname');
+        _logger?.error('No certificate received from $hostname');
         return false;
       }
 
@@ -67,26 +67,26 @@ class SslPinningService {
       final digest = sha256.convert(derBytes);
       final fingerprint = base64.encode(digest.bytes);
 
-      _logger.debug('Certificate fingerprint for $hostname: $fingerprint');
+      _logger?.debug('Certificate fingerprint for $hostname: $fingerprint');
 
       // Check against known pins
       for (final pin in pins) {
         if (fingerprint == pin) {
-          _logger.info('SSL pinning validation successful for $hostname');
+          _logger?.info('SSL pinning validation successful for $hostname');
           return true;
         }
       }
 
-      _logger.error(
+      _logger?.error(
         'SSL pinning validation failed for $hostname - certificate mismatch. '
         'Got: $fingerprint',
       );
       return false;
     } on SocketException catch (e) {
-      _logger.error('SSL pinning connection error for $hostname: $e');
+      _logger?.error('SSL pinning connection error for $hostname: $e');
       return false;
     } catch (e) {
-      _logger.error('SSL pinning validation error for $hostname: $e');
+      _logger?.error('SSL pinning validation error for $hostname: $e');
       return false;
     }
   }
@@ -114,7 +114,7 @@ class SslPinningService {
 
       final matched = pins.contains(fingerprint);
       if (!matched) {
-        _logger.error(
+        _logger?.error(
           'Pinned client rejected $host:$port — fingerprint $fingerprint '
           'not in known pins',
         );
@@ -145,7 +145,7 @@ class SslPinningService {
   /// Should only be called during controlled maintenance windows.
   void updatePins(String hostname, List<String> newPins) {
     _knownPins[hostname] = newPins;
-    _logger.info('Updated SSL pins for $hostname');
+    _logger?.info('Updated SSL pins for $hostname');
   }
 
   /// Gets current pins for a hostname (for debugging).
