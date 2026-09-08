@@ -34,9 +34,31 @@ Material 3 дизайн с glassmorphism стилем. Интуитивно по
 
 ---
 
-## 📊 Счётчик задач
+##  Быстрый старт
 
-**Выполнено и запушено задач: 10**
+### Запуск backend (Windows PowerShell):
+
+```powershell
+cd backend
+.\start-backend.ps1
+```
+
+**Требования:**
+- PostgreSQL установлен и запущен
+- База данных `morok_vpn` создана
+- Пользователь `morok` с паролем `morok`
+
+### Сборка APK (Windows PowerShell):
+
+```powershell
+# Debug версия (с админским доступом)
+.\build-apk.ps1
+
+# Release версия (без админского доступа)
+.\build-apk.ps1 -Release
+```
+
+**Подробные инструкции:** [RUN_BACKEND.md](RUN_BACKEND.md)
 
 ---
 
