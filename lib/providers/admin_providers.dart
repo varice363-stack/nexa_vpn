@@ -14,12 +14,6 @@ const String kOwnerCode = String.fromEnvironment(
   defaultValue: 'NEXA-66AB-AV3H-9HSJ-R8VZ',
 );
 
-/// Состояние разблокировки админки.
-/// Управляется через диалог ввода кода владельца на экране профиля.
-final _adminUnlockedState = StateProvider<bool>((ref) {
-  return false;
-});
-
 /// Открыт ли раздел выпуска ключей на этом устройстве.
 ///
 /// Работает через ручной ввод кода владельца:
@@ -30,9 +24,9 @@ final _adminUnlockedState = StateProvider<bool>((ref) {
 /// Также автоматически разблокируется, если код устройства совпадает
 /// с OWNER_CODE (для отладки через --dart-define).
 final adminUnlockedProvider = Provider<bool>((ref) {
-  // Проверяем ручную разблокировку через диалог
-  final manualUnlock = ref.watch(_adminUnlockedState);
-  if (manualUnlock) return true;
+  // Проверяем ручную разблокировку через контроллер
+  final controller = ref.watch(adminUnlockControllerProvider);
+  if (controller.isUnlocked) return true;
 
   // Автоматическая разблокировка — для debug-сборок, где OWNER_CODE совпадает
   // с кодом устройства (удобно при разработке)
@@ -46,18 +40,17 @@ final adminUnlockedProvider = Provider<bool>((ref) {
 
 /// Провайдер для управления состоянием админки (ввод кода).
 final adminUnlockControllerProvider =
-    Provider<AdminUnlockController>((ref) => AdminUnlockController(ref));
+    Provider<AdminUnlockController>((ref) => AdminUnlockController());
 
 class AdminUnlockController {
-  AdminUnlockController(this._ref);
-  final Ref _ref;
+  bool _isUnlocked = false;
 
   /// Попытка разблокировать админку по коду владельца.
   /// Возвращает true если код верный.
   bool tryUnlock(String enteredCode) {
     final normalised = enteredCode.trim().toUpperCase();
     if (normalised == kOwnerCode) {
-      _ref.read(_adminUnlockedState.notifier).state = true;
+      _isUnlocked = true;
       return true;
     }
     return false;
@@ -65,9 +58,9 @@ class AdminUnlockController {
 
   /// Заблокировать админку.
   void lock() {
-    _ref.read(_adminUnlockedState.notifier).state = false;
+    _isUnlocked = false;
   }
 
   /// Текущее состояние.
-  bool get isUnlocked => _ref.read(_adminUnlockedState);
+  bool get isUnlocked => _isUnlocked;
 }
