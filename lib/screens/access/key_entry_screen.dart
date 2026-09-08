@@ -19,7 +19,7 @@ import '../../widgets/common/glass_container.dart';
 /// "I have a key" — the fastest path to a working connection.
 ///
 /// Accepts three things on purpose:
-///  * a Morok code (NEXA-XXXX-XXXX), redeemed through the backend;
+///  * a Morok code (MOROK-XXXX-XXXX), redeemed through the backend;
 ///  * a third-party `vless://` link, stored locally and never uploaded;
 ///  * an `https://` subscription link, which most providers hand out instead
 ///    of a bare share link — fetched on the device, contents never uploaded.

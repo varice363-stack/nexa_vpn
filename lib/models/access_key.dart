@@ -42,7 +42,7 @@ class AccessKey {
   /// QR payload (equals configUri; client renders the QR).
   final String? qrPayload;
 
-  /// Redemption code (NEXA-XXXX-XXXX) for standalone keys sold to customers.
+  /// Redemption code (MOROK-XXXX-XXXX) for standalone keys sold to customers.
   /// Only returned to the issuing admin and to the redeemer.
   final String? code;
 

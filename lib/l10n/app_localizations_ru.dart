@@ -725,7 +725,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Введите код Morok, ссылку vless:// или ссылку на подписку от любого провайдера';
 
   @override
-  String get keyEntryHint => 'NEXA-XXXX-XXXX, vless://… или https://…';
+  String get keyEntryHint => 'MOROK-XXXX-XXXX, vless://… или https://…';
 
   @override
   String get keyEntryLabel => 'Ключ доступа';
@@ -756,7 +756,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get keyEntryErrorUnknown =>
-      'Формат не распознан. Используйте код NEXA-XXXX-XXXX, ссылку vless:// или ссылку на подписку.';
+      'Формат не распознан. Используйте код MOROK-XXXX-XXXX, ссылку vless:// или ссылку на подписку.';
 
   @override
   String get keyEntryErrorUnsupportedScheme =>

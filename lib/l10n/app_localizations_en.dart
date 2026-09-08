@@ -719,7 +719,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a Morok code, a vless:// link, or a subscription link from any provider';
 
   @override
-  String get keyEntryHint => 'NEXA-XXXX-XXXX, vless://… or https://…';
+  String get keyEntryHint => 'MOROK-XXXX-XXXX, vless://… or https://…';
 
   @override
   String get keyEntryLabel => 'Access key';
@@ -750,7 +750,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keyEntryErrorUnknown =>
-      'Unrecognised format. Use a NEXA-XXXX-XXXX code, a vless:// link, or a subscription link.';
+      'Unrecognised format. Use a MOROK-XXXX-XXXX code, a vless:// link, or a subscription link.';
 
   @override
   String get keyEntryErrorUnsupportedScheme =>

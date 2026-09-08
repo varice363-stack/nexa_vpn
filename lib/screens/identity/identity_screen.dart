@@ -94,7 +94,7 @@ class _Body extends ConsumerWidget {
                   letterSpacing: 1.2,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'NEXA-XXXX-XXXX-XXXX-XXXX',
+                  hintText: 'MOROK-XXXX-XXXX-XXXX-XXXX',
                   hintStyle: const TextStyle(color: AppColors.textTertiary),
                   errorText: error,
                   border: const OutlineInputBorder(),

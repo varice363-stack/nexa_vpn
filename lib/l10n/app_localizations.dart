@@ -1445,7 +1445,7 @@ abstract class AppLocalizations {
   /// No description provided for @keyEntryHint.
   ///
   /// In en, this message translates to:
-  /// **'NEXA-XXXX-XXXX, vless://… or https://…'**
+  /// **'MOROK-XXXX-XXXX, vless://… or https://…'**
   String get keyEntryHint;
 
   /// No description provided for @keyEntryLabel.
@@ -1505,7 +1505,7 @@ abstract class AppLocalizations {
   /// No description provided for @keyEntryErrorUnknown.
   ///
   /// In en, this message translates to:
-  /// **'Unrecognised format. Use a NEXA-XXXX-XXXX code, a vless:// link, or a subscription link.'**
+  /// **'Unrecognised format. Use a MOROK-XXXX-XXXX code, a vless:// link, or a subscription link.'**
   String get keyEntryErrorUnknown;
 
   /// No description provided for @keyEntryErrorUnsupportedScheme.
