@@ -85,7 +85,10 @@ class ConnectionNotifier extends Notifier<VpnStatus> {
         ref.invalidate(sessionsProvider);
       }
     });
-    ref.onDispose(() => _sub?.cancel());
+    ref.onDispose(() {
+      _sub?.cancel();
+      _sub = null;
+    });
     return service.status;
   }
 

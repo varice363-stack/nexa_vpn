@@ -46,9 +46,14 @@ class HomePowerSection extends ConsumerWidget {
 
     return Column(
       children: [
-        PowerButton(
-          state: buttonState,
-          onTap: () async {
+        Semantics(
+          label: status == VpnStatus.connected
+              ? 'VPN подключено. Нажмите чтобы отключиться'
+              : 'VPN отключено. Нажмите чтобы подключиться',
+          hint: 'Управление VPN соединением',
+          child: PowerButton(
+            state: buttonState,
+            onTap: () async {
             // No account gate here on purpose: a key the user already owns
             // must work on first launch, before any sign-up. Requiring an
             // account to connect would close the door the product depends on.
@@ -92,6 +97,7 @@ class HomePowerSection extends ConsumerWidget {
               }
             }
           },
+        ),
         ),
         const SizedBox(height: 12),
         // Status text

@@ -22,6 +22,8 @@ import '../../screens/settings/settings_screen.dart';
 import '../../screens/splash/splash_screen.dart';
 import '../../screens/support/support_screen.dart';
 import '../../screens/security/socks5_shield_screen.dart';
+import '../../screens/settings/devices_screen.dart';
+import '../../screens/premium/trial_screen.dart';
 import '../../widgets/navigation/bottom_nav.dart';
 
 /// Notifies [GoRouter] to re-evaluate redirects when auth / onboarding
@@ -133,6 +135,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/socks5-shield',
         builder: (context, state) => const Socks5ShieldScreen(),
+      ),
+      GoRoute(
+        path: '/premium',
+        builder: (context, state) => const TrialScreen(),
+      ),
+      GoRoute(
+        path: '/devices',
+        builder: (context, state) => const DevicesScreen(),
       ),
     ],
   );

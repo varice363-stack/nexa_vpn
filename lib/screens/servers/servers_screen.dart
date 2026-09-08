@@ -123,10 +123,18 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                for (final source in visible)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _row(source, active?.id == source.id),
+                if (visible.isNotEmpty)
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: visible.length,
+                    itemBuilder: (context, index) {
+                      final source = visible[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _row(source, active?.id == source.id),
+                      );
+                    },
                   ),
                 if (visible.isEmpty)
                   Padding(

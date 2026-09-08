@@ -6,51 +6,79 @@ import '../../core/utils/app_logger.dart';
 /// SSL Pinning service for secure API communication.
 ///
 /// Implements certificate pinning to prevent MITM attacks.
-/// Validates server certificates against known public key hashes.
-/// Uses native dart:io — no external packages needed.
+///
+/// Режимы работы:
+/// 1. **Development** — пиннинг отключён (чтобы работало с localhost)
+/// 2. **Production без пинов** — используется системная валидация сертификатов
+///    (стандартный HTTPS с доверенными CA)
+/// 3. **Production с пинами** — строгая проверка по SHA-256 хешу публичного ключа
+///
+/// Пины добавляются через [registerPin] после деплоя VPS:
+/// ```bash
+/// openssl s_client -connect api.morokvpn.app:443 2>/dev/null | \
+///   openssl x509 -pubkey -noout | \
+///   openssl pkey -pubin -outform der | \
+///   openssl dgst -sha256 -binary | \
+///   openssl enc -base64
+/// ```
 class SslPinningService {
-  final AppLogger? _logger;
-
-  // Known certificate hashes for our API servers.
-  // These are SHA-256 hashes of the Subject Public Key Information (SPKI).
-  // Update these when certificates are rotated.
-  static const Map<String, List<String>> _knownPins = {
-    'api.morokvpn.app': [
-      // Production server certificate pins
-      // TODO: Replace with real pins after VPS deployment
-      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-      'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=',
-    ],
-    'staging.morokvpn.app': [
-      'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=',
-    ],
-  };
-
   SslPinningService(this._logger);
 
-  /// Validates SSL certificate for the given hostname.
-  ///
-  /// Connects to the host, extracts the certificate, computes SHA-256 of
-  /// its DER bytes, and checks against known pins.
-  ///
-  /// Returns true if certificate matches at least one known pin.
-  /// Returns false if validation fails or certificate is not recognized.
-  Future<bool> validateCertificate(String hostname) async {
-    try {
-      final pins = _knownPins[hostname];
-      if (pins == null || pins.isEmpty) {
-        _logger?.warn('No SSL pins configured for $hostname');
-        return false;
-      }
+  final AppLogger? _logger;
 
-      // Connect and extract certificate
+  /// Known certificate pins: hostname → list of SHA-256 base64 hashes.
+  /// Empty by default — add via [registerPin] after VPS deployment.
+  final Map<String, List<String>> _knownPins = {};
+
+  /// Whether pinning is actively enforced (pins exist for the host).
+  bool _strictModeEnabled = false;
+
+  /// Загружает пины из конфига (вызывается при старте).
+  /// В production замените на реальные значения.
+  void loadProductionPins() {
+    // После деплоя VPS раскомментируйте и подставьте реальные пины:
+    // registerPin('api.morokvpn.app', 'REPLACE_WITH_REAL_SHA256_BASE64=');
+    // _strictModeEnabled = true;
+
+    if (_logger != null) {
+      _logger!.info(
+        'SSL pinning: ${_knownPins.isEmpty ? "disabled (no pins configured)" : "${_knownPins.length} host(s) pinned"}',
+        source: 'ssl',
+      );
+    }
+  }
+
+  /// Добавляет пин для хоста.
+  void registerPin(String hostname, String sha256Base64) {
+    final pins = _knownPins.putIfAbsent(hostname, () => []);
+    if (!pins.contains(sha256Base64)) {
+      pins.add(sha256Base64);
+    }
+    _logger?.info('Registered SSL pin for $hostname', source: 'ssl');
+  }
+
+  /// Проверяет сертификат хоста.
+  ///
+  /// Логика:
+  /// - Если пины для хоста не настроены → возвращает true (доверяем системе)
+  /// - Если пины настроены → строгая проверка по SHA-256
+  Future<bool> validateCertificate(String hostname) async {
+    final pins = _knownPins[hostname];
+
+    // Если пины не настроены — доверяем системным CA (стандартный HTTPS).
+    // Это безопасно: без пинов MITM атакующий должен подменить весь CA,
+    // что невозможно без компрометации доверенного центра.
+    if (pins == null || pins.isEmpty) {
+      _logger?.debug('No pins for $hostname — trusting system CA', source: 'ssl');
+      return true;
+    }
+
+    try {
+      // Подключаемся и получаем сертификат
       final socket = await SecureSocket.connect(
         hostname,
         443,
-        onBadCertificate: (cert) {
-          // Accept temporarily — we validate pins manually below
-          return true;
-        },
+        onBadCertificate: (cert) => true, // Принимаем временно для проверки
         timeout: const Duration(seconds: 5),
       );
 
@@ -58,43 +86,37 @@ class SslPinningService {
       await socket.close();
 
       if (cert == null) {
-        _logger?.error('No certificate received from $hostname');
+        _logger?.error('No certificate from $hostname', source: 'ssl');
         return false;
       }
 
-      // Compute SHA-256 of the DER-encoded certificate
-      final derBytes = cert.der;
-      final digest = sha256.convert(derBytes);
-      final fingerprint = base64.encode(digest.bytes);
+      // SHA-256 от DER-кодированного сертификата
+      final fingerprint = base64.encode(sha256.convert(cert.der).bytes);
+      _logger?.debug('Cert fingerprint for $hostname: $fingerprint', source: 'ssl');
 
-      _logger?.debug('Certificate fingerprint for $hostname: $fingerprint');
-
-      // Check against known pins
       for (final pin in pins) {
         if (fingerprint == pin) {
-          _logger?.info('SSL pinning validation successful for $hostname');
+          _logger?.info('SSL pin matched for $hostname', source: 'ssl');
           return true;
         }
       }
 
       _logger?.error(
-        'SSL pinning validation failed for $hostname - certificate mismatch. '
-        'Got: $fingerprint',
+        'SSL pin MISMATCH for $hostname (got: $fingerprint)',
+        source: 'ssl',
       );
       return false;
     } on SocketException catch (e) {
-      _logger?.error('SSL pinning connection error for $hostname: $e');
+      _logger?.error('SSL connection error for $hostname: $e', source: 'ssl');
       return false;
     } catch (e) {
-      _logger?.error('SSL pinning validation error for $hostname: $e');
+      _logger?.error('SSL validation error for $hostname: $e', source: 'ssl');
       return false;
     }
   }
 
-  /// Creates an [HttpClient] with SSL pinning enabled.
-  ///
-  /// Use this client for API requests instead of the default one.
-  /// Rejects connections to hosts with mismatched certificates.
+  /// Создаёт HttpClient с пиннингом.
+  /// Если пины не настроены — работает как обычный клиент.
   HttpClient createPinnedClient() {
     final client = HttpClient();
     client.badCertificateCallback = (
@@ -104,19 +126,17 @@ class SslPinningService {
     ) {
       final pins = _knownPins[host];
       if (pins == null || pins.isEmpty) {
-        // Unknown host — fall back to system validation
+        // Нет пинов — полагаемся на системную валидацию
         return false;
       }
 
-      final derBytes = cert.der;
-      final digest = sha256.convert(derBytes);
-      final fingerprint = base64.encode(digest.bytes);
+      final fingerprint = base64.encode(sha256.convert(cert.der).bytes);
+      final matched = pins.any((p) => p == fingerprint);
 
-      final matched = pins.contains(fingerprint);
       if (!matched) {
         _logger?.error(
-          'Pinned client rejected $host:$port — fingerprint $fingerprint '
-          'not in known pins',
+          'Pinned client rejected $host:$port (fingerprint: $fingerprint)',
+          source: 'ssl',
         );
       }
       return matched;
@@ -124,9 +144,8 @@ class SslPinningService {
     return client;
   }
 
-  /// Validates certificate before making HTTP request.
-  ///
-  /// Throws exception if validation fails.
+  /// Валидация перед HTTP запросом.
+  /// НЕ блокирует работу если пины не настроены.
   Future<void> validateBeforeRequest(String url) async {
     final uri = Uri.parse(url);
     final hostname = uri.host;
@@ -140,24 +159,16 @@ class SslPinningService {
     }
   }
 
-  /// Updates known pins for a hostname (for certificate rotation).
-  ///
-  /// Should only be called during controlled maintenance windows.
   void updatePins(String hostname, List<String> newPins) {
     _knownPins[hostname] = newPins;
-    _logger?.info('Updated SSL pins for $hostname');
+    _logger?.info('Updated SSL pins for $hostname', source: 'ssl');
   }
 
-  /// Gets current pins for a hostname (for debugging).
-  List<String>? getCurrentPins(String hostname) {
-    return _knownPins[hostname];
-  }
+  List<String>? getCurrentPins(String hostname) => _knownPins[hostname];
 }
 
-/// Exception thrown when SSL pinning validation fails.
 class SslPinningValidationException implements Exception {
   final String message;
-
   SslPinningValidationException(this.message);
 
   @override

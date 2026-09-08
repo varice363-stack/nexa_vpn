@@ -1,6 +1,6 @@
-# Nexa VPN — ProGuard/R8 rules for the release build.
+# ProGuard rules for Morok VPN
 
-# Flutter engine and embedding.
+# Keep Flutter classes
 -keep class io.flutter.app.** { *; }
 -keep class io.flutter.plugin.** { *; }
 -keep class io.flutter.util.** { *; }
@@ -8,25 +8,47 @@
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
 
-# flutter_secure_storage relies on the AndroidX security library.
--keep class androidx.security.crypto.** { *; }
+# Keep Riverpod
+-keep class com.example.** { *; }
+-keepnames class * extends com.example.**
 
-# Keep annotations used for reflection by plugins.
--keepattributes *Annotation*
+# Keep JSON serialization (Gson/JSON)
 -keepattributes Signature
--keepattributes InnerClasses
+-keepattributes *Annotation*
+-keep class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+-keepnames class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
 
-# Play Core is referenced by the Flutter embedding for deferred components,
-# which this app does not use. Without these rules R8 fails on missing classes.
--dontwarn com.google.android.play.core.**
--keep class com.google.android.play.core.** { *; }
+# Keep models (used in JSON serialization)
+-keep class com.nexavpn.app.models.** { *; }
+-keep class com.morokvpn.app.models.** { *; }
 
-# Keep native method names so JNI bindings keep working.
+# Keep Xray/V2Ray native classes
+-keep class com.github.xray.** { *; }
+-keep class libv2ray.** { *; }
+
+# Keep native methods
 -keepclasseswithmembernames class * {
     native <methods>;
 }
 
-# Preserve line numbers for readable crash reports, but hide the original
-# source file name.
--keepattributes SourceFile,LineNumberTable
--renamesourcefileattribute SourceFile
+# Keep enum values
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# Suppress warnings
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-dontwarn kotlin.**
+-dontwarn javax.annotation.**
+
+# Optimization
+-optimizationpasses 5
+-dontusemixedcaseclassnames
+-dontskipnonpubliclibraryclasses
+-verbose

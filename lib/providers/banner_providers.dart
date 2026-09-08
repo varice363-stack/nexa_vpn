@@ -9,14 +9,15 @@ import 'app_providers.dart';
 
 /// Ключ для хранения баннеров в локальном хранилище.
 const _kLocalBannersKey = 'morok_local_banners';
+const _kCachedBannersKey = 'morok_cached_banners';
 
-/// Активные промо-баннеры.
+/// Активные промо-баннеры с offline-кэшем.
 ///
-/// Работает в двух режимах:
-/// 1. **Онлайн**: загружает с бэкенда `GET /banners`
-/// 2. **Оффлайн**: загружает из локального хранилища (баннеры, созданные в демо-режиме)
-///
-/// Если бэкенд недоступен — показывает демо-баннеры для превью.
+/// Стратегия:
+/// 1. Пробуем загрузить с сервера
+/// 2. При успехе — кэшируем и возвращаем
+/// 3. При ошибке — возвращаем кэш
+/// 4. Если кэша нет — демо-баннеры
 final bannerProvider =
     AsyncNotifierProvider<BannerNotifier, List<PromoBanner>>(
   BannerNotifier.new,
@@ -30,17 +31,23 @@ class BannerNotifier extends AsyncNotifier<List<PromoBanner>> {
       final serverBanners =
           await ref.watch(bannerRepositoryProvider).getActiveBanners();
       if (serverBanners.isNotEmpty) {
+        // Кэшируем для offline
+        await _saveCachedBanners(serverBanners);
         return serverBanners;
       }
     } on ApiException catch (e) {
-      ref.read(loggerProvider).warn('Banners API unavailable: $e', source: 'banner');
+      ref.read(loggerProvider).debug('Banners API unavailable: $e', source: 'banner');
+    } catch (e) {
+      ref.read(loggerProvider).debug('Banners fetch error: $e', source: 'banner');
     }
 
-    // Сервер недоступен или нет баннеров — загружаем локальные
+    // Fallback: кэш → локальные → демо
+    final cached = await _loadCachedBanners();
+    if (cached.isNotEmpty) return cached;
+
     final local = await _loadLocalBanners();
     if (local.isNotEmpty) return local;
 
-    // Нет ни серверных, ни локальных — показываем демо-баннеры
     return _demoBanners;
   }
 
@@ -50,12 +57,12 @@ class BannerNotifier extends AsyncNotifier<List<PromoBanner>> {
       final serverBanners =
           await ref.read(bannerRepositoryProvider).getActiveBanners();
       if (serverBanners.isNotEmpty) {
+        await _saveCachedBanners(serverBanners);
         state = AsyncValue.data(serverBanners);
         return;
       }
     } catch (_) {}
 
-    // Fallback на локальные
     final local = await _loadLocalBanners();
     if (local.isNotEmpty) {
       state = AsyncValue.data(local);
@@ -70,7 +77,6 @@ class BannerNotifier extends AsyncNotifier<List<PromoBanner>> {
     final existing = await _loadLocalBanners();
     existing.add(banner);
     await _saveLocalBanners(existing);
-    // Обновляем список баннеров в UI
     await refresh();
   }
 
@@ -115,13 +121,47 @@ class BannerNotifier extends AsyncNotifier<List<PromoBanner>> {
       await storage.write(_kLocalBannersKey, raw);
     } catch (_) {}
   }
+
+  Future<List<PromoBanner>> _loadCachedBanners() async {
+    try {
+      final storage = ref.read(keyStorageProvider);
+      final raw = await storage.read(_kCachedBannersKey);
+      if (raw == null || raw.isEmpty) return [];
+      final list = jsonDecode(raw) as List;
+      return list
+          .map((item) => PromoBanner.fromJson(Map<String, Object?>.from(item as Map)))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> _saveCachedBanners(List<PromoBanner> banners) async {
+    try {
+      final storage = ref.read(keyStorageProvider);
+      final raw = jsonEncode(
+        banners.map((b) => {
+          'id': b.id,
+          'title': b.title,
+          'description': b.description,
+          'imageUrl': b.imageUrl,
+          'buttonText': b.buttonText,
+          'targetUrl': b.targetUrl,
+          'placement': b.placement.wireValue,
+          'active': b.active,
+          'displayDuration': b.displayDuration,
+        }).toList(),
+      );
+      await storage.write(_kCachedBannersKey, raw);
+    } catch (_) {}
+  }
 }
 
-/// Демо-баннеры для превью (когда нет ни сервера, ни локальных баннеров).
+/// Демо-баннеры для превью.
 const _demoBanners = [
   PromoBanner(
     id: 'demo-partner-1',
-    title: '🔥 Партнёрская программа',
+    title: 'Партнёрская программа',
     description: 'Зарабатывайте с Morok VPN! Приглашайте друзей и получайте 30% от каждой оплаты.',
     placement: BannerPlacement.home,
     active: true,
@@ -130,14 +170,14 @@ const _demoBanners = [
   ),
 ];
 
-/// Баннеры для конкретной позиции (home/premium).
+/// Баннеры для конкретной позиции.
 final bannersForPlacementProvider =
     Provider.family<List<PromoBanner>, BannerPlacement>((ref, placement) {
   final banners = ref.watch(bannerProvider).value ?? const <PromoBanner>[];
   return banners.where((b) => b.placement == placement).toList();
 });
 
-/// Аналитика баннеров: просмотры и клики.
+/// Аналитика баннеров.
 final bannerTrackerProvider = Provider<BannerTracker>((ref) {
   return BannerTracker(ref);
 });
@@ -148,13 +188,11 @@ class BannerTracker {
   final Ref _ref;
   final Set<String> _seen = <String>{};
 
-  /// Записывает первый показ [bannerId] в сессии.
   void impression(String bannerId) {
     if (!_seen.add(bannerId)) return;
     _send(() => _ref.read(bannerRepositoryProvider).trackImpression(bannerId));
   }
 
-  /// Записывает клик по CTA.
   void click(String bannerId) {
     _send(() => _ref.read(bannerRepositoryProvider).trackClick(bannerId));
   }

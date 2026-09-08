@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../../core/utils/app_logger.dart';
@@ -12,9 +13,12 @@ import 'token_storage.dart';
 
 /// Minimal JSON HTTP client for the Morok VPN backend.
 ///
-/// Injects the stored JWT, decodes UTF-8 responses and maps every failure
-/// onto [ApiException] (network, timeout, HTTP status, malformed body).
-/// Implements SSL pinning for secure communication.
+/// Features:
+/// - JWT injection
+/// - UTF-8 response decoding
+/// - Retry on network/timeout errors only
+/// - 401 auto-logout
+/// - Rate limiting (500ms между запросами)
 class ApiClient {
   ApiClient({
     required TokenStorage tokenStorage,
@@ -33,6 +37,13 @@ class ApiClient {
   final SslPinningService _sslPinningService;
   final String _baseUrl;
 
+  /// Rate limiting: минимальный интервал между запросами.
+  static const _minRequestInterval = Duration(milliseconds: 500);
+  DateTime? _lastRequestTime;
+
+  /// Callback для logout при 401.
+  VoidCallback? onUnauthorized;
+
   Future<dynamic> get(String path) => _request('GET', path);
 
   Future<dynamic> post(String path, {Object? body}) =>
@@ -41,20 +52,33 @@ class ApiClient {
   Future<dynamic> patch(String path, {Object? body}) =>
       _request('PATCH', path, body: body);
 
+  Future<dynamic> delete(String path) => _request('DELETE', path);
+
+  /// Rate-limited HTTP request с retry на сетевые ошибки.
   Future<dynamic> _request(String method, String path, {Object? body}) async {
+    // Rate limiting
+    final now = DateTime.now();
+    if (_lastRequestTime != null) {
+      final elapsed = now.difference(_lastRequestTime!);
+      if (elapsed < _minRequestInterval) {
+        await Future<void>.delayed(_minRequestInterval - elapsed);
+      }
+    }
+    _lastRequestTime = DateTime.now();
+
     final uri = Uri.parse('$_baseUrl$path');
-    
-    // Validate SSL certificate before making request
+
+    // SSL pinning (не блокирует если пины не настроены)
     try {
       await _sslPinningService.validateBeforeRequest(_baseUrl);
     } on SslPinningValidationException catch (e) {
-      _logger?.error('SSL pinning validation failed: ${e.message}', source: 'api');
+      _logger?.error('SSL validation failed: ${e.message}', source: 'api');
       throw const ApiException(
         'Connection security validation failed',
         code: 'SSL_VALIDATION_FAILED',
       );
     }
-    
+
     final token = await _tokenStorage.read();
 
     final headers = <String, String>{
@@ -64,15 +88,12 @@ class ApiClient {
         'Authorization': 'Bearer $token',
     };
 
-    _logger?.info('$method $_baseUrl$path (base=$_baseUrl)', source: 'api');
     _logger?.debug('$method $path', source: 'api');
 
-    // Retry только на сетевые ошибки, не на 4xx/5xx.
     return await retry(
       () => _executeRequest(method, uri, headers, body),
       maxAttempts: 3,
       shouldRetry: (error) {
-        // Retry только на timeout и network errors.
         if (error is ApiException) {
           return error.isNetworkError || error.code == 'TIMEOUT';
         }
@@ -99,6 +120,9 @@ class ApiClient {
         'PATCH' => await _client
             .patch(uri, headers: headers, body: _encode(body))
             .timeout(ApiConfig.timeout),
+        'DELETE' => await _client
+            .delete(uri, headers: headers)
+            .timeout(ApiConfig.timeout),
         _ => throw ApiException('Unsupported method: $method',
             code: 'BAD_REQUEST'),
       };
@@ -118,8 +142,20 @@ class ApiClient {
       return decoded;
     }
 
+    // 401 — сессия истекла
+    if (response.statusCode == 401) {
+      _logger?.warn('401 Unauthorized — clearing token', source: 'api');
+      await _tokenStorage.clear();
+      onUnauthorized?.call();
+      throw const ApiException(
+        'Session expired. Please re-authenticate.',
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+      );
+    }
+
     final message = _errorMessage(decoded, response.statusCode);
-    _logger?.warn('$method ${uri.path} → ${response.statusCode}: $message',
+    _logger?.debug('$method ${uri.path} → ${response.statusCode}: $message',
         source: 'api');
     throw ApiException(
       message,
