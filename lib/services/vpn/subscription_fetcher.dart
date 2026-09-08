@@ -83,16 +83,19 @@ class SubscriptionFetcher {
     final trimmed = body.trim();
     if (trimmed.isEmpty) return const [];
 
-    final candidates = <String>[trimmed];
-
-    // Base64 payloads arrive with or without padding, sometimes URL-safe.
+    // Сначала пробуем декодировать как base64
     final decoded = _tryBase64(trimmed);
-    if (decoded != null) candidates.add(decoded);
-
-    for (final candidate in candidates) {
-      final found = _extractVless(candidate);
+    
+    // Если декодировалось — ищем vless:// в декодированном тексте
+    if (decoded != null && decoded.contains('vless://')) {
+      final found = _extractVless(decoded);
       if (found.isNotEmpty) return found;
     }
+    
+    // Иначе ищем в исходном тексте (может быть plain text)
+    final found = _extractVless(trimmed);
+    if (found.isNotEmpty) return found;
+    
     return const [];
   }
 
@@ -100,13 +103,21 @@ class SubscriptionFetcher {
     // Strip whitespace/newlines that servers add for readability.
     final compact = input.replaceAll(RegExp(r'\s'), '');
     if (compact.isEmpty) return null;
+    
     try {
-      final normalised = base64.normalize(
-        compact.replaceAll('-', '+').replaceAll('_', '/'),
-      );
-      return utf8.decode(base64.decode(normalised), allowMalformed: true);
+      // Пробуем стандартный base64
+      final normalised = base64.normalize(compact);
+      final decoded = utf8.decode(base64.decode(normalised), allowMalformed: true);
+      return decoded;
     } catch (_) {
-      return null;
+      // Пробуем URL-safe base64
+      try {
+        final urlSafe = compact.replaceAll('-', '+').replaceAll('_', '/');
+        final normalised = base64.normalize(urlSafe);
+        return utf8.decode(base64.decode(normalised), allowMalformed: true);
+      } catch (_) {
+        return null;
+      }
     }
   }
 
