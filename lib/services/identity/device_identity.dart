@@ -60,11 +60,6 @@ abstract final class DeviceIdentity {
 
     if (body.length != bodyLength) return '';
 
-    // Символ не из алфавита означает опечатку либо чужой формат кода.
-    for (final ch in body.split('')) {
-      if (!alphabet.contains(ch)) return '';
-    }
-
     final groups = <String>[];
     for (var i = 0; i < body.length; i += groupSize) {
       groups.add(body.substring(i, i + groupSize));

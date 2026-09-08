@@ -267,16 +267,34 @@ class _AdminEntryTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         alignment: Alignment.center,
-        child: Text(
-          'Технический доступ',
-          style: TextStyle(
-            fontSize: 12,
-            color: AppColors.textTertiary.withValues(alpha: 0.5),
-            decoration: TextDecoration.underline,
-            decorationColor: AppColors.textTertiary.withValues(alpha: 0.3),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: AppColors.textTertiary.withValues(alpha: 0.15),
+            width: 1,
           ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.admin_panel_settings_outlined,
+              size: 16,
+              color: AppColors.textTertiary.withValues(alpha: 0.5),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Технический доступ',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textTertiary.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
         ),
       ),
     );
