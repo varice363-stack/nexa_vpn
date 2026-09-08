@@ -38,7 +38,7 @@ class KeyInput {
   /// Classifies raw input from the text field.
   ///
   /// Deliberately forgiving: people paste with stray whitespace, in the
-  /// wrong case, or with the `NEXA-` prefix missing.
+  /// wrong case, or with the `MOROK-` prefix missing.
   factory KeyInput.parse(String raw) {
     final trimmed = raw.trim();
     if (trimmed.isEmpty) return const KeyInput._(KeyInputKind.unknown, '');
@@ -106,8 +106,8 @@ class KeyInput {
     final cleaned =
         input.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
     final body =
-        cleaned.startsWith('NEXA') ? cleaned.substring(4) : cleaned;
+        cleaned.startsWith('MOROK') ? cleaned.substring(5) : cleaned;
     if (body.length != _codeBody) return '';
-    return 'NEXA-${body.substring(0, 4)}-${body.substring(4)}';
+    return 'MOROK-${body.substring(0, 4)}-${body.substring(4)}';
   }
 }

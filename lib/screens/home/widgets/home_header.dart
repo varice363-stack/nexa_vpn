@@ -26,10 +26,16 @@ class HomeHeader extends StatelessWidget {
               ),
             ],
           ),
-          child: const Icon(
-            Icons.shield_rounded,
-            size: 24,
-            color: Colors.white,
+          child: Center(
+            child: Text(
+              'M',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: -1,
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 12),

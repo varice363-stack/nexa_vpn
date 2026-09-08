@@ -46,7 +46,7 @@ describe('VlessConfigService (TASK #012 — ingress contract)', () => {
       port: 8443,
       transport: 'ws',
       security: 'tls',
-      sni: 'cdn.nexa.app',
+      sni: 'cdn.morok.app',
       flow: null,
       publicKey: null,
       shortId: null,
@@ -54,7 +54,7 @@ describe('VlessConfigService (TASK #012 — ingress contract)', () => {
     expect(uri).toContain('@10.0.0.1:8443');
     expect(uri).toContain('type=ws');
     expect(uri).toContain('security=tls');
-    expect(uri).toContain('sni=cdn.nexa.app');
+    expect(uri).toContain('sni=cdn.morok.app');
   });
 
   it('appends reality parameters (flow/pbk/sid) when present', () => {
@@ -129,7 +129,7 @@ describe('XrayIngressConfig validation (TASK #012)', () => {
       port: 8443,
       transport: 'ws',
       security: 'tls',
-      sni: 'cdn.nexa.app',
+      sni: 'cdn.morok.app',
       flow: 'xtls-rprx-vision',
       publicKey: 'PBK',
       shortId: 'SID',
@@ -139,7 +139,7 @@ describe('XrayIngressConfig validation (TASK #012)', () => {
       port: 8443,
       transport: 'ws',
       security: 'tls',
-      sni: 'cdn.nexa.app',
+      sni: 'cdn.morok.app',
       flow: 'xtls-rprx-vision',
       publicKey: 'PBK',
       shortId: 'SID',

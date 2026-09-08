@@ -5,7 +5,7 @@ import '../services/identity/device_identity.dart';
 import 'app_providers.dart';
 
 /// Ключ в защищённом хранилище устройства (Android Keystore).
-const _kIdentityKey = 'nexa_identity_code';
+const _kIdentityKey = 'morok_identity_code';
 
 /// Идентификатор владельца — заменяет собой регистрацию.
 ///

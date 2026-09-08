@@ -22,7 +22,7 @@ export function loadBillingConfig(): BillingConfig {
     provider,
     secret: process.env.PAYMENT_SECRET ?? '',
     webhookSecret: process.env.PAYMENT_WEBHOOK_SECRET ?? 'mock-signature',
-    returnUrl: process.env.PAYMENT_RETURN_URL ?? 'https://nexavpn.app/payment/result',
+    returnUrl: process.env.PAYMENT_RETURN_URL ?? 'https://morokvpn.app/payment/result',
     cleanupIntervalMs: Number(process.env.BILLING_CLEANUP_INTERVAL_MS ?? 0),
     webhookToleranceMs: Number(process.env.WEBHOOK_TOLERANCE_MS ?? 300000),
   };

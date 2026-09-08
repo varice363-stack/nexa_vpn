@@ -6,7 +6,7 @@ import '../models/key_input.dart';
 import '../services/vpn/subscription_fetcher.dart';
 import 'app_providers.dart';
 
-const _manualKeyStoreKey = 'nexa_manual_keys';
+const _manualKeyStoreKey = 'morok_manual_keys';
 
 /// A VLESS configuration the user pasted in by hand.
 ///

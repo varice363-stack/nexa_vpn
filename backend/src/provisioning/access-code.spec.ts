@@ -7,15 +7,15 @@ import {
 
 describe('access codes', () => {
   describe('generateAccessCode', () => {
-    it('produces the NEXA-XXXX-XXXX shape', () => {
-      expect(generateAccessCode()).toMatch(/^NEXA-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+    it('produces the MOROK-XXXX-XXXX shape', () => {
+      expect(generateAccessCode()).toMatch(/^MOROK-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
     });
 
     it('never emits characters people misread', () => {
       // 0/O, 1/I/L, 5/S and 8/B are the classic transcription failures.
       const banned = /[01>58BILOS]/;
       for (let i = 0; i < 300; i++) {
-        const body = generateAccessCode().replace('NEXA-', '');
+        const body = generateAccessCode().replace('MOROK-', '');
         expect(body).not.toMatch(banned);
       }
     });
@@ -29,7 +29,7 @@ describe('access codes', () => {
   });
 
   describe('normaliseAccessCode', () => {
-    const canonical = 'NEXA-7QK2-M4XP';
+    const canonical = 'MOROK-7QK2-M4XP';
 
     it('accepts the canonical form unchanged', () => {
       expect(normaliseAccessCode(canonical)).toBe(canonical);
@@ -37,10 +37,10 @@ describe('access codes', () => {
 
     it('accepts what users actually type', () => {
       for (const input of [
-        'nexa-7qk2-m4xp',
-        'NEXA7QK2M4XP',
-        '  NEXA-7QK2-M4XP  ',
-        'nexa 7qk2 m4xp',
+        'morok-7qk2-m4xp',
+        'MOROK7QK2M4XP',
+        '  MOROK-7QK2-M4XP  ',
+        'morok 7qk2 m4xp',
         '7QK2-M4XP',
         '7qk2m4xp',
       ]) {
@@ -49,7 +49,7 @@ describe('access codes', () => {
     });
 
     it('rejects the wrong length instead of guessing', () => {
-      for (const bad of ['NEXA-7QK2', '7QK2', '', 'NEXA-7QK2-M4XP-EXTRA']) {
+      for (const bad of ['MOROK-7QK2', '7QK2', '', 'MOROK-7QK2-M4XP-EXTRA']) {
         expect(normaliseAccessCode(bad)).toBe('');
       }
     });
@@ -57,14 +57,14 @@ describe('access codes', () => {
 });
 
 describe('recovery codes', () => {
-  it('generates the NEXA-XXXX-XXXX-XXXX-XXXX shape', () => {
+  it('generates the MOROK-XXXX-XXXX-XXXX-XXXX shape', () => {
     const code = generateRecoveryCode();
-    expect(code).toMatch(/^NEXA-[234679ACDEFGHJKMNPQRTUVWXYZ]{4}(-[234679ACDEFGHJKMNPQRTUVWXYZ]{4}){3}$/);
+    expect(code).toMatch(/^MOROK-[234679ACDEFGHJKMNPQRTUVWXYZ]{4}(-[234679ACDEFGHJKMNPQRTUVWXYZ]{4}){3}$/);
   });
 
   it('is long enough to be worth protecting every purchase', () => {
     // 16 symbols over a 27-char alphabet ~= 76 bits; a redemption code is 8.
-    const body = generateRecoveryCode().replace(/^NEXA-/, '').replace(/-/g, '');
+    const body = generateRecoveryCode().replace(/^MOROK-/, '').replace(/-/g, '');
     expect(body).toHaveLength(16);
   });
 
@@ -75,13 +75,13 @@ describe('recovery codes', () => {
 
   it('accepts the sloppy input people actually type', () => {
     const code = generateRecoveryCode();
-    const body = code.replace(/^NEXA-/, '').replace(/-/g, '');
+    const body = code.replace(/^MOROK-/, '').replace(/-/g, '');
     for (const variant of [
       code.toLowerCase(),
       `  ${code}  `,
       body,
       body.toLowerCase(),
-      `nexa ${body}`,
+      `morok ${body}`,
     ]) {
       expect(normaliseRecoveryCode(variant)).toBe(code);
     }
@@ -94,7 +94,7 @@ describe('recovery codes', () => {
   });
 
   it('rejects wrong lengths', () => {
-    expect(normaliseRecoveryCode('NEXA-7QK2-M4XP-99')).toBe('');
+    expect(normaliseRecoveryCode('MOROK-7QK2-M4XP-99')).toBe('');
     expect(normaliseRecoveryCode('')).toBe('');
   });
 });

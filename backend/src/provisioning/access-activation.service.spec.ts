@@ -47,7 +47,7 @@ describe('AccessActivationService', () => {
 
       const key = await svc.issue({ name: 'Promo', durationDays: 30 });
 
-      expect(key.code).toMatch(/^NEXA-/);
+      expect(key.code).toMatch(/^MOROK-/);
       expect(prisma.accessKey.create).toHaveBeenCalled();
       // The whole point of #021: a sellable key with no owner yet.
       expect(prisma.accessKey.create.mock.calls[0][0].data.userId).toBeNull();
@@ -65,7 +65,7 @@ describe('AccessActivationService', () => {
   describe('redeem', () => {
     const base = {
       id: 'k1',
-      code: 'NEXA-AAAA-BBBB',
+      code: 'MOROK-AAAA-BBBB',
       status: 'ACTIVE',
       userId: null,
       boundDevice: null,
@@ -77,7 +77,7 @@ describe('AccessActivationService', () => {
       const prisma = makePrisma([{ ...base }]);
       const svc = new AccessActivationService(prisma, provisioning);
 
-      const key = await svc.redeem('NEXA-AAAA-BBBB', 'phone-1');
+      const key = await svc.redeem('MOROK-AAAA-BBBB', 'phone-1');
 
       expect(key.userId).toBeNull();
       expect(key.activatedAt).toBeInstanceOf(Date);
@@ -88,9 +88,9 @@ describe('AccessActivationService', () => {
       const prisma = makePrisma([{ ...base }]);
       const svc = new AccessActivationService(prisma, provisioning);
 
-      const first = await svc.redeem('NEXA-AAAA-BBBB', 'phone-1');
+      const first = await svc.redeem('MOROK-AAAA-BBBB', 'phone-1');
       const activatedAt = first.activatedAt;
-      const second = await svc.redeem('NEXA-AAAA-BBBB', 'phone-1');
+      const second = await svc.redeem('MOROK-AAAA-BBBB', 'phone-1');
 
       // The original activation timestamp survives — it is the purchase date.
       expect(second.activatedAt).toEqual(activatedAt);
@@ -100,7 +100,7 @@ describe('AccessActivationService', () => {
       const prisma = makePrisma([{ ...base, boundDevice: 'phone-1' }]);
       const svc = new AccessActivationService(prisma, provisioning);
 
-      await expect(svc.redeem('NEXA-AAAA-BBBB', 'phone-2')).rejects.toThrow(
+      await expect(svc.redeem('MOROK-AAAA-BBBB', 'phone-2')).rejects.toThrow(
         BadRequestException,
       );
     });
@@ -110,7 +110,7 @@ describe('AccessActivationService', () => {
         makePrisma([{ ...base, status: 'REVOKED' }]),
         provisioning,
       );
-      await expect(revoked.redeem('NEXA-AAAA-BBBB')).rejects.toThrow(
+      await expect(revoked.redeem('MOROK-AAAA-BBBB')).rejects.toThrow(
         /CODE_REVOKED/,
       );
 
@@ -118,14 +118,14 @@ describe('AccessActivationService', () => {
         makePrisma([{ ...base, expiresAt: new Date(Date.now() - 1000) }]),
         provisioning,
       );
-      await expect(expired.redeem('NEXA-AAAA-BBBB')).rejects.toThrow(
+      await expect(expired.redeem('MOROK-AAAA-BBBB')).rejects.toThrow(
         /CODE_EXPIRED/,
       );
     });
 
     it('reports an unknown code as not found', async () => {
       const svc = new AccessActivationService(makePrisma(), provisioning);
-      await expect(svc.redeem('NEXA-ZZZZ-ZZZZ')).rejects.toThrow(
+      await expect(svc.redeem('MOROK-ZZZZ-ZZZZ')).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -134,7 +134,7 @@ describe('AccessActivationService', () => {
       const prisma = makePrisma([{ ...base }]);
       const svc = new AccessActivationService(prisma, provisioning);
 
-      await expect(svc.redeem('nexa aaaa bbbb', 'phone-1')).resolves.toBeTruthy();
+      await expect(svc.redeem('morok aaaa bbbb', 'phone-1')).resolves.toBeTruthy();
     });
 
     it('rejects a malformed code without touching the database', async () => {
@@ -149,7 +149,7 @@ describe('AccessActivationService', () => {
   describe('claim', () => {
     const base = {
       id: 'k1',
-      code: 'NEXA-AAAA-BBBB',
+      code: 'MOROK-AAAA-BBBB',
       status: 'ACTIVE',
       userId: null,
       activatedAt: null,
@@ -159,7 +159,7 @@ describe('AccessActivationService', () => {
       const prisma = makePrisma([{ ...base }]);
       const svc = new AccessActivationService(prisma, provisioning);
 
-      const key = await svc.claim('NEXA-AAAA-BBBB', 'user-1');
+      const key = await svc.claim('MOROK-AAAA-BBBB', 'user-1');
       expect(key.userId).toBe('user-1');
     });
 
@@ -167,7 +167,7 @@ describe('AccessActivationService', () => {
       const prisma = makePrisma([{ ...base, userId: 'user-2' }]);
       const svc = new AccessActivationService(prisma, provisioning);
 
-      await expect(svc.claim('NEXA-AAAA-BBBB', 'user-1')).rejects.toThrow(
+      await expect(svc.claim('MOROK-AAAA-BBBB', 'user-1')).rejects.toThrow(
         /CODE_OWNED_BY_ANOTHER_ACCOUNT/,
       );
     });
@@ -176,7 +176,7 @@ describe('AccessActivationService', () => {
       const prisma = makePrisma([{ ...base, userId: 'user-1' }]);
       const svc = new AccessActivationService(prisma, provisioning);
 
-      await expect(svc.claim('NEXA-AAAA-BBBB', 'user-1')).resolves.toBeTruthy();
+      await expect(svc.claim('MOROK-AAAA-BBBB', 'user-1')).resolves.toBeTruthy();
     });
   });
 
@@ -185,7 +185,7 @@ describe('AccessActivationService', () => {
       const prisma = makePrisma([
         {
           id: 'k1',
-          code: 'NEXA-AAAA-BBBB',
+          code: 'MOROK-AAAA-BBBB',
           status: 'ACTIVE',
           userId: null,
           boundDevice: null,
@@ -195,10 +195,10 @@ describe('AccessActivationService', () => {
       ]);
       const svc = new AccessActivationService(prisma, provisioning);
 
-      const result = await svc.redeemToContract('NEXA-AAAA-BBBB', 'phone-1');
+      const result = await svc.redeemToContract('MOROK-AAAA-BBBB', 'phone-1');
 
       expect(result.config.uri).toBe('vless://stub');
-      expect(result.code).toBe('NEXA-AAAA-BBBB');
+      expect(result.code).toBe('MOROK-AAAA-BBBB');
       expect(result.userId).toBeNull();
     });
   });

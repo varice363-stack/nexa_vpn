@@ -8,7 +8,7 @@ import '../services/api/api_exception.dart';
 import 'app_providers.dart';
 
 /// Ключ для хранения баннеров в локальном хранилище.
-const _kLocalBannersKey = 'nexa_local_banners';
+const _kLocalBannersKey = 'morok_local_banners';
 
 /// Активные промо-баннеры.
 ///

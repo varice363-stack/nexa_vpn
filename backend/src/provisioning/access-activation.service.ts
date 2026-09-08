@@ -66,7 +66,7 @@ export class AccessActivationService {
       data: {
         userId: null,
         code,
-        name: params.name?.trim() || 'Nexa Access',
+        name: params.name?.trim() || 'Morok Access',
         protocol: params.protocol ?? 'VLESS',
         uuid: randomUUID(),
         expiresAt,

@@ -41,7 +41,7 @@ export class VlessConfigService {
     if (ingress.publicKey) params.push(`pbk=${encodeURIComponent(ingress.publicKey)}`);
     if (ingress.shortId) params.push(`sid=${encodeURIComponent(ingress.shortId)}`);
 
-    const remark = encodeURIComponent(accessKey.name || 'Nexa VPN');
+    const remark = encodeURIComponent(accessKey.name || 'Morok VPN');
 
     return `vless://${accessKey.uuid}@${ingress.host}:${ingress.port}?${params.join('&')}#${remark}`;
   }

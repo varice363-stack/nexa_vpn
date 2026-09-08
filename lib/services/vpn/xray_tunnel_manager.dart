@@ -196,7 +196,7 @@ class XrayTunnelManager implements TunnelManager {
       );
 
       _logger.info(
-        'Tunnel up via ${source.host} (${source.isImported ? 'imported' : 'nexa'})',
+        'Tunnel up via ${source.host} (${source.isImported ? 'imported' : 'morok'})',
         source: 'vpn',
       );
     } on AppException {

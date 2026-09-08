@@ -39,7 +39,7 @@ export interface RefundRequest {
 }
 
 /**
- * Billing contract — the universal seam between Nexa and any payment
+ * Billing contract — the universal seam between Morok and any payment
  * provider (ЮKassa, CloudPayments, Stripe, SBP, crypto).
  *
  * Only a Mock implementation exists today. Real providers implement this

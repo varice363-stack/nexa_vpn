@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_providers.dart';
 
 /// Key under which the user's language choice is persisted.
-const _localeKey = 'nexa_locale';
+const _localeKey = 'morok_locale';
 
 /// Interface language.
 ///

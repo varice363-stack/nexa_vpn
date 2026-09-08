@@ -7,7 +7,7 @@ import 'app_providers.dart';
 import 'manual_key_providers.dart';
 
 /// Preference key holding the id of the source the user picked last.
-const _activeSourceKey = 'nexa_active_source';
+const _activeSourceKey = 'morok_active_source';
 
 /// Every connection the user can pick, both origins merged.
 ///

@@ -1,7 +1,7 @@
 import { IsOptional, IsString, Length } from 'class-validator';
 
 export class AutoRegisterDto {
-  /// Device Identity code (e.g. NEXA-XXXX-XXXX-XXXX-XXXX).
+  /// Device Identity code (e.g. MOROK-XXXX-XXXX-XXXX-XXXX).
   @IsString()
   @Length(20, 24)
   deviceId!: string;

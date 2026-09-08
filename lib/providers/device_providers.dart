@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_providers.dart';
 
-const _deviceIdKey = 'nexa_device_id';
+const _deviceIdKey = 'morok_device_id';
 
 /// Stable per-installation identifier.
 ///

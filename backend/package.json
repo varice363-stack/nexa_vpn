@@ -1,7 +1,7 @@
 {
-  "name": "nexa-vpn-backend",
+  "name": "morok-vpn-backend",
   "version": "0.1.0",
-  "description": "Nexa VPN backend — NestJS + Prisma + PostgreSQL",
+  "description": "Morok VPN backend — NestJS + Prisma + PostgreSQL",
   "private": true,
   "scripts": {
     "build": "nest build",

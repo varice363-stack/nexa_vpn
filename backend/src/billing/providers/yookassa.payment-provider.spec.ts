@@ -1,6 +1,6 @@
 import { YooKassaPaymentProvider } from './yookassa.payment-provider';
 
-const plan = { id: 'p1', name: 'Nexa 30 Days' } as never;
+const plan = { id: 'p1', name: 'Morok 30 Days' } as never;
 const user = { id: 'u1', email: 'u@test.dev' } as never;
 
 const checkoutRequest = {
@@ -42,7 +42,7 @@ describe('YooKassaPaymentProvider (TASK #015)', () => {
     expect((captured!.headers as Record<string, string>)['Idempotency-Key']).toBe('tx1');
     const body = JSON.parse(captured!.body as string);
     expect(body.amount).toEqual({ value: '11.99', currency: 'USD' });
-    expect(body.metadata.nexaTransactionId).toBe('tx1');
+    expect(body.metadata.morokTransactionId).toBe('tx1');
 
     expect(result.status).toBe('PENDING');
     expect(result.checkoutUrl).toBe('https://yoomoney.ru/checkout/1');

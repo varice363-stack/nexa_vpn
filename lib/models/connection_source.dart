@@ -8,7 +8,7 @@ import 'access_key.dart';
 /// [ConnectionSource] is allowed to care which one it is holding.
 enum ConnectionOrigin {
   /// Issued by us (redeemed code or purchased subscription).
-  nexa,
+  morok,
 
   /// A `vless://` link the user pasted in, belonging to another provider.
   /// Stored on the device only.
@@ -33,7 +33,7 @@ class ConnectionSource {
 
   /// Stable identity, unique across both origins.
   ///
-  /// Morok keys use `nexa:<keyId>`; imported links use `imported:<uri>` —
+  /// Morok keys use `morok:<keyId>`; imported links use `imported:<uri>` —
   /// the URI itself, because that is what makes an imported key unique
   /// (re-importing the same link must not create a second entry).
   final String id;
@@ -52,7 +52,7 @@ class ConnectionSource {
   /// Server-side status for Morok keys (revoked / expired).
   final bool isExpired;
 
-  bool get isMorok => origin == ConnectionOrigin.nexa;
+  bool get isMorok => origin == ConnectionOrigin.morok;
   bool get isImported => origin == ConnectionOrigin.imported;
 
   /// Host of the endpoint, used to tell two entries apart in lists.
@@ -76,10 +76,10 @@ class ConnectionSource {
     final uri = key.configUri;
     if (uri == null || uri.isEmpty) return null;
     return ConnectionSource(
-      id: 'nexa:${key.id}',
+      id: 'morok:${key.id}',
       label: key.name,
       uri: uri,
-      origin: ConnectionOrigin.nexa,
+      origin: ConnectionOrigin.morok,
       expiresAt: key.expiresAt,
       isExpired: !key.isActive,
     );

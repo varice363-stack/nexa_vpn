@@ -13,10 +13,10 @@ const GROUP = 4;
 const GROUPS = 2;
 
 /** Prefix makes the code recognisable when pasted anywhere. */
-export const CODE_PREFIX = 'NEXA';
+export const CODE_PREFIX = 'MOROK';
 
 /**
- * Generates a code like `NEXA-7QK2-M4XP`.
+ * Generates a code like `MOROK-7QK2-M4XP`.
  *
  * Uses `randomInt` (CSPRNG) rather than Math.random: these codes are
  * bearer credentials — anyone holding one gets paid access.
@@ -61,7 +61,7 @@ export function normaliseAccessCode(input: string): string {
 }
 
 /**
- * Recovery codes: `NEXA-XXXX-XXXX-XXXX-XXXX`.
+ * Recovery codes: `MOROK-XXXX-XXXX-XXXX-XXXX`.
  *
  * An account is optional in this product — a buyer never has to hand over an
  * email address. A recovery code is what lets them get their keys back after

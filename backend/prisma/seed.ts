@@ -6,9 +6,9 @@ const prisma = new PrismaClient();
 async function main() {
   // Subscription plans (the sellable product).
   const plans = [
-    { code: PlanCode.MONTHLY, name: 'Nexa 30 дней', description: 'Помесячно, без автопродления', durationDays: 30, price: 199, currency: 'RUB' },
-    { code: PlanCode.QUARTERLY, name: 'Nexa 90 дней', description: 'Три месяца — выгоднее на 98 ₽', durationDays: 90, price: 499, currency: 'RUB' },
-    { code: PlanCode.YEARLY, name: 'Nexa 365 дней', description: 'Год — выгоднее на 898 ₽', durationDays: 365, price: 1490, currency: 'RUB' },
+    { code: PlanCode.MONTHLY, name: 'Morok 30 дней', description: 'Помесячно, без автопродления', durationDays: 30, price: 199, currency: 'RUB' },
+    { code: PlanCode.QUARTERLY, name: 'Morok 90 дней', description: 'Три месяца — выгоднее на 98 ₽', durationDays: 90, price: 499, currency: 'RUB' },
+    { code: PlanCode.YEARLY, name: 'Morok 365 дней', description: 'Год — выгоднее на 898 ₽', durationDays: 365, price: 1490, currency: 'RUB' },
   ];
   for (const plan of plans) {
     await prisma.subscriptionPlan.upsert({
@@ -32,26 +32,26 @@ async function main() {
     data: { isActive: false },
   });
 
-  // Admin account: admin@nexavpn.app / admin1234
+  // Admin account: admin@morokvpn.app / admin1234
   const adminHash = await bcrypt.hash('admin1234', 10);
   await prisma.user.upsert({
-    where: { email: 'admin@nexavpn.app' },
+    where: { email: 'admin@morokvpn.app' },
     update: {},
     create: {
-      email: 'admin@nexavpn.app',
+      email: 'admin@morokvpn.app',
       passwordHash: adminHash,
       role: Role.ADMIN,
       country: 'TR',
     },
   });
 
-  // Demo user: user@nexavpn.app / user1234
+  // Demo user: user@morokvpn.app / user1234
   const userHash = await bcrypt.hash('user1234', 10);
   await prisma.user.upsert({
-    where: { email: 'user@nexavpn.app' },
+    where: { email: 'user@morokvpn.app' },
     update: {},
     create: {
-      email: 'user@nexavpn.app',
+      email: 'user@morokvpn.app',
       passwordHash: userHash,
       role: Role.USER,
       country: 'TR',
@@ -75,7 +75,7 @@ async function main() {
     });
   }
 
-  console.log('Seed complete: admin@nexavpn.app / admin1234, user@nexavpn.app / user1234, 6 servers.');
+  console.log('Seed complete: admin@morokvpn.app / admin1234, user@morokvpn.app / user1234, 6 servers.');
 }
 
 main()

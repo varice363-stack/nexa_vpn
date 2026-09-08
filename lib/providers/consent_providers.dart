@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_providers.dart';
 
 /// Key under which the VpnService disclosure acceptance is persisted.
-const _consentKey = 'nexa_vpn_consent_accepted';
+const _consentKey = 'morok_vpn_consent_accepted';
 
 /// Whether the user has accepted the prominent VpnService disclosure.
 ///

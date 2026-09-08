@@ -12,7 +12,7 @@ class TokenStorage {
       : _storage = storage,
         _logger = logger;
 
-  static const String tokenKey = 'nexa_auth_token';
+  static const String tokenKey = 'morok_auth_token';
 
   final KeyStorage _storage;
   final AppLogger? _logger;

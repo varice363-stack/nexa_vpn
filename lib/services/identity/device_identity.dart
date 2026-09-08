@@ -16,7 +16,7 @@ import 'dart:math';
 /// `2`/`Z` — человек диктует код голосом и переписывает от руки, а значит
 /// ошибка распознавания дороже пары лишних символов.
 abstract final class DeviceIdentity {
-  static const String prefix = 'NEXA';
+  static const String prefix = 'MOROK';
   // Alphabet without visually similar characters: no 0/O, 1/I/L, 2/Z, 5/S, 8/B.
   // A human reads this code aloud and writes it by hand — a misread costs
   // more than a few extra symbols.

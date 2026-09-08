@@ -7,12 +7,12 @@ async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
   const prisma = app.get(PrismaService);
   
-  const email = 'admin2@nexavpn.app';
+  const email = 'admin2@morokvpn.app';
   const password = 'MyAdminPass123!';
   const passwordHash = await bcrypt.hash(password, 10);
   
   // Удалим старого админа если есть
-  await prisma.user.deleteMany({ where: { email: 'admin@nexavpn.app' } });
+  await prisma.user.deleteMany({ where: { email: 'admin@morokvpn.app' } });
   
   await prisma.user.create({
     data: {

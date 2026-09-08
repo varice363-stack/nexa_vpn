@@ -7,7 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
   const prisma = app.get(PrismaService);
   
-  const email = 'admin@nexavpn.app';
+  const email = 'admin@morokvpn.app';
   const password = 'AdminPass123';
   const passwordHash = await bcrypt.hash(password, 10);
   

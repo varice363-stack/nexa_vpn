@@ -6,7 +6,7 @@ import 'identity_providers.dart';
 ///
 /// Задаётся при сборке, в исходники не попадает:
 ///
-///   flutter build apk --dart-define=OWNER_CODE=NEXA-ADMIN-2026
+///   flutter build apk --dart-define=OWNER_CODE=MOROK-ADMIN-2026
 ///
 /// Для debug-сборок (flutter run) используется значение по умолчанию.
 const String kOwnerCode = String.fromEnvironment(

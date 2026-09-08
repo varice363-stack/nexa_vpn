@@ -12,7 +12,7 @@ import {
  * Mock payment provider — for local development and tests only.
  *
  * `createCheckout` returns no URL (null); `verifyWebhook` accepts the mock
- * payload with the header signature `x-nexa-signature: mock-signature`;
+ * payload with the header signature `x-morok-signature: mock-signature`;
  * `parseWebhook` accepts the mock payload shape:
  *   { event: 'payment.paid', transactionId: '...', providerPaymentId: '...' }
  */

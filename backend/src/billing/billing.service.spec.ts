@@ -21,7 +21,7 @@ const user = { id: 'u1', email: 'u@test.dev' } as never;
 const plan = {
   id: 'p1',
   code: PlanCode.MONTHLY,
-  name: 'Nexa 30 Days',
+  name: 'Morok 30 Days',
   description: null,
   durationDays: 30,
   price: 199,

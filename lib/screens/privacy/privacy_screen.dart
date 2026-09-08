@@ -11,7 +11,7 @@ import '../../widgets/common/glass_button.dart';
 /// URL of the full HTML privacy policy hosted on GitHub Pages.
 /// Keep this in sync with the GitHub Pages publishing configuration.
 const String kPrivacyPolicyUrl =
-    'https://varice363-stack.github.io/nexa_vpn/privacy/';
+    'https://varice363-stack.github.io/morok_vpn/privacy/';
 
 /// Privacy policy (static in-app summary) with a link to the full HTML version.
 class PrivacyScreen extends StatelessWidget {

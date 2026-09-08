@@ -92,7 +92,7 @@ export class AuthService {
 
     if (!user) {
       // Generate a unique email so the unique constraint never fires.
-      const email = `device-${dto.deviceId.toLowerCase().replace(/[^a-z0-9-]/g, '')}@nexa.local`;
+      const email = `device-${dto.deviceId.toLowerCase().replace(/[^a-z0-9-]/g, '')}@morok.local`;
 
       // If this is the very first user on the platform, make them ADMIN.
       const userCount = await this.prisma.user.count();

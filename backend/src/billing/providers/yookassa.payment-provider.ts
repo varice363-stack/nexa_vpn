@@ -19,7 +19,7 @@ import {
  *      - mandatory payload shape (object.id, event, object.amount);
  *      - amount cross-check against the plan price in BillingService;
  *      - transaction lookup by providerPaymentId (unique constraint);
- *  * no card data ever touches Nexa (hosted payment page).
+ *  * no card data ever touches Morok (hosted payment page).
  *
  * Webhook signature: YooKassa does not use HMAC; the protection is the IP
  * allowlist + amount/ownership checks. verifyWebhook therefore validates
@@ -33,7 +33,7 @@ export class YooKassaPaymentProvider implements PaymentProvider {
   private readonly shopId = process.env.YOOKASSA_SHOP_ID ?? '';
   private readonly secretKey = process.env.YOOKASSA_SECRET_KEY ?? '';
   private readonly returnUrl =
-    process.env.PAYMENT_RETURN_URL ?? 'https://nexavpn.app/payment/result';
+    process.env.PAYMENT_RETURN_URL ?? 'https://morokvpn.app/payment/result';
 
   constructor(
     private readonly fetchImpl: typeof fetch = globalThis.fetch.bind(globalThis),
@@ -53,8 +53,8 @@ export class YooKassaPaymentProvider implements PaymentProvider {
       },
       capture: true,
       confirmation: { type: 'redirect', return_url: this.returnUrl },
-      description: `Nexa VPN — ${request.plan.name}`,
-      metadata: { nexaTransactionId: request.transactionId },
+      description: `Morok VPN — ${request.plan.name}`,
+      metadata: { morokTransactionId: request.transactionId },
     };
 
     const response = await this.fetchImpl(this.apiUrl, {

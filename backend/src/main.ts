@@ -125,7 +125,7 @@ async function bootstrap() {
   const isProduction = process.env.NODE_ENV === 'production';
   if (!isProduction) {
     const swaggerConfig = new DocumentBuilder()
-      .setTitle('Nexa VPN API')
+      .setTitle('Morok VPN API')
       .setDescription(
         'Commercial VPN platform — Account, Subscription, Provisioning, ' +
           'Devices, Sessions, Servers. Access is the product; the app is one client.',
@@ -144,7 +144,7 @@ async function bootstrap() {
   const host = process.env.HOST || '0.0.0.0';
   await app.listen(port, host);
   // eslint-disable-next-line no-console
-  console.log(`Nexa VPN API ready → http://${host}:${port}/api`);
+  console.log(`Morok VPN API ready → http://${host}:${port}/api`);
   if (process.env.NODE_ENV !== 'production') {
     // eslint-disable-next-line no-console
     console.log(`Swagger docs → http://${host}:${port}/api/docs`);
