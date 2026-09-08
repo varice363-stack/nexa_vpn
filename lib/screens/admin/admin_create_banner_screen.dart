@@ -15,12 +15,7 @@ import '../../widgets/common/app_page.dart';
 import '../../widgets/common/glass_button.dart';
 import '../../widgets/common/glass_container.dart';
 
-/// Экран создания баннера.
-///
-/// Работает в двух режимах:
-/// 1. **Онлайн** — если сервер доступен, создаёт через API
-/// 2. **Оффлайн/Демо** — если сервер недоступен, сохраняет баннер локально
-///    и сразу показывает его на главном экране для превью
+/// Экран создания баннера с нормальной загрузкой изображений.
 class AdminCreateBannerScreen extends ConsumerStatefulWidget {
   const AdminCreateBannerScreen({super.key});
 
@@ -41,18 +36,64 @@ class _AdminCreateBannerScreenState
 
   BannerPlacement _placement = BannerPlacement.home;
   bool _isSubmitting = false;
-  XFile? _selectedImage;
+  File? _selectedImage;
+  String? _imagePreviewPath;
   final ImagePicker _picker = ImagePicker();
 
+  /// Выбирает изображение БЕЗ сжатия и ограничений размера.
   Future<void> _pickImage() async {
-    final image = await _picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1200,
-      maxHeight: 600,
-      imageQuality: 85,
-    );
-    if (image != null) {
-      setState(() => _selectedImage = image);
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        // Убираем ВСЕ ограничения — оригинальный размер и качество
+        maxWidth: null,
+        maxHeight: null,
+        imageQuality: null,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+          _imagePreviewPath = image.path;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка выбора изображения: $e'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Также поддерживаем камеру
+  Future<void> _takePhoto() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: null,
+        maxHeight: null,
+        imageQuality: null,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+          _imagePreviewPath = image.path;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка камеры: $e'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
     }
   }
 
@@ -67,7 +108,6 @@ class _AdminCreateBannerScreenState
     super.dispose();
   }
 
-  /// Генерирует уникальный ID для локального баннера.
   String _generateLocalId() {
     final rnd = Random.secure();
     final hex = List.generate(8, (_) => rnd.nextInt(16).toRadixString(16)).join();
@@ -92,8 +132,8 @@ class _AdminCreateBannerScreenState
         ? _targetUrlController.text.trim()
         : null;
 
-    // Пробуем создать через API
     try {
+      // Сначала создаём баннер
       final banner = await ref.read(bannerRepositoryProvider).createBanner(
             title: title,
             description: description,
@@ -104,15 +144,23 @@ class _AdminCreateBannerScreenState
             displayDuration: displayDuration,
           );
 
-      // Если выбрана картинка — загружаем её
+      // Потом загружаем картинку если выбрана
       if (_selectedImage != null) {
         try {
           await ref.read(bannerRepositoryProvider).uploadBannerImage(
                 bannerId: banner.id,
-                imageFile: File(_selectedImage!.path),
+                imageFile: _selectedImage!,
               );
         } catch (e) {
-          // Картинка не загрузилась — не критично
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('⚠️ Баннер создан, но изображение не загрузилось: $e'),
+                backgroundColor: AppColors.primary,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
         }
       }
 
@@ -125,21 +173,18 @@ class _AdminCreateBannerScreenState
       );
       Navigator.of(context).pop();
     } on ApiException catch (e) {
-      // Сервер недоступен — сохраняем локально (демо-режим)
       if (e.isNetworkError || e.statusCode == null) {
         await _saveLocally(title, description, imageUrl, buttonText, targetUrl, displayDuration);
       } else {
         _showError(_buildErrorMessage(e));
       }
     } catch (e) {
-      // Любая другая ошибка — тоже сохраняем локально
       await _saveLocally(title, description, imageUrl, buttonText, targetUrl, displayDuration);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
-  /// Сохраняет баннер локально для демо-просмотра.
   Future<void> _saveLocally(
     String title,
     String description,
@@ -160,13 +205,12 @@ class _AdminCreateBannerScreenState
       displayDuration: displayDuration,
     );
 
-    // Сохраняем в локальное хранилище
     await ref.read(bannerProvider.notifier).saveLocalBanner(banner);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('💾 Баннер «$title» сохранён (демо-режим). Он появится на главном экране.'),
+        content: Text('💾 Баннер «$title» сохранён (демо-режим).'),
         backgroundColor: AppColors.primary,
         duration: const Duration(seconds: 3),
       ),
@@ -187,7 +231,7 @@ class _AdminCreateBannerScreenState
   String _buildErrorMessage(Object e) {
     if (e is ApiException) {
       if (e.isNetworkError) {
-        return 'Нет связи с сервером. Баннер сохранён локально для превью.';
+        return 'Нет связи с сервером. Баннер сохранён локально.';
       }
       switch (e.statusCode) {
         case 401:
@@ -207,17 +251,15 @@ class _AdminCreateBannerScreenState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
     return AppPage(
       title: 'Создать баннер',
       subtitle: 'Рекламный баннер для партнёрской программы',
       child: Form(
         key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
           children: [
-            // Подсказка о демо-режиме
+            // Подсказка
             GlassContainer(
               borderRadius: BorderRadius.circular(14),
               padding: const EdgeInsets.all(12),
@@ -229,7 +271,7 @@ class _AdminCreateBannerScreenState
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
-                      'Если сервер недоступен, баннер сохранится локально и покажется на главном экране.',
+                      'Если сервер недоступен, баннер сохранится локально.',
                       style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     ),
                   ),
@@ -237,6 +279,8 @@ class _AdminCreateBannerScreenState
               ),
             ),
             const SizedBox(height: 16),
+
+            // Название
             _buildTextField(
               controller: _titleController,
               label: 'Название баннера',
@@ -245,6 +289,8 @@ class _AdminCreateBannerScreenState
               minLength: 2,
             ),
             const SizedBox(height: 16),
+
+            // Описание
             _buildTextField(
               controller: _descriptionController,
               label: 'Описание',
@@ -254,15 +300,21 @@ class _AdminCreateBannerScreenState
               minLength: 2,
             ),
             const SizedBox(height: 16),
+
+            // Загрузка изображения
             _buildImagePicker(),
             const SizedBox(height: 16),
+
+            // URL картинки (опционально)
             _buildTextField(
               controller: _imageUrlController,
-              label: 'URL картинки (опционально)',
+              label: 'URL картинки (если не загружаете файл)',
               hint: 'https://example.com/banner.jpg',
               required: false,
             ),
             const SizedBox(height: 16),
+
+            // Текст кнопки
             _buildTextField(
               controller: _buttonTextController,
               label: 'Текст кнопки',
@@ -270,6 +322,8 @@ class _AdminCreateBannerScreenState
               required: false,
             ),
             const SizedBox(height: 16),
+
+            // Ссылка партнёра
             _buildTextField(
               controller: _targetUrlController,
               label: 'Ссылка партнёра',
@@ -277,6 +331,8 @@ class _AdminCreateBannerScreenState
               required: false,
             ),
             const SizedBox(height: 16),
+
+            // Время показа
             _buildTextField(
               controller: _displayDurationController,
               label: 'Время показа (секунды)',
@@ -285,14 +341,19 @@ class _AdminCreateBannerScreenState
               required: false,
             ),
             const SizedBox(height: 20),
-            _buildPlacementSelector(l10n),
+
+            // Расположение
+            _buildPlacementSelector(),
             const SizedBox(height: 24),
+
+            // Кнопка создать
             GlassButton(
               label: _isSubmitting ? 'Создание...' : 'Создать баннер',
               onTap: _isSubmitting ? () {} : _submit,
             ),
             const SizedBox(height: 16),
-            // Кнопка превью
+
+            // Предпросмотр
             OutlinedButton.icon(
               onPressed: () => _showPreview(context),
               icon: const Icon(Icons.preview_rounded),
@@ -302,6 +363,7 @@ class _AdminCreateBannerScreenState
                 side: const BorderSide(color: AppColors.primary),
               ),
             ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -315,9 +377,7 @@ class _AdminCreateBannerScreenState
       id: 'preview',
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
-      imageUrl: _imageUrlController.text.trim().isNotEmpty
-          ? _imageUrlController.text.trim()
-          : null,
+      imageUrl: _imagePreviewPath ?? _imageUrlController.text.trim(),
       buttonText: _buttonTextController.text.trim().isNotEmpty
           ? _buttonTextController.text.trim()
           : null,
@@ -378,43 +438,90 @@ class _AdminCreateBannerScreenState
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.file(
-                    File(_selectedImage!.path),
-                    height: 150,
+                    _selectedImage!,
+                    height: 200,
                     width: double.infinity,
                     fit: BoxFit.cover,
                   ),
                 ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => setState(() => _selectedImage = null),
-                  child: const Text(
-                    'Удалить',
-                    style: TextStyle(color: AppColors.danger),
-                  ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () => setState(() {
+                        _selectedImage = null;
+                        _imagePreviewPath = null;
+                      }),
+                      icon: const Icon(Icons.delete, size: 18),
+                      label: const Text('Удалить'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.danger,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: _pickImage,
+                      icon: const Icon(Icons.photo_library, size: 18),
+                      label: const Text('Другое фото'),
+                    ),
+                  ],
                 ),
               ],
             )
           else
-            GestureDetector(
-              onTap: _pickImage,
-              child: Container(
-                height: 120,
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.textTertiary, width: 2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.add_photo_alternate, size: 40, color: AppColors.textTertiary),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Нажмите чтобы выбрать картинку',
-                      style: TextStyle(color: AppColors.textSecondary),
+            Column(
+              children: [
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    height: 150,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.5),
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.add_photo_alternate_rounded,
+                          size: 48,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Выбрать из галереи',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Любой формат и размер',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: _takePhoto,
+                  icon: const Icon(Icons.camera_alt_rounded, size: 18),
+                  label: const Text('Сделать фото'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
+              ],
             ),
         ],
       ),
@@ -458,7 +565,7 @@ class _AdminCreateBannerScreenState
     );
   }
 
-  Widget _buildPlacementSelector(AppLocalizations l10n) {
+  Widget _buildPlacementSelector() {
     return GlassContainer(
       borderRadius: BorderRadius.circular(14),
       padding: const EdgeInsets.all(16),
@@ -477,7 +584,7 @@ class _AdminCreateBannerScreenState
             children: [
               Expanded(
                 child: _PlacementOption(
-                  label: '🏠 Главная',
+                  label: ' Главная',
                   selected: _placement == BannerPlacement.home,
                   onTap: () => setState(() => _placement = BannerPlacement.home),
                 ),
@@ -487,8 +594,7 @@ class _AdminCreateBannerScreenState
                 child: _PlacementOption(
                   label: '⭐ Премиум',
                   selected: _placement == BannerPlacement.premium,
-                  onTap: () =>
-                      setState(() => _placement = BannerPlacement.premium),
+                  onTap: () => setState(() => _placement = BannerPlacement.premium),
                 ),
               ),
             ],
@@ -499,7 +605,6 @@ class _AdminCreateBannerScreenState
   }
 }
 
-/// Превью баннера в модалке.
 class _PreviewBannerCard extends StatelessWidget {
   const _PreviewBannerCard({required this.banner});
   final PromoBanner banner;
@@ -512,6 +617,29 @@ class _PreviewBannerCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (banner.imageUrl != null) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: banner.imageUrl!.startsWith('http')
+                  ? Image.network(
+                      banner.imageUrl!,
+                      height: 150,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox(
+                        height: 150,
+                        child: Center(child: Icon(Icons.broken_image, size: 48)),
+                      ),
+                    )
+                  : Image.file(
+                      File(banner.imageUrl!),
+                      height: 150,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+            ),
+            const SizedBox(height: 14),
+          ],
           Row(
             children: [
               Container(
