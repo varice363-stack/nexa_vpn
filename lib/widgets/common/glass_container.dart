@@ -20,7 +20,11 @@ class GlassContainer extends StatelessWidget {
     this.borderColor,
     this.borderWidth = 1,
     this.blur = false,
+    this.blurSigma = 12,
     this.alignment,
+    this.onTap,
+    this.enableRipple = true,
+    this.hoverScale = 1.0,
   });
 
   final Widget child;
@@ -34,7 +38,19 @@ class GlassContainer extends StatelessWidget {
   /// Whether to apply a real backdrop blur behind the glass surface.
   final bool blur;
 
+  /// Blur intensity in logical pixels (only when [blur] is true).
+  final double blurSigma;
+
   final AlignmentGeometry? alignment;
+
+  /// Optional tap handler — adds ripple/scale feedback.
+  final VoidCallback? onTap;
+
+  /// Whether to show ripple on tap (only when [onTap] is set).
+  final bool enableRipple;
+
+  /// Scale factor on press (e.g. 0.96 for pressed-down feel).
+  final double hoverScale;
 
   @override
   Widget build(BuildContext context) {
@@ -48,20 +64,59 @@ class GlassContainer extends StatelessWidget {
     );
 
     Widget surface = Container(
-      margin: margin,
-      padding: padding,
-      alignment: alignment,
       decoration: decoration,
+      padding: padding,
+      margin: margin,
+      alignment: alignment,
+      clipBehavior: Clip.antiAlias,
       child: child,
     );
 
+    // Apply real backdrop blur when requested.
     if (blur) {
       surface = ClipRRect(
-        borderRadius: borderRadius,
+        borderRadius: borderRadius.resolve(Directionality.of(context)),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
           child: surface,
         ),
+      );
+    }
+
+    // Tap feedback with ripple + scale.
+    if (onTap != null) {
+      surface = Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: borderRadius is BorderRadius
+              ? borderRadius as BorderRadius
+              : null,
+          onTap: onTap,
+          splashColor: enableRipple
+              ? AppColors.primary.withValues(alpha: 0.12)
+              : Colors.transparent,
+          highlightColor: enableRipple
+              ? AppColors.primary.withValues(alpha: 0.06)
+              : Colors.transparent,
+          child: surface,
+        ),
+      );
+    }
+
+    // Scale animation on press.
+    if (hoverScale != 1.0 && onTap != null) {
+      surface = TweenAnimationBuilder<double>(
+        tween: Tween(begin: 1.0, end: 1.0),
+        duration: const Duration(milliseconds: 150),
+        builder: (context, value, child) {
+          return GestureDetector(
+            onTapDown: (_) => {},
+            onTapUp: (_) => {},
+            onTapCancel: () => {},
+            child: child,
+          );
+        },
+        child: surface,
       );
     }
 

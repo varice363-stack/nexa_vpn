@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../theme/app_colors.dart';
 
-/// Section title with an optional action label.
+/// Улучшенный section header с анимацией появления.
 class SectionHeader extends StatelessWidget {
   const SectionHeader({
     super.key,
     required this.title,
-    this.actionLabel,
-    this.onAction,
+    this.action,
   });
 
   final String title;
-  final String? actionLabel;
-  final VoidCallback? onAction;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 6, 4, 10),
+      padding: const EdgeInsets.only(left: 4, bottom: 12, top: 8),
       child: Row(
         children: [
           Expanded(
@@ -27,23 +26,12 @@ class SectionHeader extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
                 color: AppColors.textTertiary,
-                letterSpacing: 0.4,
               ),
-            ),
+            ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.1, end: 0),
           ),
-          if (actionLabel != null)
-            GestureDetector(
-              onTap: onAction,
-              child: Text(
-                actionLabel!,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primaryBright,
-                ),
-              ),
-            ),
+          if (action != null) action!,
         ],
       ),
     );

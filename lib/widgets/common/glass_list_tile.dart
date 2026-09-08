@@ -1,117 +1,146 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
-import 'glass_container.dart';
 
-/// Glass list row with leading icon, title, optional subtitle and trailing.
-class GlassListTile extends StatelessWidget {
+/// Улучшенный glass list tile с микровзаимодействиями.
+class GlassListTile extends StatefulWidget {
   const GlassListTile({
     super.key,
-    required this.icon,
     required this.title,
     this.subtitle,
+    this.icon,
     this.trailing,
     this.onTap,
-    this.badge,
+    this.borderRadius,
   });
 
-  final IconData icon;
   final String title;
   final String? subtitle;
+  final IconData? icon;
   final Widget? trailing;
   final VoidCallback? onTap;
-  final String? badge;
+  final BorderRadius? borderRadius;
+
+  @override
+  State<GlassListTile> createState() => _GlassListTileState();
+}
+
+class _GlassListTileState extends State<GlassListTile>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GlassContainer(
-      borderRadius: BorderRadius.circular(16),
-      margin: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-            child: Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, size: 19, color: AppColors.primaryBright),
+    final borderRadius = widget.borderRadius ?? BorderRadius.circular(16);
+
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) => _controller.reverse(),
+      onTapCancel: () => _controller.reverse(),
+      onTap: widget.onTap,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: borderRadius,
+                color: AppColors.glassFill,
+                border: Border.all(
+                  color: AppColors.glassBorder,
+                  width: 1,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: borderRadius,
+                  onTap: widget.onTap,
+                  splashColor: AppColors.primary.withValues(alpha: 0.12),
+                  highlightColor: AppColors.primary.withValues(alpha: 0.06),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    child: Row(
+                      children: [
+                        if (widget.icon != null) ...[
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              gradient: AppColors.primaryGradient,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              widget.icon,
+                              size: 20,
+                              color: Colors.white,
                             ),
                           ),
-                          if (badge != null) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.danger.withValues(alpha: 0.9),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                badge!,
+                          const SizedBox(width: 14),
+                        ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.title,
                                 style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
+                              if (widget.subtitle != null) ...[
+                                const SizedBox(height: 3),
+                                Text(
+                                  widget.subtitle!,
+                                  style: const TextStyle(
+                                    fontSize: 12.5,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
+                        if (widget.trailing != null) widget.trailing!,
+                        if (widget.trailing == null && widget.onTap != null)
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            size: 20,
+                            color: AppColors.textTertiary,
+                          ),
                       ],
-                    ],
+                    ),
                   ),
                 ),
-                trailing ??
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      size: 20,
-                      color: AppColors.textTertiary,
-                    ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

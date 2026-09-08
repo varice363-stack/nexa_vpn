@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../theme/app_colors.dart';
 import '../background/animated_background.dart';
-import 'glass_container.dart';
 
-/// Standard page scaffold: animated background, glass header with back
-/// button, and a scrollable body.
+/// Базовая страница с анимированным фоном и staggered анимацией.
 class AppPage extends StatelessWidget {
   const AppPage({
     super.key,
     required this.title,
     this.subtitle,
-    this.actions,
     required this.child,
-    this.padding = const EdgeInsets.fromLTRB(16, 0, 16, 110),
+    this.padding,
+    this.showBackButton = true,
   });
 
   final String title;
   final String? subtitle;
-  final List<Widget>? actions;
   final Widget child;
-  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? padding;
+  final bool showBackButton;
 
   @override
   Widget build(BuildContext context) {
@@ -31,30 +29,32 @@ class AppPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // App bar
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                 child: Row(
                   children: [
-                    GlassContainer(
-                      borderRadius: BorderRadius.circular(14),
-                      padding: const EdgeInsets.all(11),
-                      child: GestureDetector(
-                        onTap: () {
-                          if (context.canPop()) {
-                            context.pop();
-                          } else {
-                            context.go('/');
-                          }
-                        },
-                        behavior: HitTestBehavior.opaque,
-                        child: const Icon(
-                          Icons.arrow_back_rounded,
-                          size: 20,
-                          color: AppColors.textPrimary,
+                    if (showBackButton)
+                      GestureDetector(
+                        onTap: () => Navigator.maybePop(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.glassFill,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.glassBorder,
+                              width: 1,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            size: 18,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 14),
+                    if (showBackButton) const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,39 +62,34 @@ class AppPage extends StatelessWidget {
                           Text(
                             title,
                             style: const TextStyle(
-                              fontSize: 19,
+                              fontSize: 20,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary,
-                              letterSpacing: 0.2,
                             ),
-                          ),
+                          ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.2),
                           if (subtitle != null) ...[
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 4),
                             Text(
                               subtitle!,
                               style: const TextStyle(
-                                fontSize: 12.5,
+                                fontSize: 13,
                                 color: AppColors.textSecondary,
                               ),
-                            ),
+                            ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
                           ],
                         ],
                       ),
                     ),
-                    if (actions != null) ...[
-                      const SizedBox(width: 8),
-                      ...actions!,
-                    ],
                   ],
                 ),
               ),
+
+              // Контент
               Expanded(
-                child: ListView(
-                  physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics(),
-                  ),
-                  padding: padding,
-                  children: [child],
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: padding ?? const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  child: child,
                 ),
               ),
             ],
