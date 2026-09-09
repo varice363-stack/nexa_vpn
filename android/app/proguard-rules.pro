@@ -42,10 +42,16 @@
 }
 
 # Suppress warnings
+-dontwarn com.google.android.play.core.**
 -dontwarn okhttp3.**
 -dontwarn okio.**
 -dontwarn kotlin.**
 -dontwarn javax.annotation.**
+
+# Keep Flutter Play Store split install classes
+-keep class com.google.android.play.core.** { *; }
+-keep class io.flutter.embedding.android.** { *; }
+-keep class io.flutter.embedding.engine.deferredcomponents.** { *; }
 
 # Optimization
 -optimizationpasses 5
