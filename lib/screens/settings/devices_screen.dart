@@ -216,7 +216,7 @@ class _DeviceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         padding: const EdgeInsets.all(16),
         color: AppColors.surface.withValues(alpha: 0.05),
-        borderColor: AppColors.border.withValues(alpha: 0.2),
+        borderColor: AppColors.glassBorder.withValues(alpha: 0.2),
         child: Row(
           children: [
             Icon(
@@ -320,7 +320,7 @@ class _DeviceCard extends StatelessWidget {
               );
             },
             child: Text(
-              l10n.commonConfirm,
+              'Отключить',
               style: const TextStyle(color: AppColors.danger),
             ),
           ),
@@ -338,7 +338,7 @@ class _EmptyDevicesMessage extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       padding: const EdgeInsets.all(24),
       color: AppColors.surface.withValues(alpha: 0.05),
-      borderColor: AppColors.border.withValues(alpha: 0.2),
+      borderColor: AppColors.glassBorder.withValues(alpha: 0.2),
       child: Column(
         children: [
           const Icon(

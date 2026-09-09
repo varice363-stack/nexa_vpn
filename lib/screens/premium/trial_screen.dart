@@ -8,7 +8,6 @@ import '../../theme/app_colors.dart';
 import '../../widgets/common/app_page.dart';
 import '../../widgets/common/glass_button.dart';
 import '../../widgets/common/glass_container.dart';
-import '../../widgets/common/primary_gradient_button.dart';
 
 /// Trial activation screen.
 ///
@@ -230,9 +229,11 @@ class _TrialOfferCard extends StatelessWidget {
               )),
           const SizedBox(height: 24),
           // Activate button
-          PrimaryGradientButton(
-            onPressed: onActivate,
+          GlassButton(
             label: l10n.trialActivateButton,
+            gradient: AppColors.primaryGradient,
+            foreground: Colors.white,
+            onTap: onActivate,
           ),
         ],
       ),
