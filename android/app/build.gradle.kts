@@ -89,3 +89,8 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Google Play Core library — required by Flutter for split install / deferred components
+    implementation("com.google.android.play:core:1.10.3")
+}
