@@ -111,7 +111,7 @@ class _PromoBannerCardState extends State<PromoBannerCard>
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontSize: 13,
-                                  color: Colors.white.withValues(alpha: 0.87),
+                                  color: Color(0xDEFFFFFF),
                                 ),
                               ),
                             ],
