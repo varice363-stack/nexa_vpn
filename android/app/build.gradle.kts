@@ -21,7 +21,7 @@ if (hasReleaseKeystore) {
 }
 
 android {
-    namespace = "com.morokvpn.app"
+    namespace = "com.nexavpn.nexa_vpn"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -39,9 +39,7 @@ android {
     }
 
     defaultConfig {
-        // Permanent Play Store identity — must never change after the first
-        // upload, or the app becomes a different listing.
-        applicationId = "com.morokvpn.app"
+        applicationId = "com.nexavpn.app"
         // flutter_vless requires 23+; pinned explicitly so a Flutter SDK
         // default can never drop below what the tunnel needs.
         minSdk = maxOf(flutter.minSdkVersion, 23)
@@ -88,6 +86,4 @@ flutter {
 }
 
 dependencies {
-    // Google Play Core library — required by Flutter for split install / deferred components
-    implementation("com.google.android.play:core:1.10.3")
 }
