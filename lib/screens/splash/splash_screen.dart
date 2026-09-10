@@ -135,7 +135,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         child: Opacity(
                           opacity: _logoOpacity.value,
                           child: Image.asset(
-                            'assets/images/splash_logo.jpg',
+                            'assets/images/splash_logo.png',
                             width: 280,
                             height: 280,
                             fit: BoxFit.contain,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,7 +13,9 @@ import 'package:go_router/go_router.dart';
 import '../../../widgets/buttons/power_button.dart';
 import '../../../core/utils/formatters.dart';
 
-/// Connection control driven by the real VPN service state.
+/// Секция управления подключением.
+///
+/// Красивая кнопка питания + статус подключения.
 class HomePowerSection extends ConsumerWidget {
   const HomePowerSection({super.key});
 
@@ -26,7 +29,7 @@ class HomePowerSection extends ConsumerWidget {
     final PowerButtonState buttonState = switch (status) {
       VpnStatus.disconnected => PowerButtonState.disconnected,
       VpnStatus.connecting || VpnStatus.disconnecting =>
-        PowerButtonState.connecting,
+          PowerButtonState.connecting,
       VpnStatus.reconnecting => PowerButtonState.connecting,
       VpnStatus.connected => PowerButtonState.connected,
       VpnStatus.error => PowerButtonState.disconnected,
@@ -34,13 +37,13 @@ class HomePowerSection extends ConsumerWidget {
 
     final (statusColor, statusText) = switch (status) {
       VpnStatus.disconnected => (AppColors.textSecondary, l10n.powerNotConnected),
-      VpnStatus.connecting => (AppColors.warning, l10n.powerConnecting),
+      VpnStatus.connecting => (const Color(0xFF6C63FF), l10n.powerConnecting),
       VpnStatus.connected => (
-          AppColors.success,
+          const Color(0xFF22D3EE),
           'Подключено • ${Formatters.duration(stats?.duration ?? Duration.zero)}',
         ),
-      VpnStatus.disconnecting => (AppColors.warning, l10n.powerDisconnecting),
-      VpnStatus.reconnecting => (AppColors.warning, l10n.powerReconnecting),
+      VpnStatus.disconnecting => (const Color(0xFF6C63FF), l10n.powerDisconnecting),
+      VpnStatus.reconnecting => (const Color(0xFF6C63FF), l10n.powerReconnecting),
       VpnStatus.error => (AppColors.danger, l10n.powerConnectionError),
     };
 
@@ -53,88 +56,53 @@ class HomePowerSection extends ConsumerWidget {
           hint: 'Управление VPN соединением',
           child: PowerButton(
             state: buttonState,
+            size: 180,
             onTap: () async {
-            // No account gate here on purpose: a key the user already owns
-            // must work on first launch, before any sign-up. Requiring an
-            // account to connect would close the door the product depends on.
-            final source = ref.read(activeSourceProvider);
-            if (source == null) {
-              // Nothing to connect with yet — send them where keys are added.
-              context.push('/key');
-              return;
-            }
-            
-            try {
-              await ref.read(connectionStateProvider.notifier).toggle(source);
-              
-              // Show success feedback
-              if (context.mounted) {
-                final status = ref.read(connectionStateProvider);
-                if (status == VpnStatus.connected) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.powerConnectedSuccessfully),
-                      backgroundColor: AppColors.success,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                  // Haptic feedback
-                  HapticFeedback.lightImpact();
+              final source = ref.read(activeSourceProvider);
+              if (source == null) {
+                context.push('/key');
+                return;
+              }
+
+              try {
+                await ref.read(connectionStateProvider.notifier).toggle(source);
+
+                if (context.mounted) {
+                  final status = ref.read(connectionStateProvider);
+                  if (status == VpnStatus.connected) {
+                    HapticFeedback.mediumImpact();
+                  } else if (status == VpnStatus.disconnected) {
+                    HapticFeedback.lightImpact();
+                  }
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  HapticFeedback.heavyImpact();
                 }
               }
-            } catch (e) {
-              // Show error feedback
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${l10n.powerConnectionError}: $e'),
-                    backgroundColor: AppColors.danger,
-                    duration: const Duration(seconds: 3),
-                  ),
-                );
-                // Haptic feedback for error
-                HapticFeedback.heavyImpact();
-              }
-            }
-          },
+            },
+          ),
         ),
-        ),
-        const SizedBox(height: 12),
-        // Status text
+        const SizedBox(height: 60), // Отступ от текста кнопки
+        // Статус подключения
         Text(
           statusText,
           style: TextStyle(
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: statusColor,
           ),
-        ),
-        const SizedBox(height: 8),
-        // Connection progress indicator
+        ).animate().fadeIn(duration: 300.ms),
+
         if (status == VpnStatus.connecting || status == VpnStatus.reconnecting) ...[
-          const SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.warning),
-            ),
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             l10n.serverConnectingTo(source?.label ?? 'server'),
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
+              color: AppColors.textTertiary,
             ),
-          ),
-        ] else ...[
-          Text(
-            (status == VpnStatus.connected || status == VpnStatus.reconnecting)
-                ? l10n.powerTapToDisconnect
-                : l10n.powerTapToConnect,
-            style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
           ),
         ],
       ],
