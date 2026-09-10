@@ -1,4 +1,4 @@
-package com.nexavpn.nexa_vpn
+package com.morokvpn.morok_vpn
 
 import android.app.Service
 import android.content.Context
@@ -27,7 +27,7 @@ import io.flutter.plugin.common.MethodChannel
 class KillSwitchService : Service() {
     
     companion object {
-        private const val CHANNEL_NAME = "com.nexavpn.killswitch"
+        private const val CHANNEL_NAME = "com.morokvpn.killswitch"
         private var methodChannel: MethodChannel? = null
         
         fun start(context: Context) {

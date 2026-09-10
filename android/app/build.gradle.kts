@@ -21,7 +21,7 @@ if (hasReleaseKeystore) {
 }
 
 android {
-    namespace = "com.nexavpn.nexa_vpn"
+    namespace = "com.morokvpn.morok_vpn"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -39,7 +39,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.nexavpn.app"
+        applicationId = "com.morokvpn.app"
         // flutter_vless requires 23+; pinned explicitly so a Flutter SDK
         // default can never drop below what the tunnel needs.
         minSdk = maxOf(flutter.minSdkVersion, 23)

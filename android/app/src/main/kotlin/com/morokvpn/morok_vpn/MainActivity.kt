@@ -1,4 +1,4 @@
-package com.nexavpn.nexa_vpn
+package com.morokvpn.morok_vpn
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
