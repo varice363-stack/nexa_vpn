@@ -69,13 +69,10 @@ android {
                 // Not Play-uploadable. See android/KEYSTORE.md.
                 signingConfigs.getByName("debug")
             }
-            // Code shrinking is ON for release builds - obfuscates and minimizes APK
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
-            )
+            // Code shrinking DISABLED — ProGuard was killing critical classes
+            // Re-enable only after adding proper keep rules for all dependencies
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
