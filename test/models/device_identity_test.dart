@@ -38,8 +38,9 @@ void main() {
     });
 
     test('accepts input without hyphens', () {
-      final result = DeviceIdentity.normalise('MOROK-ABCDEFGH');
+      final result = DeviceIdentity.normalise('MOROKABCDEFGHIJKLMNOP');
       expect(result, isNotEmpty);
+      expect(result, startsWith('MOROK-'));
     });
 
     test('accepts input without prefix', () {
