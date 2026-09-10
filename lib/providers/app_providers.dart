@@ -150,29 +150,14 @@ final notificationServiceProvider = Provider<NotificationService>(
   },
 );
 
-/// Kill Switch service for blocking traffic when VPN drops.
-final killSwitchProvider = Provider<KillSwitchService>(
-  (ref) {
-    try {
-      final service = KillSwitchService(logger: ref.watch(loggerProvider));
-      ref.onDispose(service.dispose);
-      return service;
-    } catch (e) {
-      ref.read(loggerProvider).error('KillSwitchService init failed: $e', source: 'provider');
-      // Return a no-op service
-      return KillSwitchService(logger: ref.read(loggerProvider));
-    }
-  },
-);
+/// Kill Switch service — создаётся лениво, не блокирует запуск.
+final killSwitchProvider = Provider<KillSwitchService>((ref) {
+  final service = KillSwitchService(logger: AppLogger());
+  ref.onDispose(service.dispose);
+  return service;
+});
 
-/// Master security service for comprehensive app protection.
-final securityServiceProvider = Provider<SecurityService>(
-  (ref) {
-    try {
-      return SecurityService(ref.watch(loggerProvider));
-    } catch (e) {
-      ref.read(loggerProvider).error('SecurityService init failed: $e', source: 'provider');
-      return SecurityService(ref.read(loggerProvider));
-    }
-  },
-);
+/// Security service — создаётся лениво, не блокирует запуск.
+final securityServiceProvider = Provider<SecurityService>((ref) {
+  return SecurityService(AppLogger());
+});

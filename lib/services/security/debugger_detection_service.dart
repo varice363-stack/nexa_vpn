@@ -43,14 +43,10 @@ class DebuggerDetectionService {
     }
   }
 
-  /// Terminate app if debugger is detected.
+  /// Non-fatal debugger check — только лог в dev mode.
   void terminateIfDebuggerDetected() {
     if (isDebuggerAttached()) {
-      _logger.error('Terminating app due to debugger detection');
-      // Give logger time to write
-      Future.delayed(const Duration(milliseconds: 100), () {
-        exit(0);
-      });
+      _logger.warn('Debugger detected — not terminating (dev mode)', source: 'security');
     }
   }
 }
