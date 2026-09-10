@@ -128,15 +128,16 @@ class XrayTunnelManager implements TunnelManager {
       var xrayConfig = parsed.getFullConfiguration();
 
       // === ANTI-CENSORSHIP ENHANCEMENT ===
-      // Add Reality + Vision + XHTTP to bypass Russian ТСПУ (DPI systems).
-      // This is CRITICAL for Russia since December 2025 — plain VLESS is blocked.
-      // Effectiveness: 95-98% bypass rate (September 2026).
-      // 
-      // IMPORTANT: Only apply to VLESS protocol. Other protocols (VMess, Trojan, SS)
-      // have their own encryption and enhancement would break them.
+      // CRITICAL: Only enhance MOROK-origin keys. Imported keys already have
+      // their own security configuration (Reality, Vision, etc.) injected by
+      // their own panel. Overwriting them with our hardcoded Reality settings
+      // (icloud.com dest, no valid publicKey) BREAKS the connection —
+      // "Tunnel closed before it came up".
+      //
+      // For imported keys, pass the config through unchanged.
       final isVless = source.uri.toLowerCase().startsWith('vless://');
       
-      if (isVless) {
+      if (isVless && source.isMorok) {
         const enhancer = XrayProtocolEnhancer();
         xrayConfig = enhancer.enhance(
           xrayConfig,
@@ -149,6 +150,11 @@ class XrayTunnelManager implements TunnelManager {
 
         _logger.info(
           'Anti-censorship: ${XrayProtocolEnhancer.describeProtection(xrayConfig)}',
+          source: 'vpn',
+        );
+      } else if (isVless && source.isImported) {
+        _logger.info(
+          'Imported key — passing through original config unchanged',
           source: 'vpn',
         );
       } else {

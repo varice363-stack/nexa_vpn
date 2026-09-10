@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../theme/app_colors.dart';
@@ -7,12 +9,12 @@ import '../../../theme/app_colors.dart';
 /// Премиальный заголовок главного экрана MOROK VPN.
 ///
 /// Стилизованный логотип с буквой M и свечением + название приложения.
-/// Уведомления справа.
-class HomeHeader extends StatelessWidget {
+/// Иконка SOCKS5 Shield вместо колокольчика.
+class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     
     return Row(
@@ -83,28 +85,24 @@ class HomeHeader extends StatelessWidget {
           ),
         ),
         
-        // Кнопка уведомлений
+        // Иконка SOCKS5 Shield — переход на экран защиты
         Container(
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.green.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.08),
+              color: Colors.green.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
           child: GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.homeNotificationsSoon)),
-              );
-            },
+            onTap: () => context.push('/socks5-shield'),
             child: const Icon(
-              Icons.notifications_none_rounded,
+              Icons.shield_rounded,
               size: 22,
-              color: AppColors.textSecondary,
+              color: Colors.green,
             ),
           ),
         ),

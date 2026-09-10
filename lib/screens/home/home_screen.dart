@@ -11,7 +11,6 @@ import 'widgets/home_banner_section.dart';
 import 'widgets/home_header.dart';
 import 'widgets/home_logo_section.dart';
 import 'widgets/home_power_section.dart';
-import 'widgets/home_socks5_shield_section.dart';
 import 'widgets/home_stats_section.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -46,18 +45,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
                   children: [
                     _staggered(0, const HomeHeader()),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                     _staggered(1, const HomeLogoSection()),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 16),
                     _staggered(2, const HomePowerSection()),
                     const SizedBox(height: 24),
-                    _staggered(3, const HomeSocks5ShieldSection()),
-                    const SizedBox(height: 18),
-                    _staggered(4, const HomeAccessSection()),
+                    _staggered(3, const HomeAccessSection()),
                     const SizedBox(height: 24),
-                    _staggered(5, const HomeStatsSection()),
+                    _staggered(4, const HomeStatsSection()),
                     const SizedBox(height: 16),
-                    _staggered(6, const HomeBannerSection()),
+                    _staggered(5, const HomeBannerSection()),
                   ],
                 ),
               ),
