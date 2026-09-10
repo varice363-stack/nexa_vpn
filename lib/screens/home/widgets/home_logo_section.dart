@@ -7,9 +7,6 @@ import '../../../theme/app_colors.dart';
 import '../../../widgets/branding/morok_logo.dart';
 
 /// Центральный логотип MOROK VPN на главном экране.
-///
-/// Использует программно созданный [MorokLogo] — никакой PNG-картинки.
-/// Индикаторы подключения (зелёная/бирюзовая точка) рисуются поверх.
 class HomeLogoSection extends ConsumerWidget {
   const HomeLogoSection({super.key});
 
@@ -21,14 +18,12 @@ class HomeLogoSection extends ConsumerWidget {
         status == VpnStatus.connecting || status == VpnStatus.reconnecting;
 
     return SizedBox(
-      height: 340,
+      height: 320,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Программно созданный логотип MOROK.
           const MorokLogo(),
 
-          // Индикатор подключения (зелёная точка при connected).
           if (isConnected)
             Positioned(
               top: 14,
@@ -49,7 +44,6 @@ class HomeLogoSection extends ConsumerWidget {
               ),
             ),
 
-          // Индикатор подключения (пульс при connecting).
           if (isConnecting)
             Positioned(
               top: 14,
