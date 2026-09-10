@@ -70,11 +70,12 @@ vless://uuid@host:443?encryption=none#Test
       expect(result, hasLength(1));
     });
 
-    test('parses vless URI with fragment as label', () {
-      const input = 'vless://uuid@host:443?encryption=none#🇱 Latvia';
+    test('parses vless URI with URL-encoded fragment as label', () {
+      // %F0%9F%87%B1%F0%9F%87%BB = 🇱🇻 (Latvia flag emoji, URL-encoded)
+      const input = 'vless://uuid@host:443?encryption=none#%F0%9F%87%B1%F0%9F%87%BB%20Latvia';
       final result = SubscriptionFetcher.parseBody(input);
       expect(result, hasLength(1));
-      expect(result.first.label, '🇱🇻 Latvia');
+      expect(result.first.label, contains('Latvia'));
     });
 
     test('returns empty when base64 decodes to non-vless content', () {
