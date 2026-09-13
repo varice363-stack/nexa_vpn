@@ -2,9 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../models/promo_banner.dart';
-import '../../../../providers/banner_providers.dart';
-import '../../../../widgets/banners/promo_banner_card.dart';
+import '../../../../../models/promo_banner.dart';
+import '../../../../../providers/banner_providers.dart';
+import '../../../../../widgets/banners/promo_banner_card.dart';
 
 /// Home-slot promo banners fed by the backend (`GET /banners?placement=home`).
 ///

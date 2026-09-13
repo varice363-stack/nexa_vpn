@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../../l10n/app_localizations.dart';
+import '../../../../../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../models/vpn_status.dart';
-import '../../../../providers/vpn_providers.dart';
-import '../../../../theme/app_colors.dart';
-import '../../../../widgets/common/glass_container.dart';
+import '../../../../../models/vpn_status.dart';
+import '../../../../../providers/vpn_providers.dart';
+import '../../../../../theme/app_colors.dart';
+import '../../../../../widgets/common/glass_container.dart';
 
 /// Live download / upload / ping tiles fed by [ConnectionManager].
 class HomeStatsSection extends ConsumerWidget {

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../models/vpn_status.dart';
-import '../../providers/vpn_providers.dart';
-import '../../providers/connection_source_providers.dart';
+import '../../../models/vpn_status.dart';
+import '../../../providers/vpn_providers.dart';
+import '../../../providers/connection_source_providers.dart';
 
 /// Круглая кнопка питания с бирюзовым свечением и анимацией.
 class PowerButtonWidget extends ConsumerStatefulWidget {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../models/vpn_status.dart';
-import '../../providers/vpn_providers.dart';
+import '../../../models/vpn_status.dart';
+import '../../../providers/vpn_providers.dart';
 
 /// Карточка "ЗАЩИЩЕНО" с улучшенным визуалом.
 class ProtectedCard extends ConsumerWidget {

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../l10n/app_localizations.dart';
-import '../../../../models/vpn_status.dart';
-import '../../../../providers/vpn_providers.dart';
-import '../../../../theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../../models/vpn_status.dart';
+import '../../../../../providers/vpn_providers.dart';
+import '../../../../../theme/app_colors.dart';
 
 /// Премиальный заголовок главного экрана MOROK VPN.
 ///

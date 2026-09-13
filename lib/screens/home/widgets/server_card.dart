@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../providers/connection_source_providers.dart';
-import '../../providers/server_providers.dart';
+import '../../../providers/connection_source_providers.dart';
+import '../../../providers/server_providers.dart';
 
 /// Карточка текущего сервера с флагом страны.
 class ServerCard extends ConsumerWidget {
