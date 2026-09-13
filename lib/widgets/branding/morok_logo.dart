@@ -273,7 +273,7 @@ class _MorokLogoPainter extends CustomPainter {
             Shadow(
               color: Colors.black.withValues(alpha: 0.50),
               blurRadius: morokSize * 0.05,
-              offset: const Offset(0, morokSize * 0.02),
+              offset: Offset(0, morokSize * 0.02),
             ),
           ],
         ),
