@@ -10,7 +10,7 @@ class ServerCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final server = ref.watch(currentServerProvider).value;
+    final server = ref.watch(selectedServerProvider);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -32,10 +32,10 @@ class ServerCard extends ConsumerWidget {
               borderRadius: BorderRadius.circular(8),
               color: Colors.white.withValues(alpha: 0.1),
             ),
-            child: const Center(
+            child: Center(
               child: Text(
-                '🇳🇱',
-                style: TextStyle(fontSize: 24),
+                server?.flagEmoji ?? '🇳🇱',
+                style: const TextStyle(fontSize: 24),
               ),
             ),
           ),
@@ -46,7 +46,7 @@ class ServerCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  server?.name ?? 'Нидерланды — Амстердам',
+                  server?.displayName ?? 'Нидерланды · Амстердам',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -55,7 +55,7 @@ class ServerCard extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  server?.ip ?? '85.203.4.19',
+                  'Ping: ${server?.ping ?? 0} мс',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 12,
@@ -68,11 +68,11 @@ class ServerCard extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.2),
+              color: AppColors.primary.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Text(
-              'Текущий сервер',
+            child: Text(
+              server != null ? 'Выбран' : 'Текущий сервер',
               style: TextStyle(
                 color: AppColors.primary,
                 fontSize: 10,
