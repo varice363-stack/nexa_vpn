@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/vpn_status.dart';
 import '../../providers/vpn_providers.dart';
-import '../../theme/app_colors.dart';
 import 'widgets/protected_card.dart';
 import 'widgets/power_button_widget.dart';
 import 'widgets/stats_row.dart';
@@ -16,6 +15,9 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final status = ref.watch(connectionStateProvider);
+    final isConnected = status == VpnStatus.connected;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E1A),
       body: SafeArea(
@@ -41,13 +43,16 @@ class HomeScreen extends ConsumerWidget {
             
             const SizedBox(height: 16),
             
-            // Карточка сервера
-            const ServerCard(),
-            
-            const SizedBox(height: 16),
+            // Карточка сервера (только при подключении)
+            if (isConnected) ...[
+              const ServerCard(),
+              const SizedBox(height: 16),
+            ],
             
             // Баннер партнёрки
             const PartnerBanner(),
+            
+            const Spacer(),
           ],
         ),
       ),
@@ -56,6 +61,8 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildHeader(BuildContext context, WidgetRef ref) {
+    final status = ref.watch(connectionStateProvider);
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -65,7 +72,7 @@ class HomeScreen extends ConsumerWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: const Color(0xFF2DD4BF),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Center(
@@ -89,18 +96,24 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
           const Spacer(),
-          // Аватар пользователя
+          // Статус подключения
           Container(
-            width: 36,
-            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary, width: 2),
+              color: status == VpnStatus.connected 
+                  ? const Color(0xFF22C55E).withValues(alpha: 0.2)
+                  : Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.person,
-              color: AppColors.primary,
-              size: 20,
+            child: Text(
+              status == VpnStatus.connected ? 'ЗАЩИЩЕНО' : 'ОТКЛЮЧЕНО',
+              style: TextStyle(
+                color: status == VpnStatus.connected 
+                    ? const Color(0xFF22C55E)
+                    : Colors.white.withValues(alpha: 0.6),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -118,7 +131,7 @@ class HomeScreen extends ConsumerWidget {
       ),
       child: BottomNavigationBar(
         backgroundColor: Colors.transparent,
-        selectedItemColor: AppColors.primary,
+        selectedItemColor: const Color(0xFF2DD4BF),
         unselectedItemColor: Colors.white54,
         currentIndex: 0,
         onTap: (index) {
