@@ -1,10 +1,14 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_providers.dart';
 
-/// Splash screen с оригинальным логотипом MOROK VPN.
+/// Splash screen с логотипом MOROK VPN.
+///
+/// Использует оригинальную картинку на тёмном фоне —
+/// чёрный фон картинки сливается с фоном приложения.
 class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
 
@@ -36,28 +40,41 @@ class SplashScreen extends ConsumerWidget {
 
           // Дымка на фоне
           _SmokeBackground(),
-          
+
           // Центральный контент
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Оригинальный логотип MOROK
+                // Логотип MOROK — картинка на тёмном фоне
                 Container(
-                  width: 280,
-                  height: 280,
+                  width: 320,
+                  height: 320,
                   decoration: BoxDecoration(
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF2DD4BF).withValues(alpha: 0.3),
-                        blurRadius: 40,
-                        spreadRadius: 10,
+                        color: const Color(0xFF2DD4BF).withValues(alpha: 0.4),
+                        blurRadius: 60,
+                        spreadRadius: 20,
                       ),
                     ],
                   ),
-                  child: Image.asset(
-                    'assets/images/morok_logo.png',
-                    fit: BoxFit.contain,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Картинка с небольшим размытием краёв через ClipOval + padding
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          color: const Color(0xFF05070F), // Чёрный фон чтобы слить с приложением
+                          padding: const EdgeInsets.all(20),
+                          child: Image.asset(
+                            'assets/images/morok_logo.png',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 )
                     .animate()
