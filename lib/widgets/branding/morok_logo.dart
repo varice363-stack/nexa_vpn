@@ -277,7 +277,7 @@ class _LogoPainter extends CustomPainter {
     final thickness = width * 0.14; // толщина ножки
 
     // Внешние точки (по периметру буквы).
-    final p = Offset Function(double nx, double ny) {
+    final p = (double nx, double ny) {
       return Offset(left + nx * width, top + ny * height);
     };
 
