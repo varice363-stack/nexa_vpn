@@ -1,19 +1,10 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-/// Программно созданный логотип MOROK VPN.
-///
-/// Воссоздаёт дизайн референса:
-/// - Угловатая буква M с металлическим градиентом
-/// - Бирюзовое свечение вокруг
-/// - Плавно движущаяся дымка
-/// - Текст MOROK / VPN
-///
-/// НИКАКИХ PNG/JPG ассетов. Только CustomPainter + Text.
+/// Программно созданный логотип MOROK VPN с 3D metallic эффектом.
 class MorokLogo extends StatefulWidget {
-  /// Если [showText] = false, отрисовывается только буква M со свечением и дымом
-  /// (для splash, где текст добавляется отдельно).
   const MorokLogo({super.key, this.showText = true});
 
   final bool showText;
@@ -51,12 +42,14 @@ class _MorokLogoState extends State<MorokLogo>
           animation: _controller,
           builder: (context, _) {
             final t = _controller.value;
-            // Пульсация свечения: low → high → low
             final pulse = 0.5 + 0.5 * math.sin(t * 2 * math.pi);
-            return _MorokLogoPainter(
-              t: t,
-              pulse: pulse,
-              showText: widget.showText,
+            return CustomPaint(
+              size: Size(w, h),
+              painter: _MorokLogoPainter(
+                t: t,
+                pulse: pulse,
+                showText: widget.showText,
+              ),
             );
           },
         );
@@ -65,8 +58,8 @@ class _MorokLogoState extends State<MorokLogo>
   }
 }
 
-class _MorokLogoPainter extends StatelessWidget {
-  const _MorokLogoPainter({
+class _MorokLogoPainter extends CustomPainter {
+  _MorokLogoPainter({
     required this.t,
     required this.pulse,
     required this.showText,
@@ -76,76 +69,66 @@ class _MorokLogoPainter extends StatelessWidget {
   final double pulse;
   final bool showText;
 
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _LogoPainter(t: t, pulse: pulse, showText: showText),
-      child: const SizedBox.expand(),
-    );
-  }
-}
-
-class _LogoPainter extends CustomPainter {
-  _LogoPainter({required this.t, required this.pulse, required this.showText});
-
-  final double t;
-  final double pulse;
-  final bool showText;
-
   static const _teal = Color(0xFF2DD4BF);
-  static const _tealDim = Color(0x402DD4BF); // ~25% alpha
+  static const _tealLight = Color(0xFF5EEAD4);
+  static const _tealDark = Color(0xFF14B8A6);
 
-  // Blob-ы дыма — медленно вращаются вокруг центра буквы.
   static const List<_SmokeBlob> _smokeBlobs = [
-    _SmokeBlob(angle: 0.0,  orbit: 0.38, size: 0.32, speed: 0.45, alpha: 0.18),
-    _SmokeBlob(angle: 1.0,  orbit: 0.42, size: 0.28, speed: 0.35, alpha: 0.15),
-    _SmokeBlob(angle: 2.1,  orbit: 0.35, size: 0.35, speed: 0.40, alpha: 0.17),
-    _SmokeBlob(angle: 3.2,  orbit: 0.40, size: 0.30, speed: 0.38, alpha: 0.14),
-    _SmokeBlob(angle: 4.3,  orbit: 0.37, size: 0.33, speed: 0.42, alpha: 0.16),
-    _SmokeBlob(angle: 5.4,  orbit: 0.41, size: 0.29, speed: 0.36, alpha: 0.13),
+    _SmokeBlob(angle: 0.0, orbit: 0.38, size: 0.32, speed: 0.45, alpha: 0.18),
+    _SmokeBlob(angle: 1.0, orbit: 0.42, size: 0.28, speed: 0.35, alpha: 0.15),
+    _SmokeBlob(angle: 2.1, orbit: 0.35, size: 0.35, speed: 0.40, alpha: 0.17),
+    _SmokeBlob(angle: 3.2, orbit: 0.40, size: 0.30, speed: 0.38, alpha: 0.14),
+    _SmokeBlob(angle: 4.3, orbit: 0.37, size: 0.33, speed: 0.42, alpha: 0.16),
+    _SmokeBlob(angle: 5.4, orbit: 0.41, size: 0.29, speed: 0.36, alpha: 0.13),
   ];
 
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
-    final letterTop = size.height * 0.08;
-    final letterBottom = size.height * 0.72;
+    final letterTop = size.height * 0.05;
+    final letterBottom = size.height * 0.65;
     final letterH = letterBottom - letterTop;
-    final letterW = math.min(size.width * 0.75, letterH * 1.1);
+    final letterW = math.min(size.width * 0.7, letterH * 1.0);
     final letterCx = cx;
     final letterCy = (letterTop + letterBottom) / 2;
 
-    // -------------------------------------------------------------
-    // 1. Свечение (radial gradient за буквой)
-    // -------------------------------------------------------------
-    final glowRadius = letterW * 0.9;
-    final glowPaint = Paint()
+    // 1. Свечение (radial gradient)
+    _paintGlow(canvas, Offset(letterCx, letterCy), letterW * 0.9);
+
+    // 2. Дымка
+    _paintSmoke(canvas, letterCx, letterCy, letterW);
+
+    // 3. Буква M с 3D metallic эффектом
+    _paintLetterM(canvas, letterCx, letterTop, letterW, letterH);
+
+    // 4. Текст MOROK / VPN
+    if (showText) {
+      _paintText(canvas, cx, letterBottom, size.width);
+    }
+  }
+
+  void _paintGlow(Canvas canvas, Offset center, double radius) {
+    final paint = Paint()
       ..shader = RadialGradient(
         center: Alignment.center,
         radius: 0.5,
         colors: [
           _teal.withValues(alpha: 0.50 * pulse),
-          _teal.withValues(alpha: 0.18 * pulse),
+          _teal.withValues(alpha: 0.20 * pulse),
           Colors.transparent,
         ],
         stops: const [0.0, 0.5, 1.0],
-      ).createShader(
-        Rect.fromCircle(
-          center: Offset(letterCx, letterCy),
-          radius: glowRadius,
-        ),
-      );
-    canvas.drawCircle(Offset(letterCx, letterCy), glowRadius, glowPaint);
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+    canvas.drawCircle(center, radius, paint);
+  }
 
-    // -------------------------------------------------------------
-    // 2. Дым (blob-ы вокруг буквы)
-    // -------------------------------------------------------------
+  void _paintSmoke(Canvas canvas, double cx, double cy, double letterW) {
     for (final blob in _smokeBlobs) {
       final angle = blob.angle + t * blob.speed * 2 * math.pi;
       final wobble = math.sin(t * 2 * math.pi + blob.angle * 3.7) * 0.06;
       final orbit = (blob.orbit + wobble) * letterW * 0.6;
-      final x = letterCx + math.cos(angle) * orbit;
-      final y = letterCy + math.sin(angle) * orbit * 0.75; // сплюснут по Y
+      final x = cx + math.cos(angle) * orbit;
+      final y = cy + math.sin(angle) * orbit * 0.75;
       final blobR = blob.size * letterW * 0.5;
 
       final paint = Paint()
@@ -153,178 +136,181 @@ class _LogoPainter extends CustomPainter {
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, blobR * 1.1);
       canvas.drawCircle(Offset(x, y), blobR, paint);
     }
+  }
 
-    // -------------------------------------------------------------
-    // 3. Буква M (металлический градиент, угловатая)
-    // -------------------------------------------------------------
-    final mPath = _buildLetterM(
-      left: letterCx - letterW / 2,
-      top: letterTop,
-      width: letterW,
-      height: letterH,
-    );
+  void _paintLetterM(Canvas canvas, double cx, double top, double w, double h) {
+    final left = cx - w / 2;
+    final right = cx + w / 2;
+    final bottom = top + h;
+    final thickness = w * 0.15;
 
-    // Металлический градиент: светлый сверху → серебро → тёмный снизу.
-    final mPaint = Paint()
+    // Создаю форму буквы M с более сложной геометрией
+    final path = Path();
+
+    // Внешний контур (левая ножка → левый скат → V → правый скат → правая ножка)
+    path.moveTo(left, bottom);
+    path.lineTo(left, top);
+    path.lineTo(left + thickness, top);
+    // Левый скат к центру
+    path.lineTo(cx - thickness * 0.3, top + h * 0.45);
+    // V вниз
+    path.lineTo(cx, top + h * 0.55);
+    // V вверх к правой стороне
+    path.lineTo(cx + thickness * 0.3, top + h * 0.45);
+    // Правый скат к правой вершине
+    path.lineTo(right - thickness, top);
+    path.lineTo(right, top);
+    path.lineTo(right, bottom);
+    path.lineTo(right - thickness, bottom);
+    path.lineTo(right - thickness, top + thickness * 0.8);
+    // Внутренний правый скат
+    path.lineTo(cx + thickness * 0.5, top + h * 0.55 + thickness * 0.6);
+    // Внутренний левый скат
+    path.lineTo(cx - thickness * 0.5, top + h * 0.55 + thickness * 0.6);
+    path.lineTo(left + thickness, top + thickness * 0.8);
+    path.lineTo(left + thickness, bottom);
+    path.close();
+
+    // 3D Metallic эффект — множественные слои
+
+    // Базовый metallic градиент (светлый сверху, тёмный снизу)
+    final baseGradient = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: const [
-          Color(0xFFF5F8FA), // почти белый
-          Color(0xFFD6DEE5), // светло-серебро
-          Color(0xFF9CA8B4), // серебро
-          Color(0xFF6B7A88), // тёмное серебро
+          Color(0xFFF8FAFB), // почти белый
+          Color(0xFFE2E8ED), // светло-серебро
+          Color(0xFFB8C5D0), // серебро
+          Color(0xFF8B9AA8), // тёмное серебро
+          Color(0xFF6B7A88), // тень
         ],
-        stops: const [0.0, 0.30, 0.65, 1.0],
-      ).createShader(
-        Rect.fromLTWH(
-          letterCx - letterW / 2,
-          letterTop,
-          letterW,
-          letterH,
-        ),
-      );
-    canvas.drawPath(mPath, mPaint);
+        stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+      ).createShader(Rect.fromLTWH(left, top, w, h));
 
-    // Бирюзовый outline-свечение по краям буквы.
+    canvas.drawPath(path, baseGradient);
+
+    // Верхний highlight (свет падает сверху)
+    final highlightPath = Path();
+    highlightPath.moveTo(left, top);
+    highlightPath.lineTo(left + thickness, top);
+    highlightPath.lineTo(cx - thickness * 0.3, top + h * 0.45);
+    highlightPath.lineTo(cx, top + h * 0.55);
+    highlightPath.lineTo(cx + thickness * 0.3, top + h * 0.45);
+    highlightPath.lineTo(right - thickness, top);
+    highlightPath.lineTo(right, top);
+    highlightPath.lineTo(right - thickness * 0.5, top + thickness);
+    highlightPath.lineTo(cx + thickness * 0.2, top + h * 0.42);
+    highlightPath.lineTo(cx, top + h * 0.52);
+    highlightPath.lineTo(cx - thickness * 0.2, top + h * 0.42);
+    highlightPath.lineTo(left + thickness * 0.5, top + thickness);
+    highlightPath.close();
+
+    final highlightPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Colors.white.withValues(alpha: 0.6),
+          Colors.white.withValues(alpha: 0.1),
+        ],
+        stops: const [0.0, 1.0],
+      ).createShader(Rect.fromLTWH(left, top, w, h * 0.5));
+
+    canvas.drawPath(highlightPath, highlightPaint);
+
+    // Бирюзовое свечение по краям (teal glow на контуре)
     final edgePaint = Paint()
-      ..color = _teal.withValues(alpha: 0.45 * pulse)
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, letterW * 0.08)
+      ..color = _teal.withValues(alpha: 0.40 * pulse)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, w * 0.06)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = letterW * 0.04;
-    canvas.drawPath(mPath, edgePaint);
+      ..strokeWidth = w * 0.03;
+    canvas.drawPath(path, edgePaint);
 
-    // -------------------------------------------------------------
-    // 4. Текст MOROK / VPN (если нужно)
-    // -------------------------------------------------------------
-    if (showText) {
-      final textTop = letterBottom + size.height * 0.06;
-      final morokSize = size.width * 0.22;
-      final vpnSize = size.width * 0.11;
+    // Внутреннее бирюзовое свечение (из центра V)
+    final innerGlowPaint = Paint()
+      ..shader = RadialGradient(
+        center: Alignment.center,
+        radius: 0.3,
+        colors: [
+          _tealLight.withValues(alpha: 0.30 * pulse),
+          _teal.withValues(alpha: 0.10 * pulse),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(Rect.fromCircle(
+        center: Offset(cx, top + h * 0.5),
+        radius: w * 0.3,
+      ));
 
-      // MOROK
-      final morokPainter = TextPainter(
-        text: TextSpan(
-          text: 'MOROK',
-          style: TextStyle(
-            fontSize: morokSize,
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFFEAF0F5),
-            letterSpacing: morokSize * 0.18,
-            height: 1.0,
-            shadows: [
-              Shadow(
-                color: _teal.withValues(alpha: 0.35),
-                blurRadius: morokSize * 0.15,
-              ),
-            ],
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      );
-      morokPainter.layout();
-      morokPainter.paint(
-        canvas,
-        Offset(cx - morokPainter.width / 2, textTop),
-      );
-
-      // VPN
-      final vpnPainter = TextPainter(
-        text: TextSpan(
-          text: 'VPN',
-          style: TextStyle(
-            fontSize: vpnSize,
-            fontWeight: FontWeight.w700,
-            color: _teal.withValues(alpha: 0.85),
-            letterSpacing: vpnSize * 0.30,
-            height: 1.0,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      );
-      vpnPainter.layout();
-      vpnPainter.paint(
-        canvas,
-        Offset(cx - vpnPainter.width / 2, textTop + morokSize * 1.25),
-      );
-    }
+    canvas.drawPath(path, innerGlowPaint);
   }
 
-  /// Угловатая буква M.
-  ///
-  /// Форма:
-  /// ```
-  ///  |\        /|
-  ///  | \      / |
-  ///  |  \    /  |
-  ///  |   \  /   |
-  ///  |    \/    |
-  ///  |    /\    |
-  ///  |   /  \   |
-  ///  |  /    \  |
-  ///  | /      \ |
-  ///  |/        \|
-  /// ```
-  /// Но с V-вырезом сверху (как в референсе — две ножки и V между ними).
-  Path _buildLetterM({
-    required double left,
-    required double top,
-    required double width,
-    required double height,
-  }) {
-    final right = left + width;
-    final bottom = top + height;
-    final thickness = width * 0.14; // толщина ножки
+  void _paintText(Canvas canvas, double cx, double letterBottom, double canvasWidth) {
+    final textTop = letterBottom + canvasWidth * 0.04;
+    final morokSize = canvasWidth * 0.20;
+    final vpnSize = canvasWidth * 0.10;
 
-    // Внешние точки (по периметру буквы).
-    final p = (double nx, double ny) {
-      return Offset(left + nx * width, top + ny * height);
-    };
+    // MOROK — белый, жирный, широкий
+    final morokPainter = TextPainter(
+      text: TextSpan(
+        text: 'MOROK',
+        style: TextStyle(
+          fontSize: morokSize,
+          fontWeight: FontWeight.w900,
+          color: const Color(0xFFEAF0F5),
+          letterSpacing: morokSize * 0.15,
+          height: 1.0,
+          shadows: [
+            Shadow(
+              color: _teal.withValues(alpha: 0.30),
+              blurRadius: morokSize * 0.12,
+            ),
+            Shadow(
+              color: Colors.black.withValues(alpha: 0.50),
+              blurRadius: morokSize * 0.05,
+              offset: const Offset(0, morokSize * 0.02),
+            ),
+          ],
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    morokPainter.layout();
+    morokPainter.paint(
+      canvas,
+      Offset(cx - morokPainter.width / 2, textTop),
+    );
 
-    // Вершины буквы M (по часовой стрелке, снаружи → внутрь):
-    //
-    // 0: bottom-left внешняя
-    // 1: top-left внешняя
-    // 2: top-left внутренняя (начало левого ската)
-    // 3: центр V (нижняя точка V, внешняя)
-    // 4: top-right внутренняя (начало правого ската)
-    // 5: top-right внешняя
-    // 6: bottom-right внешняя
-    // 7: bottom-right внутренняя
-    // 8: центр V внутренняя (верхняя точка V, внутренняя)
-    // 9: bottom-left внутренняя
-
-    final path = Path()
-      // внешняя левая ножка: снизу вверх
-      ..moveTo(p(0.00, 1.00).dx, p(0.00, 1.00).dy) // 0
-      ..lineTo(p(0.00, 0.00).dx, p(0.00, 0.00).dy) // 1
-      // внешний левый скат к центру V
-      ..lineTo(p(0.50, 0.55).dx, p(0.50, 0.55).dy) // 3 (вершина V)
-      // внешний правый скат от центра к правой вершине
-      ..lineTo(p(1.00, 0.00).dx, p(1.00, 0.00).dy) // 5
-      // внешняя правая ножка: вниз
-      ..lineTo(p(1.00, 1.00).dx, p(1.00, 1.00).dy) // 6
-      // внутренняя правая ножка: вверх
-      ..lineTo(p(1.00 - thickness / width, 1.00).dx,
-          p(1.00 - thickness / width, 1.00).dy) // 7
-      ..lineTo(
-          p(1.00 - thickness / width, thickness / height).dx,
-          p(1.00 - thickness / width, thickness / height).dy)
-      // внутренний правый скат к центру V (внутренняя сторона)
-      ..lineTo(p(0.50, 0.55 + thickness / height * 1.2).dx,
-          p(0.50, 0.55 + thickness / height * 1.2).dy)
-      // внутренний левый скат от центра к левой вершине
-      ..lineTo(p(thickness / width, thickness / height).dx,
-          p(thickness / width, thickness / height).dy)
-      // внутренняя левая ножка: вниз
-      ..lineTo(p(thickness / width, 1.00).dx, p(thickness / width, 1.00).dy)
-      ..close();
-
-    return path;
+    // VPN — бирюзовый, меньше
+    final vpnPainter = TextPainter(
+      text: TextSpan(
+        text: 'VPN',
+        style: TextStyle(
+          fontSize: vpnSize,
+          fontWeight: FontWeight.w700,
+          color: _teal.withValues(alpha: 0.90),
+          letterSpacing: vpnSize * 0.25,
+          height: 1.0,
+          shadows: [
+            Shadow(
+              color: _teal.withValues(alpha: 0.40),
+              blurRadius: vpnSize * 0.15,
+            ),
+          ],
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    vpnPainter.layout();
+    vpnPainter.paint(
+      canvas,
+      Offset(cx - vpnPainter.width / 2, textTop + morokSize * 1.20),
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _LogoPainter old) =>
+  bool shouldRepaint(covariant _MorokLogoPainter old) =>
       old.t != t || old.pulse != pulse || old.showText != showText;
 }
 
@@ -337,18 +323,9 @@ class _SmokeBlob {
     required this.alpha,
   });
 
-  /// Начальный угол (радианы).
   final double angle;
-
-  /// Радиус орбиты как доля от половины ширины буквы.
   final double orbit;
-
-  /// Размер пятна как доля от ширины буквы.
   final double size;
-
-  /// Скорость вращения (1 = полный оборот за цикл анимации).
   final double speed;
-
-  /// Прозрачность пятна.
   final double alpha;
 }
