@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../providers/server_providers.dart';
-import '../../theme/app_colors.dart';
+import '../../../providers/server_providers.dart';
+import '../../../theme/app_colors.dart';
 
 /// Карточка текущего сервера с флагом страны.
 class ServerCard extends ConsumerWidget {
@@ -68,7 +68,7 @@ class ServerCard extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Text(

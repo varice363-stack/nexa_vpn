@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../providers/vpn_providers.dart';
-import '../../theme/app_colors.dart';
-import '../../../core/utils/formatters.dart';
+import '../../../providers/vpn_providers.dart';
+import '../../../theme/app_colors.dart';
+import '../../../../core/utils/formatters.dart';
 
 /// Строка со статистикой: Загрузка, Отдача, Пинг.
 class StatsRow extends ConsumerWidget {
@@ -21,12 +21,12 @@ class StatsRow extends ConsumerWidget {
           _StatItem(
             icon: Icons.arrow_downward,
             label: 'Загрузка',
-            value: Formatters.bytesPerSecond(stats?.downloadSpeed ?? 0),
+            value: Formatters.bytes(stats?.downloadSpeed ?? 0),
           ),
           _StatItem(
             icon: Icons.arrow_upward,
             label: 'Отдача',
-            value: Formatters.bytesPerSecond(stats?.uploadSpeed ?? 0),
+            value: Formatters.bytes(stats?.uploadSpeed ?? 0),
           ),
           _StatItem(
             icon: Icons.signal_cellular_alt,

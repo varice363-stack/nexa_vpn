@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../models/vpn_status.dart';
-import '../../../providers/vpn_providers.dart';
-import '../../../theme/app_colors.dart';
-import '../../../widgets/branding/morok_logo.dart';
+import '../../../../models/vpn_status.dart';
+import '../../../../providers/vpn_providers.dart';
+import '../../../../theme/app_colors.dart';
+import '../../../../widgets/branding/morok_logo.dart';
 
 /// Центральный логотип MOROK VPN на главном экране.
 ///

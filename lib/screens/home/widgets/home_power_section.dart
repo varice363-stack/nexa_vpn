@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../../l10n/app_localizations.dart';
+import '../../../../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../models/vpn_status.dart';
-import '../../../providers/connection_source_providers.dart';
-import '../../../providers/vpn_providers.dart';
-import '../../../theme/app_colors.dart';
+import '../../../../models/vpn_status.dart';
+import '../../../../providers/connection_source_providers.dart';
+import '../../../../providers/vpn_providers.dart';
+import '../../../../theme/app_colors.dart';
 import 'package:go_router/go_router.dart';
-import '../../../widgets/buttons/power_button.dart';
-import '../../../core/utils/formatters.dart';
+import '../../../../widgets/buttons/power_button.dart';
+import '../../../../core/utils/formatters.dart';
 
 /// Секция управления подключением.
 ///

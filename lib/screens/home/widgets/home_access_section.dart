@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../../../l10n/app_localizations.dart';
+import '../../../../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../models/access_key.dart';
-import '../../../providers/access_providers.dart';
-import '../../../providers/subscription_providers.dart';
-import '../../../theme/app_colors.dart';
-import '../../../widgets/common/glass_container.dart';
+import '../../../../models/access_key.dart';
+import '../../../../providers/access_providers.dart';
+import '../../../../providers/subscription_providers.dart';
+import '../../../../theme/app_colors.dart';
+import '../../../../widgets/common/glass_container.dart';
 
 /// Home status strip for the access state:
 ///
