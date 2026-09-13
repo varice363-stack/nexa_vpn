@@ -1,6 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 
 /// Программно созданный логотип MOROK VPN с 3D metallic эффектом.
@@ -49,8 +47,6 @@ class _MorokLogoState extends State<MorokLogo>
                 t: t,
                 pulse: pulse,
                 showText: widget.showText,
-                // Масштабируем под размер контейнера
-                scaleFactor: math.min(w / 300, h / 350),
               ),
             );
           },
@@ -65,17 +61,14 @@ class _MorokLogoPainter extends CustomPainter {
     required this.t,
     required this.pulse,
     required this.showText,
-    this.scaleFactor = 1.0,
   });
 
   final double t;
   final double pulse;
   final bool showText;
-  final double scaleFactor; // Масштаб для адаптивности
 
   static const _teal = Color(0xFF2DD4BF);
   static const _tealLight = Color(0xFF5EEAD4);
-  static const _tealDark = Color(0xFF14B8A6);
 
   static const List<_SmokeBlob> _smokeBlobs = [
     _SmokeBlob(angle: 0.0, orbit: 0.38, size: 0.32, speed: 0.45, alpha: 0.18),
@@ -90,9 +83,9 @@ class _MorokLogoPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final letterTop = size.height * 0.05;
-    final letterBottom = size.height * 0.55; // Уменьшено с 0.65
+    final letterBottom = size.height * 0.55;
     final letterH = letterBottom - letterTop;
-    final letterW = math.min(size.width * 0.6, letterH * 0.9); // Уменьшено
+    final letterW = math.min(size.width * 0.6, letterH * 0.9);
     final letterCx = cx;
     final letterCy = (letterTop + letterBottom) / 2;
 
@@ -105,9 +98,9 @@ class _MorokLogoPainter extends CustomPainter {
     // 3. Буква M с 3D metallic эффектом
     _paintLetterM(canvas, letterCx, letterTop, letterW, letterH);
 
-    // 4. Текст MOROK / VPN (уменьшенный)
+    // 4. Текст MOROK / VPN
     if (showText) {
-      _paintText(canvas, cx, letterBottom, size.width * 0.8); // Уменьшено
+      _paintText(canvas, cx, letterBottom, size.width * 0.8);
     }
   }
 
@@ -148,36 +141,28 @@ class _MorokLogoPainter extends CustomPainter {
     final bottom = top + h;
     final thickness = w * 0.15;
 
-    // Создаю форму буквы M с более сложной геометрией
+    // Форма буквы M с V-образным вырезом сверху
     final path = Path();
-
-    // Внешний контур (левая ножка → левый скат → V → правый скат → правая ножка)
-    path.moveTo(left, bottom);
-    path.lineTo(left, top);
-    path.lineTo(left + thickness, top);
-    // Левый скат к центру
-    path.lineTo(cx - thickness * 0.3, top + h * 0.45);
-    // V вниз
-    path.lineTo(cx, top + h * 0.55);
-    // V вверх к правой стороне
-    path.lineTo(cx + thickness * 0.3, top + h * 0.45);
-    // Правый скат к правой вершине
-    path.lineTo(right - thickness, top);
-    path.lineTo(right, top);
-    path.lineTo(right, bottom);
-    path.lineTo(right - thickness, bottom);
+    
+    // Внешний контур
+    path.moveTo(left, bottom); // левый нижний
+    path.lineTo(left, top); // левый верхний
+    path.lineTo(left + thickness, top); // внутренний левый верхний
+    path.lineTo(cx - thickness * 0.3, top + h * 0.45); // скат к центру
+    path.lineTo(cx, top + h * 0.55); // вершина V
+    path.lineTo(cx + thickness * 0.3, top + h * 0.45); // подъём вправо
+    path.lineTo(right - thickness, top); // правый верхний внутренний
+    path.lineTo(right, top); // правый верхний
+    path.lineTo(right, bottom); // правый нижний
+    path.lineTo(right - thickness, bottom); // внутренний правый нижний
     path.lineTo(right - thickness, top + thickness * 0.8);
-    // Внутренний правый скат
     path.lineTo(cx + thickness * 0.5, top + h * 0.55 + thickness * 0.6);
-    // Внутренний левый скат
     path.lineTo(cx - thickness * 0.5, top + h * 0.55 + thickness * 0.6);
     path.lineTo(left + thickness, top + thickness * 0.8);
     path.lineTo(left + thickness, bottom);
     path.close();
 
-    // 3D Metallic эффект — множественные слои
-
-    // Базовый metallic градиент (светлый сверху, тёмный снизу)
+    // Metallic gradient (светлый сверху, тёмный снизу)
     final baseGradient = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
@@ -223,7 +208,7 @@ class _MorokLogoPainter extends CustomPainter {
 
     canvas.drawPath(highlightPath, highlightPaint);
 
-    // Бирюзовое свечение по краям (teal glow на контуре)
+    // Бирюзовое свечение по краям
     final edgePaint = Paint()
       ..color = _teal.withValues(alpha: 0.40 * pulse)
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, w * 0.06)
@@ -231,7 +216,7 @@ class _MorokLogoPainter extends CustomPainter {
       ..strokeWidth = w * 0.03;
     canvas.drawPath(path, edgePaint);
 
-    // Внутреннее бирюзовое свечение (из центра V)
+    // Внутреннее бирюзовое свечение из центра V
     final innerGlowPaint = Paint()
       ..shader = RadialGradient(
         center: Alignment.center,
@@ -315,7 +300,7 @@ class _MorokLogoPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _MorokLogoPainter old) =>
-      old.t != t || old.pulse != pulse || old.showText != showText || old.scaleFactor != scaleFactor;
+      old.t != t || old.pulse != pulse || old.showText != showText;
 }
 
 class _SmokeBlob {

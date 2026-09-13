@@ -6,23 +6,14 @@ import '../../models/server.dart';
 /// the repository layer will replace it with a network-backed source
 /// without touching the UI.
 const List<Server> kServers = [
-  // ── Europe ─────────────────────────────────────────────────────────────
+  // ─ Europe ─────────────────────────────────────────────────────────────
   Server(
-    id: 'tr-ist-01',
-    country: 'Turkey',
-    countryCode: 'TR',
-    city: 'Istanbul',
-    ping: 8,
-    load: 0.18,
-    premium: false,
-  ),
-  Server(
-    id: 'tr-ank-01',
-    country: 'Turkey',
-    countryCode: 'TR',
-    city: 'Ankara',
-    ping: 12,
-    load: 0.12,
+    id: 'nl-ams-01',
+    country: 'Netherlands',
+    countryCode: 'NL',
+    city: 'Amsterdam',
+    ping: 52,
+    load: 0.55,
     premium: false,
   ),
   Server(
@@ -68,15 +59,6 @@ const List<Server> kServers = [
     city: 'Munich',
     ping: 50,
     load: 0.30,
-    premium: false,
-  ),
-  Server(
-    id: 'nl-ams-01',
-    country: 'Netherlands',
-    countryCode: 'NL',
-    city: 'Amsterdam',
-    ping: 52,
-    load: 0.55,
     premium: false,
   ),
   Server(

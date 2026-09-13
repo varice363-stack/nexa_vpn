@@ -1,7 +1,7 @@
 /// What the user pasted into the "I have a key" field.
 enum KeyInputKind {
   /// A Morok redemption code: MOROK-XXXX-XXXX. Resolved via the backend.
-  nexaCode,
+  morokCode,
 
   /// A third-party `vless://` share link. Used locally, never sent to us.
   vlessUri,
@@ -95,7 +95,7 @@ class KeyInput {
     }
 
     final code = _normaliseCode(trimmed);
-    if (code.isNotEmpty) return KeyInput._(KeyInputKind.nexaCode, code);
+    if (code.isNotEmpty) return KeyInput._(KeyInputKind.morokCode, code);
 
     return KeyInput._(KeyInputKind.unknown, trimmed);
   }

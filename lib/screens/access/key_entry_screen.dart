@@ -318,13 +318,13 @@ class _KindChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMorok = input.kind == KeyInputKind.nexaCode;
+    final isMorok = input.kind == KeyInputKind.morokCode;
     final color = isMorok ? AppColors.premium : AppColors.primaryBright;
 
     // Detect protocol type from URI scheme
     final uriScheme = input.value.toLowerCase().split('://').first;
     final (icon, label) = switch (input.kind) {
-      KeyInputKind.nexaCode => (
+      KeyInputKind.morokCode => (
           Icons.workspace_premium_rounded,
           l10n.keyEntryDetectedMorok,
         ),
