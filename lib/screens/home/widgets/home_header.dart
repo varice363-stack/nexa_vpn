@@ -1,39 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../../models/vpn_status.dart';
+import '../../../providers/vpn_providers.dart';
 import '../../../theme/app_colors.dart';
 
 /// Премиальный заголовок главного экрана MOROK VPN.
 ///
-/// Стилизованный логотип с буквой M и свечением + название приложения.
-/// Иконка SOCKS5 Shield вместо колокольчика.
+/// Показывает правильный статус подключения.
 class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    
+    final status = ref.watch(connectionStateProvider);
+
+    // Правильный статус в зависимости от состояния VPN
+    final statusText = switch (status) {
+      VpnStatus.connected => 'Ваше соединение защищено',
+      VpnStatus.connecting => 'Подключение...',
+      VpnStatus.reconnecting => 'Переподключение...',
+      VpnStatus.disconnecting => 'Отключение...',
+      VpnStatus.disconnected => 'VPN отключён',
+      VpnStatus.error => 'Ошибка подключения',
+    };
+
+    final statusColor = switch (status) {
+      VpnStatus.connected => const Color(0xFF22C55E),
+      VpnStatus.connecting || VpnStatus.reconnecting => const Color(0xFF6C63FF),
+      VpnStatus.disconnecting => AppColors.warning,
+      VpnStatus.disconnected => AppColors.textSecondary,
+      VpnStatus.error => AppColors.danger,
+    };
+
     return Row(
       children: [
         // Стилизованный логотип MOROK
         Container(
-          width: 52,
-          height: 52,
+          width: 48,
+          height: 48,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF22D3EE), Color(0xFF6C63FF)],
+              colors: [Color(0xFF2DD4BF), Color(0xFF6C63FF)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF22D3EE).withValues(alpha: 0.4),
-                blurRadius: 20,
+                color: const Color(0xFF2DD4BF).withValues(alpha: 0.4),
+                blurRadius: 18,
                 offset: const Offset(0, 4),
               ),
             ],
@@ -42,11 +61,10 @@ class HomeHeader extends ConsumerWidget {
             child: Text(
               'M',
               style: const TextStyle(
-                fontSize: 28,
+                fontSize: 26,
                 fontWeight: FontWeight.w900,
                 color: Colors.white,
                 letterSpacing: -2,
-                fontFamily: 'SF Pro Display',
               ),
             ),
           ),
@@ -55,10 +73,10 @@ class HomeHeader extends ConsumerWidget {
           end: const Offset(1.0, 1.0),
           curve: Curves.elasticOut,
         ),
-        
-        const SizedBox(width: 14),
-        
-        // Название приложения
+
+        const SizedBox(width: 12),
+
+        // Название приложения и статус
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,42 +84,45 @@ class HomeHeader extends ConsumerWidget {
               const Text(
                 'Morok VPN',
                 style: TextStyle(
-                  fontSize: 21,
+                  fontSize: 19,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
                   letterSpacing: 0.3,
                 ),
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 2),
               Text(
-                l10n.homeGreeting,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
+                statusText,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: statusColor,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
         ),
-        
-        // Иконка SOCKS5 Shield — переход на экран защиты
+
+        // Иконка SOCKS5 Shield
         Container(
-          width: 44,
-          height: 44,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
             color: Colors.green.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: Colors.green.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
           child: GestureDetector(
-            onTap: () => context.push('/socks5-shield'),
+            onTap: () {
+              // Переход на экран SOCKS5 Shield
+              Navigator.pushNamed(context, '/socks5-shield');
+            },
             child: const Icon(
               Icons.shield_rounded,
-              size: 22,
+              size: 20,
               color: Colors.green,
             ),
           ),

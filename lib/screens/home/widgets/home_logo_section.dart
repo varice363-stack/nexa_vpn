@@ -7,6 +7,8 @@ import '../../../theme/app_colors.dart';
 import '../../../widgets/branding/morok_logo.dart';
 
 /// Центральный логотип MOROK VPN на главном экране.
+///
+/// Компактный размер — не занимает весь экран.
 class HomeLogoSection extends ConsumerWidget {
   const HomeLogoSection({super.key});
 
@@ -18,26 +20,31 @@ class HomeLogoSection extends ConsumerWidget {
         status == VpnStatus.connecting || status == VpnStatus.reconnecting;
 
     return SizedBox(
-      height: 320,
+      height: 220, // Уменьшено с 320
       child: Stack(
         alignment: Alignment.center,
         children: [
-          const MorokLogo(),
+          // Логотип ограниченного размера
+          SizedBox(
+            width: 200,
+            height: 200,
+            child: const MorokLogo(showText: true),
+          ),
 
           if (isConnected)
             Positioned(
-              top: 14,
-              right: 14,
+              top: 8,
+              right: 8,
               child: Container(
-                width: 12,
-                height: 12,
+                width: 10,
+                height: 10,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: const Color(0xFF22C55E),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFF22C55E).withValues(alpha: 0.8),
-                      blurRadius: 12,
+                      blurRadius: 10,
                     ),
                   ],
                 ),
@@ -46,18 +53,18 @@ class HomeLogoSection extends ConsumerWidget {
 
           if (isConnecting)
             Positioned(
-              top: 14,
-              right: 14,
+              top: 8,
+              right: 8,
               child: Container(
-                width: 10,
-                height: 10,
+                width: 8,
+                height: 8,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.primary,
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.primary.withValues(alpha: 0.8),
-                      blurRadius: 10,
+                      blurRadius: 8,
                     ),
                   ],
                 ),

@@ -49,6 +49,8 @@ class _MorokLogoState extends State<MorokLogo>
                 t: t,
                 pulse: pulse,
                 showText: widget.showText,
+                // Масштабируем под размер контейнера
+                scaleFactor: math.min(w / 300, h / 350),
               ),
             );
           },
@@ -63,11 +65,13 @@ class _MorokLogoPainter extends CustomPainter {
     required this.t,
     required this.pulse,
     required this.showText,
+    this.scaleFactor = 1.0,
   });
 
   final double t;
   final double pulse;
   final bool showText;
+  final double scaleFactor; // Масштаб для адаптивности
 
   static const _teal = Color(0xFF2DD4BF);
   static const _tealLight = Color(0xFF5EEAD4);
@@ -86,14 +90,14 @@ class _MorokLogoPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final letterTop = size.height * 0.05;
-    final letterBottom = size.height * 0.65;
+    final letterBottom = size.height * 0.55; // Уменьшено с 0.65
     final letterH = letterBottom - letterTop;
-    final letterW = math.min(size.width * 0.7, letterH * 1.0);
+    final letterW = math.min(size.width * 0.6, letterH * 0.9); // Уменьшено
     final letterCx = cx;
     final letterCy = (letterTop + letterBottom) / 2;
 
     // 1. Свечение (radial gradient)
-    _paintGlow(canvas, Offset(letterCx, letterCy), letterW * 0.9);
+    _paintGlow(canvas, Offset(letterCx, letterCy), letterW * 0.8);
 
     // 2. Дымка
     _paintSmoke(canvas, letterCx, letterCy, letterW);
@@ -101,9 +105,9 @@ class _MorokLogoPainter extends CustomPainter {
     // 3. Буква M с 3D metallic эффектом
     _paintLetterM(canvas, letterCx, letterTop, letterW, letterH);
 
-    // 4. Текст MOROK / VPN
+    // 4. Текст MOROK / VPN (уменьшенный)
     if (showText) {
-      _paintText(canvas, cx, letterBottom, size.width);
+      _paintText(canvas, cx, letterBottom, size.width * 0.8); // Уменьшено
     }
   }
 
@@ -311,7 +315,7 @@ class _MorokLogoPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _MorokLogoPainter old) =>
-      old.t != t || old.pulse != pulse || old.showText != showText;
+      old.t != t || old.pulse != pulse || old.showText != showText || old.scaleFactor != scaleFactor;
 }
 
 class _SmokeBlob {
