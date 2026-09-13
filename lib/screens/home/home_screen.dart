@@ -110,13 +110,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   Widget _buildLogo() {
     return Container(
-      width: 200,
-      height: 200,
+      width: 220,
+      height: 220,
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2DD4BF).withValues(alpha: 0.3),
-            blurRadius: 40,
+            color: const Color(0xFF2DD4BF).withValues(alpha: 0.25),
+            blurRadius: 50,
             spreadRadius: 10,
           ),
         ],
