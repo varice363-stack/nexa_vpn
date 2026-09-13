@@ -3,9 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_providers.dart';
-import '../../widgets/branding/morok_logo.dart';
 
-/// Splash screen с улучшенным визуалом.
+/// Splash screen с оригинальным логотипом MOROK VPN.
 class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
 
@@ -34,17 +33,32 @@ class SplashScreen extends ConsumerWidget {
               ),
             ),
           ),
+
+          // Дымка на фоне
+          _SmokeBackground(),
           
           // Центральный контент
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Логотип MOROK
-                SizedBox(
-                  width: 240,
-                  height: 240,
-                  child: const MorokLogo(showText: true),
+                // Оригинальный логотип MOROK
+                Container(
+                  width: 280,
+                  height: 280,
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF2DD4BF).withValues(alpha: 0.3),
+                        blurRadius: 40,
+                        spreadRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Image.asset(
+                    'assets/images/morok_logo.png',
+                    fit: BoxFit.contain,
+                  ),
                 )
                     .animate()
                     .fadeIn(duration: 1000.ms, curve: Curves.easeOut)
@@ -114,4 +128,90 @@ class SplashScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Дымка на фоне splash экрана.
+class _SmokeBackground extends StatefulWidget {
+  @override
+  State<_SmokeBackground> createState() => _SmokeBackgroundState();
+}
+
+class _SmokeBackgroundState extends State<_SmokeBackground>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 8000),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          size: Size.infinite,
+          painter: _SmokePainter(t: _controller.value),
+        );
+      },
+    );
+  }
+}
+
+class _SmokePainter extends CustomPainter {
+  _SmokePainter({required this.t});
+
+  final double t;
+
+  static const List<_SmokeBlob> _blobs = [
+    _SmokeBlob(x: 0.3, y: 0.4, size: 100, speed: 0.3, alpha: 0.08),
+    _SmokeBlob(x: 0.7, y: 0.5, size: 120, speed: 0.4, alpha: 0.06),
+    _SmokeBlob(x: 0.5, y: 0.3, size: 90, speed: 0.35, alpha: 0.07),
+    _SmokeBlob(x: 0.2, y: 0.7, size: 110, speed: 0.25, alpha: 0.05),
+    _SmokeBlob(x: 0.8, y: 0.6, size: 95, speed: 0.45, alpha: 0.06),
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final blob in _blobs) {
+      final x = blob.x * size.width + (t * 50 * blob.speed).remainder(size.width);
+      final y = blob.y * size.height + (t * 30 * blob.speed).remainder(size.height);
+      
+      final paint = Paint()
+        ..color = const Color(0xFF2DD4BF).withValues(alpha: blob.alpha)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, blob.size);
+      
+      canvas.drawCircle(Offset(x, y), blob.size, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SmokePainter oldDelegate) => true;
+}
+
+class _SmokeBlob {
+  const _SmokeBlob({
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.speed,
+    required this.alpha,
+  });
+
+  final double x;
+  final double y;
+  final double size;
+  final double speed;
+  final double alpha;
 }

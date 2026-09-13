@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/vpn_status.dart';
@@ -9,58 +10,130 @@ import 'widgets/stats_row.dart';
 import 'widgets/server_card.dart';
 import 'widgets/partner_banner.dart';
 
-/// Главный экран MOROK VPN с улучшенным визуалом.
-class HomeScreen extends ConsumerWidget {
+/// Главный экран MOROK VPN с дымкой на фоне.
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _smokeController;
+
+  @override
+  void initState() {
+    super.initState();
+    _smokeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 10000),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _smokeController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final status = ref.watch(connectionStateProvider);
     final isConnected = status == VpnStatus.connected;
 
     return Scaffold(
       backgroundColor: const Color(0xFF05070F),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            children: [
-              // Header с градиентом
-              _buildHeader(context, ref),
-              
-              const SizedBox(height: 20),
-              
-              // Карточка "ЗАЩИЩЕНО"
-              const ProtectedCard(),
-              
-              const SizedBox(height: 20),
-              
-              // Кнопка питания
-              const PowerButtonWidget(),
-              
-              const SizedBox(height: 20),
-              
-              // Статистика
-              const StatsRow(),
-              
-              const SizedBox(height: 16),
-              
-              // Карточка сервера (только при подключении)
-              if (isConnected) ...[
-                const ServerCard(),
-                const SizedBox(height: 16),
-              ],
-              
-              // Баннер партнёрки
-              const PartnerBanner(),
-              
-              const SizedBox(height: 24),
-            ],
+      body: Stack(
+        children: [
+          // Дымка на фоне
+          AnimatedBuilder(
+            animation: _smokeController,
+            builder: (context, child) {
+              return CustomPaint(
+                size: Size.infinite,
+                painter: _SmokePainter(t: _smokeController.value),
+              );
+            },
           ),
-        ),
+
+          // Контент
+          SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  // Header
+                  _buildHeader(context, ref),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Логотип MOROK
+                  _buildLogo(),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Карточка "ЗАЩИЩЕНО"
+                  const ProtectedCard(),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Кнопка питания
+                  const PowerButtonWidget(),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Статистика
+                  const StatsRow(),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Карточка сервера (только при подключении)
+                  if (isConnected) ...[
+                    const ServerCard(),
+                    const SizedBox(height: 16),
+                  ],
+                  
+                  // Баннер партнёрки
+                  const PartnerBanner(),
+                  
+                  const SizedBox(height: 100), // Отступ для нижней навигации
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: _buildBottomNav(context),
     );
+  }
+
+  Widget _buildLogo() {
+    return Container(
+      width: 200,
+      height: 200,
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2DD4BF).withValues(alpha: 0.3),
+            blurRadius: 40,
+            spreadRadius: 10,
+          ),
+        ],
+      ),
+      child: Image.asset(
+        'assets/images/morok_logo.png',
+        fit: BoxFit.contain,
+      ),
+    )
+        .animate()
+        .fadeIn(duration: 800.ms)
+        .scale(
+          begin: const Offset(0.9, 0.9),
+          end: const Offset(1.0, 1.0),
+          duration: 800.ms,
+          curve: Curves.easeOut,
+        );
   }
 
   Widget _buildHeader(BuildContext context, WidgetRef ref) {
@@ -80,7 +153,7 @@ class HomeScreen extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          // Логотип M с градиентом
+          // Логотип M
           Container(
             width: 36,
             height: 36,
@@ -188,7 +261,7 @@ class HomeScreen extends ConsumerWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -220,4 +293,52 @@ class HomeScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Дымка на фоне.
+class _SmokePainter extends CustomPainter {
+  _SmokePainter({required this.t});
+
+  final double t;
+
+  static const List<_SmokeBlob> _blobs = [
+    _SmokeBlob(x: 0.3, y: 0.4, size: 120, speed: 0.3, alpha: 0.06),
+    _SmokeBlob(x: 0.7, y: 0.5, size: 140, speed: 0.4, alpha: 0.05),
+    _SmokeBlob(x: 0.5, y: 0.3, size: 110, speed: 0.35, alpha: 0.06),
+    _SmokeBlob(x: 0.2, y: 0.7, size: 130, speed: 0.25, alpha: 0.04),
+    _SmokeBlob(x: 0.8, y: 0.6, size: 115, speed: 0.45, alpha: 0.05),
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final blob in _blobs) {
+      final x = blob.x * size.width + (t * 50 * blob.speed).remainder(size.width);
+      final y = blob.y * size.height + (t * 30 * blob.speed).remainder(size.height);
+      
+      final paint = Paint()
+        ..color = const Color(0xFF2DD4BF).withValues(alpha: blob.alpha)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, blob.size);
+      
+      canvas.drawCircle(Offset(x, y), blob.size, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SmokePainter oldDelegate) => true;
+}
+
+class _SmokeBlob {
+  const _SmokeBlob({
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.speed,
+    required this.alpha,
+  });
+
+  final double x;
+  final double y;
+  final double size;
+  final double speed;
+  final double alpha;
 }
