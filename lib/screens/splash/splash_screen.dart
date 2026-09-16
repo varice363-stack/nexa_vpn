@@ -37,28 +37,56 @@ class SplashScreen extends ConsumerWidget {
           // Дымка на фоне
           _SmokeBackground(),
 
+          // Туман прямо вокруг логотипа
+          Center(
+            child: Container(
+              width: 380,
+              height: 380,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF22D3EE).withValues(alpha: 0.25),
+                    const Color(0xFF22D3EE).withValues(alpha: 0.12),
+                    const Color(0xFF22D3EE).withValues(alpha: 0.04),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.4, 0.7, 1.0],
+                ),
+              ),
+            ).animate().fadeIn(duration: 2000.ms),
+          ),
+
+          // Второй слой тумана — мягче и шире
+          Center(
+            child: Container(
+              width: 500,
+              height: 500,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF2DD4BF).withValues(alpha: 0.1),
+                    const Color(0xFF2DD4BF).withValues(alpha: 0.04),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+            ).animate().fadeIn(duration: 2500.ms),
+          ),
+
           // Центральный контент
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Логотип MOROK — прозрачный PNG
-                Container(
-                  width: 280,
-                  height: 280,
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF2DD4BF).withValues(alpha: 0.3),
-                        blurRadius: 50,
-                        spreadRadius: 10,
-                      ),
-                    ],
-                  ),
-                  child: Image.asset(
-                    'assets/images/morok_logo.png',
-                    fit: BoxFit.contain,
-                  ),
+                Image.asset(
+                  'assets/images/morok_logo.png',
+                  width: 240,
+                  height: 240,
+                  fit: BoxFit.contain,
                 )
                     .animate()
                     .fadeIn(duration: 1000.ms, curve: Curves.easeOut)
@@ -174,25 +202,29 @@ class _SmokePainter extends CustomPainter {
 
   final double t;
 
-  static const List<_SmokeBlob> _blobs = [
-    _SmokeBlob(x: 0.3, y: 0.4, size: 100, speed: 0.3, alpha: 0.08),
-    _SmokeBlob(x: 0.7, y: 0.5, size: 120, speed: 0.4, alpha: 0.06),
-    _SmokeBlob(x: 0.5, y: 0.3, size: 90, speed: 0.35, alpha: 0.07),
-    _SmokeBlob(x: 0.2, y: 0.7, size: 110, speed: 0.25, alpha: 0.05),
-    _SmokeBlob(x: 0.8, y: 0.6, size: 95, speed: 0.45, alpha: 0.06),
-  ];
-
   @override
   void paint(Canvas canvas, Size size) {
-    for (final blob in _blobs) {
-      final x = blob.x * size.width + (t * 50 * blob.speed).remainder(size.width);
-      final y = blob.y * size.height + (t * 30 * blob.speed).remainder(size.height);
+    // Мягкий туман — большие размытые круги
+    final blobs = [
+      _SmokeBlob(x: 0.3, y: 0.4, size: 200, speed: 0.3, alpha: 0.04),
+      _SmokeBlob(x: 0.7, y: 0.5, size: 240, speed: 0.4, alpha: 0.03),
+      _SmokeBlob(x: 0.5, y: 0.3, size: 180, speed: 0.35, alpha: 0.035),
+      _SmokeBlob(x: 0.2, y: 0.7, size: 220, speed: 0.25, alpha: 0.025),
+      _SmokeBlob(x: 0.8, y: 0.6, size: 190, speed: 0.45, alpha: 0.03),
+      _SmokeBlob(x: 0.5, y: 0.5, size: 300, speed: 0.2, alpha: 0.02),
+    ];
+    
+    for (final blob in blobs) {
+      final dx = t * 40 * blob.speed;
+      final dy = t * 25 * blob.speed;
+      final x = blob.x * size.width + dx % (size.width * 0.3) - size.width * 0.15;
+      final y = blob.y * size.height + dy % (size.height * 0.3) - size.height * 0.15;
       
       final paint = Paint()
-        ..color = const Color(0xFF2DD4BF).withValues(alpha: blob.alpha)
+        ..color = const Color(0xFF22D3EE).withValues(alpha: blob.alpha)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, blob.size);
       
-      canvas.drawCircle(Offset(x, y), blob.size, paint);
+      canvas.drawCircle(Offset(x, y), blob.size * 0.5, paint);
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../models/vpn_status.dart';
 import '../../../providers/vpn_providers.dart';
 
 /// Строка со статистикой: Загрузка, Отдача, Пинг.
@@ -10,6 +11,9 @@ class StatsRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(connectionStatsProvider).value;
+    final ping = ref.watch(livePingProvider).value;
+    final status = ref.watch(connectionStateProvider);
+    final isConnected = status == VpnStatus.connected;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -18,21 +22,21 @@ class StatsRow extends ConsumerWidget {
           _StatItem(
             icon: Icons.arrow_downward_rounded,
             label: 'Загрузка',
-            value: '${(stats?.speedDown ?? 0).toStringAsFixed(1)}',
+            value: isConnected ? (stats?.speedDown ?? 0).toStringAsFixed(1) : '—',
             unit: 'Мб/с',
           ),
           const SizedBox(width: 12),
           _StatItem(
             icon: Icons.arrow_upward_rounded,
             label: 'Отдача',
-            value: '${(stats?.speedUp ?? 0).toStringAsFixed(1)}',
+            value: isConnected ? (stats?.speedUp ?? 0).toStringAsFixed(1) : '—',
             unit: 'Мб/с',
           ),
           const SizedBox(width: 12),
           _StatItem(
             icon: Icons.signal_cellular_alt_rounded,
             label: 'Пинг',
-            value: '—',
+            value: isConnected ? (ping?.toString() ?? '—') : '—',
             unit: 'мс',
           ),
         ],

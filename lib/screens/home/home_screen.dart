@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../models/vpn_status.dart';
 import '../../providers/vpn_providers.dart';
@@ -109,22 +110,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildLogo() {
-    return Container(
-      width: 220,
-      height: 220,
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2DD4BF).withValues(alpha: 0.25),
-            blurRadius: 50,
-            spreadRadius: 10,
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Туман вокруг логотипа
+        Container(
+          width: 320,
+          height: 320,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                const Color(0xFF22D3EE).withValues(alpha: 0.2),
+                const Color(0xFF22D3EE).withValues(alpha: 0.08),
+                const Color(0xFF22D3EE).withValues(alpha: 0.02),
+                Colors.transparent,
+              ],
+              stops: const [0.0, 0.4, 0.7, 1.0],
+            ),
           ),
-        ],
-      ),
-      child: Image.asset(
-        'assets/images/morok_logo.png',
-        fit: BoxFit.contain,
-      ),
+        ),
+        // Логотип
+        Image.asset(
+          'assets/images/morok_logo.png',
+          width: 200,
+          height: 200,
+          fit: BoxFit.contain,
+        ),
+      ],
     )
         .animate()
         .fadeIn(duration: 800.ms)
@@ -274,7 +287,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         currentIndex: 0,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
-          // Навигация
+          switch (index) {
+            case 0:
+              context.go('/');
+              break;
+            case 1:
+              context.go('/servers');
+              break;
+            case 2:
+              context.go('/profile');
+              break;
+          }
         },
         items: const [
           BottomNavigationBarItem(
@@ -301,25 +324,29 @@ class _SmokePainter extends CustomPainter {
 
   final double t;
 
-  static const List<_SmokeBlob> _blobs = [
-    _SmokeBlob(x: 0.3, y: 0.4, size: 120, speed: 0.3, alpha: 0.06),
-    _SmokeBlob(x: 0.7, y: 0.5, size: 140, speed: 0.4, alpha: 0.05),
-    _SmokeBlob(x: 0.5, y: 0.3, size: 110, speed: 0.35, alpha: 0.06),
-    _SmokeBlob(x: 0.2, y: 0.7, size: 130, speed: 0.25, alpha: 0.04),
-    _SmokeBlob(x: 0.8, y: 0.6, size: 115, speed: 0.45, alpha: 0.05),
-  ];
-
   @override
   void paint(Canvas canvas, Size size) {
-    for (final blob in _blobs) {
-      final x = blob.x * size.width + (t * 50 * blob.speed).remainder(size.width);
-      final y = blob.y * size.height + (t * 30 * blob.speed).remainder(size.height);
+    // Мягкий туман — большие размытые круги
+    final blobs = [
+      _SmokeBlob(x: 0.3, y: 0.4, size: 200, speed: 0.3, alpha: 0.04),
+      _SmokeBlob(x: 0.7, y: 0.5, size: 240, speed: 0.4, alpha: 0.03),
+      _SmokeBlob(x: 0.5, y: 0.3, size: 180, speed: 0.35, alpha: 0.035),
+      _SmokeBlob(x: 0.2, y: 0.7, size: 220, speed: 0.25, alpha: 0.025),
+      _SmokeBlob(x: 0.8, y: 0.6, size: 190, speed: 0.45, alpha: 0.03),
+      _SmokeBlob(x: 0.5, y: 0.5, size: 300, speed: 0.2, alpha: 0.02),
+    ];
+    
+    for (final blob in blobs) {
+      final dx = t * 40 * blob.speed;
+      final dy = t * 25 * blob.speed;
+      final x = blob.x * size.width + dx % (size.width * 0.3) - size.width * 0.15;
+      final y = blob.y * size.height + dy % (size.height * 0.3) - size.height * 0.15;
       
       final paint = Paint()
-        ..color = const Color(0xFF2DD4BF).withValues(alpha: blob.alpha)
+        ..color = const Color(0xFF22D3EE).withValues(alpha: blob.alpha)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, blob.size);
       
-      canvas.drawCircle(Offset(x, y), blob.size, paint);
+      canvas.drawCircle(Offset(x, y), blob.size * 0.5, paint);
     }
   }
 

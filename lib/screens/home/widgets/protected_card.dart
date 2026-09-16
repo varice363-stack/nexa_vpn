@@ -11,7 +11,17 @@ class ProtectedCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final status = ref.watch(connectionStateProvider);
+    final stats = ref.watch(connectionStatsProvider).value;
     final isConnected = status == VpnStatus.connected;
+
+    // Форматируем длительность подключения
+    String formatDuration(Duration? duration) {
+      if (duration == null) return '00ч 00м 00с';
+      final hours = duration.inHours.toString().padLeft(2, '0');
+      final minutes = (duration.inMinutes % 60).toString().padLeft(2, '0');
+      final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
+      return '${hours}ч ${minutes}м ${seconds}с';
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -138,7 +148,7 @@ class ProtectedCard extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Активно: 02ч 15м 48с',
+                    'Активно: ${formatDuration(stats?.duration)}',
                     style: TextStyle(
                       fontSize: 11,
                       color: const Color(0xFF2DD4BF),
