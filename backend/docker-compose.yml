@@ -1,16 +1,47 @@
+version: '3.8'
+
 services:
-  db:
+  postgres:
     image: postgres:16-alpine
-    container_name: nexa_vpn_db
+    container_name: morok_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: nexa
-      POSTGRES_PASSWORD: nexa
-      POSTGRES_DB: nexa_vpn
+      POSTGRES_USER: morok
+      POSTGRES_PASSWORD: morok_db_password_2026
+      POSTGRES_DB: morok_vpn
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
-      - nexa_pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U morok -d morok_vpn"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: morok_backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOST: "0.0.0.0"
+      DATABASE_URL: "postgresql://morok:morok_db_password_2026@postgres:5432/morok_vpn?schema=public"
+      JWT_SECRET: "morok_jwt_super_secret_key_2026_production_secure_777"
+      CORS_ORIGINS: "*"
+      OWNER_CODE: "MOROK-ADMIN-2026"
+      UPLOADS_DIR: "uploads"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - backend_uploads:/app/uploads
 
 volumes:
-  nexa_pgdata:
+  pgdata:
+  backend_uploads:
