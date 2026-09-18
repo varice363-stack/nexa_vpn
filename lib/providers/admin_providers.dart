@@ -11,7 +11,7 @@ import 'identity_providers.dart';
 /// Для debug-сборок (flutter run) используется значение по умолчанию.
 const String kOwnerCode = String.fromEnvironment(
   'OWNER_CODE',
-  defaultValue: 'NEXA-66AB-AV3H-9HSJ-R8VZ',
+  defaultValue: 'MOROK-66AB-AV3H-9HSJ-R8VZ',
 );
 
 /// Открыт ли раздел выпуска ключей на этом устройстве.
