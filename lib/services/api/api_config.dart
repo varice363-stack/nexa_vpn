@@ -26,11 +26,8 @@ abstract final class ApiConfig {
       return _initializedUrl!;
     }
     
-    // 3. Платформенные дефолты
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:3000/api';
-    }
-    return 'http://localhost:3000/api';
+    // 3. Дефолт для продакшена
+    return 'https://morokvpn.com:8000/api';
   }
 
   /// Initialized URL from SharedPreferences (set during app startup).
