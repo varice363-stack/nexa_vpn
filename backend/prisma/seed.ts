@@ -58,22 +58,42 @@ async function main() {
     },
   });
 
-  // Server catalog seed — mirrors the client's static catalog subset.
-  const servers = [
-    { name: 'Istanbul TR-01', country: 'Turkey', countryCode: 'TR', city: 'Istanbul', ip: '185.65.134.22', protocol: ServerProtocol.WIREGUARD, load: 0.18, ping: 8, premium: false },
-    { name: 'Frankfurt DE-01', country: 'Germany', countryCode: 'DE', city: 'Frankfurt', ip: '185.65.135.10', protocol: ServerProtocol.WIREGUARD, load: 0.45, ping: 42, premium: false },
-    { name: 'London GB-01', country: 'United Kingdom', countryCode: 'GB', city: 'London', ip: '185.65.135.44', protocol: ServerProtocol.OPENVPN, load: 0.48, ping: 55, premium: false },
-    { name: 'New York US-01', country: 'United States', countryCode: 'US', city: 'New York', ip: '185.65.136.11', protocol: ServerProtocol.WIREGUARD, load: 0.62, ping: 118, premium: false },
-    { name: 'Zurich CH-01', country: 'Switzerland', countryCode: 'CH', city: 'Zurich', ip: '185.65.136.77', protocol: ServerProtocol.IKEV2, load: 0.22, ping: 65, premium: true },
-    { name: 'Tokyo JP-01', country: 'Japan', countryCode: 'JP', city: 'Tokyo', ip: '185.65.137.31', protocol: ServerProtocol.WIREGUARD, load: 0.6, ping: 185, premium: true },
-  ];
-  for (const server of servers) {
-    await prisma.vpnServer.upsert({
-      where: { ip: server.ip },
-      update: { load: server.load, ping: server.ping },
-      create: server,
-    });
-  }
+  // Main active MOROK VLESS Reality server
+  await prisma.vpnServer.upsert({
+    where: { ip: '72.35.246.168' },
+    update: {
+      name: 'MOROK Fast NL-01',
+      country: 'Netherlands',
+      countryCode: 'NL',
+      city: 'Amsterdam',
+      port: 443,
+      transport: 'tcp',
+      security: 'reality',
+      sni: 'dl.google.com',
+      flow: 'xtls-rprx-vision',
+      publicKey: 'eouv39K3QAGroI4bzkH8paqTzLepGWgqjxkF8pWNCDA',
+      shortId: '6f8d1a2b3c4d5e6f',
+      status: 'ACTIVE',
+    },
+    create: {
+      name: 'MOROK Fast NL-01',
+      country: 'Netherlands',
+      countryCode: 'NL',
+      city: 'Amsterdam',
+      ip: '72.35.246.168',
+      port: 443,
+      transport: 'tcp',
+      security: 'reality',
+      sni: 'dl.google.com',
+      flow: 'xtls-rprx-vision',
+      publicKey: 'eouv39K3QAGroI4bzkH8paqTzLepGWgqjxkF8pWNCDA',
+      shortId: '6f8d1a2b3c4d5e6f',
+      load: 0.15,
+      ping: 45,
+      premium: false,
+      status: 'ACTIVE',
+    },
+  });
 
   console.log('Seed complete: admin@morokvpn.app / admin1234, user@morokvpn.app / user1234, 6 servers.');
 }
