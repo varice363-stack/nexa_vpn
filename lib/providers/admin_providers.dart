@@ -4,14 +4,12 @@ import 'identity_providers.dart';
 
 /// Код владельца приложения.
 ///
-/// Задаётся при сборке, в исходники не попадает:
-///
-///   flutter build apk --dart-define=OWNER_CODE=MOROK-ADMIN-2026
-///
-/// Для debug-сборок (flutter run) используется значение по умолчанию.
+/// В релизных сборках всегда пустой (раздел администрирования полностью заблокирован).
+/// Разблокируется ТОЛЬКО при сборке с секретным флагом:
+///   flutter build apk --dart-define=OWNER_CODE=ТВОЙ_СЕКРЕТНЫЙ_СЛОЖНЫЙ_КЛЮЧ
 const String kOwnerCode = String.fromEnvironment(
   'OWNER_CODE',
-  defaultValue: 'MOROK-66AB-AV3H-9HSJ-R8VZ',
+  defaultValue: '',
 );
 
 /// Открыт ли раздел выпуска ключей на этом устройстве.

@@ -34,7 +34,7 @@ services:
       DATABASE_URL: "postgresql://morok:morok_db_password_2026@postgres:5432/morok_vpn?schema=public"
       JWT_SECRET: "morok_jwt_super_secret_key_2026_production_secure_777"
       CORS_ORIGINS: "*"
-      OWNER_CODE: "MOROK-ADMIN-2026"
+      OWNER_CODE: "MOROK_SECURE_OWNER_KEY_2026_9x8f7a2c1b4e5"
       UPLOADS_DIR: "uploads"
     depends_on:
       postgres:
