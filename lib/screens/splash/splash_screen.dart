@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_providers.dart';
 
-/// Splash screen с логотипом MOROK VPN (PNG без фона).
+/// Splash screen с логотипом MOROK VPN.
 class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
 
@@ -19,16 +19,16 @@ class SplashScreen extends ConsumerWidget {
           // Фоновый градиент
           Positioned.fill(
             child: Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    const Color(0xFF05070F),
-                    const Color(0xFF0A0F1E),
-                    const Color(0xFF05070F),
+                    Color(0xFF05070F),
+                    Color(0xFF0A0F1E),
+                    Color(0xFF05070F),
                   ],
-                  stops: const [0.0, 0.5, 1.0],
+                  stops: [0.0, 0.5, 1.0],
                 ),
               ),
             ),
@@ -40,8 +40,8 @@ class SplashScreen extends ConsumerWidget {
           // Туман прямо вокруг логотипа
           Center(
             child: Container(
-              width: 380,
-              height: 380,
+              width: 320,
+              height: 320,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
@@ -57,68 +57,33 @@ class SplashScreen extends ConsumerWidget {
             ).animate().fadeIn(duration: 2000.ms),
           ),
 
-          // Второй слой тумана — мягче и шире
-          Center(
-            child: Container(
-              width: 500,
-              height: 500,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF2DD4BF).withValues(alpha: 0.1),
-                    const Color(0xFF2DD4BF).withValues(alpha: 0.04),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.5, 1.0],
-                ),
-              ),
-            ).animate().fadeIn(duration: 2500.ms),
-          ),
-
           // Центральный контент
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Логотип MOROK — прозрачный PNG
+                // Оригинальный логотип MOROK
                 Image.asset(
                   'assets/images/morok_logo.png',
-                  width: 240,
-                  height: 240,
+                  width: 220,
+                  height: 220,
                   fit: BoxFit.contain,
                 )
                     .animate()
                     .fadeIn(duration: 1000.ms, curve: Curves.easeOut)
                     .scale(
-                      begin: const Offset(0.7, 0.7),
+                      begin: const Offset(0.8, 0.8),
                       end: const Offset(1.0, 1.0),
                       duration: 1000.ms,
-                      curve: Curves.elasticOut,
+                      curve: Curves.easeOut,
                     ),
 
-                const SizedBox(height: 40),
-
-                // Tagline
-                const Text(
-                  'Растворись в мороке',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF8B9AA8),
-                    letterSpacing: 2,
-                  ),
-                )
-                    .animate(delay: 600.ms)
-                    .fadeIn(duration: 800.ms)
-                    .slideY(begin: 0.3, end: 0),
-
-                const SizedBox(height: 48),
+                const SizedBox(height: 36),
 
                 // Индикатор загрузки
                 SizedBox(
-                  width: 36,
-                  height: 36,
+                  width: 32,
+                  height: 32,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
                     valueColor: AlwaysStoppedAnimation<Color>(
@@ -126,7 +91,7 @@ class SplashScreen extends ConsumerWidget {
                     ),
                   ),
                 )
-                    .animate(delay: 800.ms)
+                    .animate(delay: 500.ms)
                     .fadeIn(duration: 600.ms)
                     .then()
                     .shimmer(
@@ -143,14 +108,15 @@ class SplashScreen extends ConsumerWidget {
             left: 0,
             right: 0,
             child: Text(
-              'v1.0.0',
+              'MOROK VPN v1.0.0',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 11,
-                color: Colors.white.withValues(alpha: 0.3),
+                fontWeight: FontWeight.w600,
+                color: Colors.white.withValues(alpha: 0.35),
                 letterSpacing: 1,
               ),
-            ).animate(delay: 1200.ms).fadeIn(duration: 600.ms),
+            ).animate(delay: 800.ms).fadeIn(duration: 600.ms),
           ),
         ],
       ),
@@ -204,7 +170,6 @@ class _SmokePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Мягкий туман — большие размытые круги
     final blobs = [
       _SmokeBlob(x: 0.3, y: 0.4, size: 200, speed: 0.3, alpha: 0.04),
       _SmokeBlob(x: 0.7, y: 0.5, size: 240, speed: 0.4, alpha: 0.03),

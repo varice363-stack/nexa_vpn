@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../models/vpn_status.dart';
 import '../../providers/vpn_providers.dart';
@@ -11,7 +10,7 @@ import 'widgets/stats_row.dart';
 import 'widgets/server_card.dart';
 import 'widgets/partner_banner.dart';
 
-/// Главный экран MOROK VPN с дымкой на фоне.
+/// Главный экран MOROK VPN.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -62,50 +61,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           SafeArea(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.only(bottom: 100),
               child: Column(
                 children: [
                   // Header
                   _buildHeader(context, ref),
                   
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 8),
                   
-                  // Логотип MOROK
+                  // Логотип MOROK (компактный и без растягивания)
                   _buildLogo(),
                   
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
                   
                   // Карточка "ЗАЩИЩЕНО"
                   const ProtectedCard(),
                   
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 14),
                   
                   // Кнопка питания
                   const PowerButtonWidget(),
                   
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 14),
                   
                   // Статистика
                   const StatsRow(),
                   
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   
-                  // Карточка сервера (только при подключении)
+                  // Карточка сервера (показывается ТОЛЬКО при подключении)
                   if (isConnected) ...[
                     const ServerCard(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                   ],
                   
                   // Баннер партнёрки
                   const PartnerBanner(),
-                  
-                  const SizedBox(height: 100), // Отступ для нижней навигации
                 ],
               ),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomNav(context),
     );
   }
 
@@ -115,8 +112,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       children: [
         // Туман вокруг логотипа
         Container(
-          width: 320,
-          height: 320,
+          width: 200,
+          height: 200,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: RadialGradient(
@@ -130,11 +127,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ),
         ),
-        // Логотип
+        // Оригинальный логотип MOROK (прозрачный)
         Image.asset(
           'assets/images/morok_logo.png',
-          width: 200,
-          height: 200,
+          width: 140,
+          height: 140,
           fit: BoxFit.contain,
         ),
       ],
@@ -153,50 +150,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final status = ref.watch(connectionStateProvider);
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF05070F),
-            const Color(0xFF0A0F1E),
+            Color(0xFF05070F),
+            Color(0xFF0A0F1E),
           ],
         ),
       ),
       child: Row(
         children: [
-          // Логотип M
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF2DD4BF), Color(0xFF14B8A6)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF2DD4BF).withValues(alpha: 0.4),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Center(
-              child: Text(
-                'M',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 20,
-                ),
-              ),
-            ),
+          // Оригинальный логотип MOROK в левом верхнем углу
+          Image.asset(
+            'assets/images/morok_logo.png',
+            width: 32,
+            height: 32,
+            fit: BoxFit.contain,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           const Text(
             'MOROK VPN',
             style: TextStyle(
@@ -209,7 +183,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           const Spacer(),
           // Статус подключения
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: status == VpnStatus.connected 
                   ? const Color(0xFF22C55E).withValues(alpha: 0.15)
@@ -242,7 +216,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Text(
                   status == VpnStatus.connected ? 'ЗАЩИЩЕНО' : 'ОТКЛЮЧЕНО',
                   style: TextStyle(
@@ -261,61 +235,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
     );
   }
-
-  Widget _buildBottomNav(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF0A0F1E),
-        border: Border(
-          top: BorderSide(
-            color: Colors.white.withValues(alpha: 0.08),
-            width: 1,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: BottomNavigationBar(
-        backgroundColor: Colors.transparent,
-        selectedItemColor: const Color(0xFF2DD4BF),
-        unselectedItemColor: Colors.white.withValues(alpha: 0.4),
-        currentIndex: 0,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/');
-              break;
-            case 1:
-              context.go('/servers');
-              break;
-            case 2:
-              context.go('/profile');
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
-            label: 'Главная',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.public_rounded),
-            label: 'Серверы',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
-            label: 'Профиль',
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// Дымка на фоне.
@@ -326,7 +245,6 @@ class _SmokePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Мягкий туман — большие размытые круги
     final blobs = [
       _SmokeBlob(x: 0.3, y: 0.4, size: 200, speed: 0.3, alpha: 0.04),
       _SmokeBlob(x: 0.7, y: 0.5, size: 240, speed: 0.4, alpha: 0.03),
