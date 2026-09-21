@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/vpn_status.dart';
@@ -10,7 +9,7 @@ import 'widgets/stats_row.dart';
 import 'widgets/server_card.dart';
 import 'widgets/partner_banner.dart';
 
-/// Главный экран MOROK VPN.
+/// Главный экран MOROK VPN с компактным и удобным дизайном.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -61,38 +60,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           SafeArea(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.only(bottom: 100),
+              padding: const EdgeInsets.only(bottom: 90),
               child: Column(
                 children: [
-                  // Header
+                  // Хедер с маленьким логотипом MOROK вверху слева
                   _buildHeader(context, ref),
                   
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   
-                  // Логотип MOROK (компактный и без растягивания)
-                  _buildLogo(),
-                  
-                  const SizedBox(height: 12),
-                  
-                  // Карточка "ЗАЩИЩЕНО"
+                  // Карточка "ЗАЩИЩЕНО / НЕ ЗАЩИЩЕНО"
                   const ProtectedCard(),
                   
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 24),
                   
-                  // Кнопка питания
+                  // Главная кнопка подключения с встроенным логотипом MOROK
+                  // (Без дыма/свечения когда выключено, с дымом/свечением при подключении)
                   const PowerButtonWidget(),
                   
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 24),
                   
-                  // Статистика
+                  // Статистика (Пинг / Загрузка / Отдача)
                   const StatsRow(),
                   
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   
                   // Карточка сервера (показывается ТОЛЬКО при подключении)
                   if (isConnected) ...[
                     const ServerCard(),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                   ],
                   
                   // Баннер партнёрки
@@ -104,46 +99,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ],
       ),
     );
-  }
-
-  Widget _buildLogo() {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        // Туман вокруг логотипа
-        Container(
-          width: 200,
-          height: 200,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                const Color(0xFF22D3EE).withValues(alpha: 0.2),
-                const Color(0xFF22D3EE).withValues(alpha: 0.08),
-                const Color(0xFF22D3EE).withValues(alpha: 0.02),
-                Colors.transparent,
-              ],
-              stops: const [0.0, 0.4, 0.7, 1.0],
-            ),
-          ),
-        ),
-        // Оригинальный логотип MOROK (прозрачный)
-        Image.asset(
-          'assets/images/morok_logo.png',
-          width: 140,
-          height: 140,
-          fit: BoxFit.contain,
-        ),
-      ],
-    )
-        .animate()
-        .fadeIn(duration: 800.ms)
-        .scale(
-          begin: const Offset(0.9, 0.9),
-          end: const Offset(1.0, 1.0),
-          duration: 800.ms,
-          curve: Curves.easeOut,
-        );
   }
 
   Widget _buildHeader(BuildContext context, WidgetRef ref) {

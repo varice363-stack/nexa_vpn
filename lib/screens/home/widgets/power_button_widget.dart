@@ -6,7 +6,10 @@ import '../../../models/vpn_status.dart';
 import '../../../providers/vpn_providers.dart';
 import '../../../providers/connection_source_providers.dart';
 
-/// Круглая кнопка питания с бирюзовым свечением и анимацией.
+/// Главная круглая кнопка подключения с логотипом MOROK.
+///
+/// В отключенном состоянии: чистый логотип без дыма и свечения.
+/// В подключенном состоянии: вокруг логотипа загорается бирюзовое свечение и пульсирует туман.
 class PowerButtonWidget extends ConsumerStatefulWidget {
   const PowerButtonWidget({super.key});
 
@@ -23,7 +26,7 @@ class _PowerButtonWidgetState extends ConsumerState<PowerButtonWidget>
     super.initState();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 2200),
     )..repeat(reverse: true);
   }
 
@@ -37,66 +40,103 @@ class _PowerButtonWidgetState extends ConsumerState<PowerButtonWidget>
   Widget build(BuildContext context) {
     final status = ref.watch(connectionStateProvider);
     final source = ref.watch(activeSourceProvider);
+    final isConnected = status == VpnStatus.connected;
+    final isConnecting = status == VpnStatus.connecting;
 
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
-        final pulse = 0.5 + 0.5 * _pulseController.value;
-        
+        final pulse = isConnected ? (0.5 + 0.5 * _pulseController.value) : 0.0;
+
         return GestureDetector(
           onTap: () async {
-            if (source == null) {
-              // Переход на экран ввода ключа
-              return;
-            }
-            
+            if (source == null) return;
             try {
               await ref.read(connectionStateProvider.notifier).toggle(source);
-            } catch (e) {
-              // Обработка ошибки
-            }
+            } catch (_) {}
           },
-          child: Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: status == VpnStatus.connected
-                    ? [
-                        const Color(0xFF22C55E),
-                        const Color(0xFF16A34A),
-                      ]
-                    : [
-                        const Color(0xFF2DD4BF),
-                        const Color(0xFF14B8A6),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // 1. Внешний дым/туман (ТОЛЬКО при подключении)
+              if (isConnected)
+                Container(
+                  width: 220,
+                  height: 220,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        const Color(0xFF22D3EE).withValues(alpha: 0.35 * pulse),
+                        const Color(0xFF2DD4BF).withValues(alpha: 0.15 * pulse),
+                        const Color(0xFF2DD4BF).withValues(alpha: 0.03),
+                        Colors.transparent,
                       ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                      stops: const [0.0, 0.4, 0.7, 1.0],
+                    ),
+                  ),
+                ),
+
+              // 2. Сама круглая кнопка с логотипом
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutCubic,
+                width: 140,
+                height: 140,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: isConnected
+                      ? const LinearGradient(
+                          colors: [Color(0xFF2DD4BF), Color(0xFF14B8A6)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : const LinearGradient(
+                          colors: [Color(0xFF0F172A), Color(0xFF020617)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                  border: Border.all(
+                    color: isConnected
+                        ? const Color(0xFF22D3EE)
+                        : Colors.white.withValues(alpha: 0.15),
+                    width: isConnected ? 2.5 : 1.5,
+                  ),
+                  boxShadow: [
+                    if (isConnected)
+                      BoxShadow(
+                        color: const Color(0xFF22D3EE).withValues(alpha: 0.6 * pulse),
+                        blurRadius: 35 * pulse + 10,
+                        spreadRadius: 8 * pulse,
+                      ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: isConnecting
+                      ? const SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(0xFF2DD4BF),
+                            ),
+                          ),
+                        )
+                      : Image.asset(
+                          'assets/images/morok_logo.png',
+                          width: 85,
+                          height: 85,
+                          fit: BoxFit.contain,
+                        ),
+                ),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: (status == VpnStatus.connected
-                          ? const Color(0xFF22C55E)
-                          : const Color(0xFF2DD4BF))
-                      .withValues(alpha: 0.4 * pulse),
-                  blurRadius: 40 * pulse,
-                  spreadRadius: 10 * pulse,
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Icon(
-              status == VpnStatus.connected 
-                  ? Icons.power_off_rounded
-                  : Icons.power_settings_new_rounded,
-              size: 56,
-              color: Colors.white,
-            ),
+            ],
           ),
         );
       },
