@@ -56,15 +56,15 @@ class PremiumPlan {
   /// Конкурентный анализ: Red Shield VPN — 299₽/мес, 799₽/3мес, 2399₽/год.
   /// Наше преимущество: VLESS + Reality (95-98% обход ТСПУ).
   static const List<PremiumPlan> available = [
-    // Trial — 7 days free (highest conversion, like Official VPN)
+    // Trial — 3 days free (3-day trial)
     PremiumPlan(
       id: 'trial',
       name: 'Пробный период',
       price: '0 \u20BD',
-      periodLabel: '/ 7 дней',
+      periodLabel: '/ 3 дня',
       description: 'Полный доступ без ограничений',
       features: [
-        '7 дней бесплатно',
+        '3 дня бесплатно',
         'Безлимитный трафик',
         '3 устройства',
         'Все серверы',
@@ -72,7 +72,7 @@ class PremiumPlan {
         'Без привязки карты',
       ],
       isTrial: true,
-      trialDays: 7,
+      trialDays: 3,
       deviceLimit: 3,
     ),
 
