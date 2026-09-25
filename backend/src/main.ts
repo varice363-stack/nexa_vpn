@@ -112,7 +112,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   // ── Global prefix ──────────────────────────────────────────────────────
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('app-api');
 
   // ── Static files (uploads) ────────────────────────────────────────────
   // Serve uploaded banner images in all environments

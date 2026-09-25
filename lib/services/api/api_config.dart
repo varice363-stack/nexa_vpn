@@ -27,7 +27,7 @@ abstract final class ApiConfig {
     }
     
     // 3. Дефолт для продакшена
-    return 'https://morokvpn.com:8000/api';
+    return 'https://morokvpn.com:8000/app-api';
   }
 
   /// Initialized URL from SharedPreferences (set during app startup).
