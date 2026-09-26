@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/vpn_status.dart';
 import '../../../providers/vpn_providers.dart';
 
-/// Карточка "ЗАЩИЩЕНО" с улучшенным визуалом.
+/// Компактная карточка статуса защиты "ЗАЩИЩЕНО / НЕ ЗАЩИЩЕНО".
 class ProtectedCard extends ConsumerWidget {
   const ProtectedCard({super.key});
 
@@ -14,7 +14,6 @@ class ProtectedCard extends ConsumerWidget {
     final stats = ref.watch(connectionStatsProvider).value;
     final isConnected = status == VpnStatus.connected;
 
-    // Форматируем длительность подключения
     String formatDuration(Duration? duration) {
       if (duration == null) return '00ч 00м 00с';
       final hours = duration.inHours.toString().padLeft(2, '0');
@@ -25,7 +24,7 @@ class ProtectedCard extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -35,95 +34,62 @@ class ProtectedCard extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isConnected 
-              ? const Color(0xFF2DD4BF).withValues(alpha: 0.3)
+              ? const Color(0xFF2DD4BF).withValues(alpha: 0.35)
               : Colors.white.withValues(alpha: 0.1),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
             color: isConnected 
-                ? const Color(0xFF2DD4BF).withValues(alpha: 0.15)
-                : Colors.black.withValues(alpha: 0.3),
-            blurRadius: 30,
-            spreadRadius: 0,
-            offset: const Offset(0, 10),
+                ? const Color(0xFF2DD4BF).withValues(alpha: 0.12)
+                : Colors.black.withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Column(
         children: [
-          // Иконка щита с анимацией свечения
-          Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF0A0F1E),
-              border: Border.all(
-                color: isConnected 
-                    ? const Color(0xFF2DD4BF).withValues(alpha: 0.5)
-                    : Colors.white.withValues(alpha: 0.2),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: isConnected 
-                      ? const Color(0xFF2DD4BF).withValues(alpha: 0.4)
-                      : Colors.transparent,
-                  blurRadius: 40,
-                  spreadRadius: 10,
-                ),
-              ],
-            ),
-            child: Icon(
-              Icons.shield_rounded,
-              size: 48,
-              color: isConnected ? const Color(0xFF2DD4BF) : Colors.white.withValues(alpha: 0.5),
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Текст "ЗАЩИЩЕНО" с градиентом
           Text(
             isConnected ? 'ЗАЩИЩЕНО' : 'НЕ ЗАЩИЩЕНО',
             style: TextStyle(
-              fontSize: 32,
+              fontSize: 24,
               fontWeight: FontWeight.w900,
-              color: isConnected ? Colors.white : Colors.white.withValues(alpha: 0.5),
-              letterSpacing: 3,
+              color: isConnected ? const Color(0xFF2DD4BF) : Colors.white.withValues(alpha: 0.6),
+              letterSpacing: 2,
               shadows: [
                 if (isConnected)
                   Shadow(
                     color: const Color(0xFF2DD4BF).withValues(alpha: 0.5),
-                    blurRadius: 20,
+                    blurRadius: 16,
                   ),
               ],
             ),
           ),
           
-          const SizedBox(height: 10),
+          const SizedBox(height: 4),
           
-          // Подпись
           Text(
-            'Трафик зашифрован (SOCKS5)',
+            isConnected 
+                ? 'Трафик зашифрован (VLESS Reality)' 
+                : 'Нажмите кнопку ниже для защиты',
             style: TextStyle(
-              fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.6),
-              letterSpacing: 0.5,
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.5),
+              letterSpacing: 0.3,
             ),
           ),
           
           if (isConnected) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
               decoration: BoxDecoration(
                 color: const Color(0xFF2DD4BF).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: const Color(0xFF2DD4BF).withValues(alpha: 0.3),
                   width: 1,
@@ -149,9 +115,9 @@ class ProtectedCard extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Text(
                     'Активно: ${formatDuration(stats?.duration)}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
-                      color: const Color(0xFF2DD4BF),
+                      color: Color(0xFF2DD4BF),
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.5,
                     ),

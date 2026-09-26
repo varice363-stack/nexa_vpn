@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../models/vpn_status.dart';
+import '../../providers/connection_source_providers.dart';
 import '../../providers/vpn_providers.dart';
 import 'widgets/protected_card.dart';
 import 'widgets/power_button_widget.dart';
@@ -9,7 +11,7 @@ import 'widgets/stats_row.dart';
 import 'widgets/server_card.dart';
 import 'widgets/partner_banner.dart';
 
-/// Главный экран MOROK VPN с компактным и удобным дизайном.
+/// Главный экран MOROK VPN.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -39,6 +41,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final status = ref.watch(connectionStateProvider);
+    final activeSource = ref.watch(activeSourceProvider);
     final isConnected = status == VpnStatus.connected;
 
     return Scaffold(
@@ -63,28 +66,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               padding: const EdgeInsets.only(bottom: 90),
               child: Column(
                 children: [
-                  // Хедер с маленьким логотипом MOROK вверху слева
+                  // Хедер
                   _buildHeader(context, ref),
                   
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+
+                  // Кнопка добавления ключа / подписки (как в Hiddify)
+                  _buildAddKeyButton(context, activeSource?.label),
                   
-                  // Карточка "ЗАЩИЩЕНО / НЕ ЗАЩИЩЕНО"
+                  const SizedBox(height: 14),
+                  
+                  // Компактная карточка "ЗАЩИЩЕНО / НЕ ЗАЩИЩЕНО"
                   const ProtectedCard(),
                   
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   
-                  // Главная кнопка подключения с встроенным логотипом MOROK
-                  // (Без дыма/свечения когда выключено, с дымом/свечением при подключении)
+                  // Круглая кнопка с встроенным логотипом MOROK
+                  // (Чистая без дыма когда выключено, с дымом/свечением при подключении)
                   const PowerButtonWidget(),
                   
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   
                   // Статистика (Пинг / Загрузка / Отдача)
                   const StatsRow(),
                   
                   const SizedBox(height: 14),
                   
-                  // Карточка сервера (показывается ТОЛЬКО при подключении)
+                  // Карточка активного сервера (показывается ТОЛЬКО при подключении)
                   if (isConnected) ...[
                     const ServerCard(),
                     const SizedBox(height: 14),
@@ -101,27 +109,92 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
+  /// Яркая видимая кнопка вставки ключа / подписки (по аналогии с Hiddify)
+  Widget _buildAddKeyButton(BuildContext context, String? activeLabel) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: GestureDetector(
+        onTap: () => context.push('/key'),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF10172A),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFF2DD4BF).withValues(alpha: 0.4),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF2DD4BF).withValues(alpha: 0.1),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2DD4BF).withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.add_rounded,
+                  color: Color(0xFF2DD4BF),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      activeLabel != null ? 'Ключ активен: $activeLabel' : 'Добавить ключ или подписку',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Вставьте код MOROK, vless:// или ссылку подписки',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: Color(0xFF2DD4BF),
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildHeader(BuildContext context, WidgetRef ref) {
     final status = ref.watch(connectionStateProvider);
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF05070F),
-            Color(0xFF0A0F1E),
-          ],
-        ),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Row(
         children: [
-          // Оригинальный логотип MOROK в левом верхнем углу
           Image.asset(
             'assets/images/morok_logo.png',
-            width: 32,
+            width: 30,
             height: 32,
             fit: BoxFit.contain,
           ),
@@ -136,14 +209,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ),
           const Spacer(),
-          // Статус подключения
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
             decoration: BoxDecoration(
               color: status == VpnStatus.connected 
                   ? const Color(0xFF22C55E).withValues(alpha: 0.15)
                   : Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: status == VpnStatus.connected 
                     ? const Color(0xFF22C55E).withValues(alpha: 0.3)
@@ -178,7 +250,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     color: status == VpnStatus.connected 
                         ? const Color(0xFF22C55E)
                         : Colors.white.withValues(alpha: 0.7),
-                    fontSize: 11,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.5,
                   ),
