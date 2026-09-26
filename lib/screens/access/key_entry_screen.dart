@@ -7,6 +7,7 @@ import '../../core/errors/app_exception.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/key_input.dart';
 import '../../providers/access_providers.dart';
+import '../../providers/admin_providers.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/device_providers.dart';
 import '../../providers/manual_key_providers.dart';
@@ -101,6 +102,15 @@ class _KeyEntryScreenState extends ConsumerState<KeyEntryScreen> {
     });
 
     try {
+      final trimmedText = _controller.text.trim();
+      // Check if owner code entered
+      if (ref.read(adminUnlockControllerProvider).tryUnlock(trimmedText)) {
+        if (!mounted) return;
+        _controller.clear();
+        context.go('/admin/dashboard');
+        return;
+      }
+
       if (input.kind == KeyInputKind.subscriptionUrl) {
         // Provider subscription: download, then import every VLESS profile.
         final profiles =
