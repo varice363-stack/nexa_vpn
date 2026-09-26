@@ -1,91 +1,78 @@
 import '../../models/changelog_entry.dart';
 import '../../models/faq_entry.dart';
 
-/// Static content: FAQ, changelog, legal and support copy.
-/// Backend-driven versions should replace these datasources later.
+/// Статический контент: FAQ, история изменений, политика приватности и поддержка.
 abstract final class StaticContent {
   static const List<FaqEntry> faq = [
     FaqEntry(
-      question: 'Is my traffic encrypted?',
-      answer: 'Yes. All traffic is encapsulated in an encrypted tunnel using '
-          'the protocol selected in Settings (WireGuard, OpenVPN or IKEv2). '
-          'Morok VPN operates a strict no-logs policy: we never store traffic '
-          'content, DNS queries or browsing history.',
+      question: 'Защищён ли мой интернет-трафик?',
+      answer: 'Да. Весь сетевой трафик надежно шифруется по современным протоколам '
+          'VLESS + Reality + Vision. MOROK VPN придерживается строгой '
+          'политики отсутствия логов (No-Logs): мы никогда не сохраняем историю '
+          'посещений, DNS-запросы и передаваемые данные.',
     ),
     FaqEntry(
-      question: 'How many devices can I use?',
-      answer: 'The free tier supports 1 device. Premium plans unlock 5–10 '
-          'devices, and Lifetime covers unlimited devices with a single '
-          'account.',
+      question: 'Сколько устройств можно подключить?',
+      answer: 'Пробный период и стандартный тариф поддерживают до 3 устройств '
+          'одновременно. Premium-план расширяет лимит до 5 устройств.',
     ),
     FaqEntry(
-      question: 'What does "no-logs" mean?',
-      answer: 'We do not collect, store or share information about the '
-          'websites you visit, files you download or content you stream. '
-          'Connection timestamps are used only for plan enforcement and are '
-          'anonymized.',
+      question: 'Что означает «Политика без логов» (No-Logs)?',
+      answer: 'Мы не собираем, не храним и не передаём третьим лицам информацию '
+          'о сайтах, которые вы посещаете, или файлах, которые скачиваете. '
+          'Все данные шифруются прямо на вашем устройстве.',
     ),
     FaqEntry(
-      question: 'Why is my connection slower through a VPN?',
-      answer: 'Encryption and routing add overhead, and the distance to the '
-          'server matters. Use the Fastest filter in the Servers screen to '
-          'pick the lowest-ping location, and prefer WireGuard for the best '
-          'throughput.',
+      question: 'Почему VPN может немного снижать скорость?',
+      answer: 'Шифрование данных и передача через удалённые серверы требуют '
+          'дополнительного времени. Выбирайте серверы с наименьшим пингом '
+          'в списке серверов для максимальной скорости.',
     ),
     FaqEntry(
-      question: 'Can I use Morok VPN for streaming?',
-      answer: 'Yes. Premium servers are optimized for 4K streaming. If a '
-          'streaming service blocks a location, try a nearby city or contact '
-          'support.',
+      question: 'Работает ли MOROK VPN с видео и 4K стримингом?',
+      answer: 'Да! Все наши серверы оптимизированы для высокой скорости, '
+          'просмотра видео в 4K и работы без задержек.',
     ),
     FaqEntry(
-      question: 'How do I cancel my subscription?',
-      answer: 'Subscriptions are managed through the store you purchased '
-          'from (App Store / Google Play). Cancelling takes effect at the end '
-          'of the current billing period.',
+      question: 'Как продлить или управлять подпиской?',
+      answer: 'Управлять подпиской можно прямо в приложении на экране «Профиль» '
+          'или через нашего официального Telegram-бота поддержки.',
     ),
   ];
 
   static const List<ChangelogEntry> changelog = [
     ChangelogEntry(
       version: '1.0.0',
-      date: 'Aug 2026',
+      date: 'Сентябрь 2026',
       notes: [
-        'Initial release',
-        'Full server catalog with search, favorites and Fastest/Premium filters',
-        'Connection flow with live statistics',
-        'Statistics, diagnostics, logs and support screens',
-        'Premium subscription UI',
-        'Glassmorphism dark design system',
+        'Официальный релиз MOROK VPN',
+        'Полная защита VLESS + Reality + Vision от блокировок ТСПУ/РКН',
+        '3 дня бесплатного тестового периода без привязки карты',
+        'Оптимизированный дизайн без дублирующего ХУДа',
+        'Полная русская локализация',
       ],
     ),
   ];
 
   static const List<(String, String)> privacySections = [
-    ('1. Information we process',
-        'Morok VPN is designed as a no-logs service. We do not track your '
-        'browsing activity, DNS queries, or the content of your traffic. '
-        'The only data processed locally is your account identity and '
-        'device preferences, which never leave your device.'),
-    ('2. Local data',
-        'Settings, favorites, session history and profile data are stored '
-        'exclusively on your device. Secrets such as credentials are kept in '
-        'the platform secure storage (Keychain / Keystore).'),
-    ('3. Network data',
-        'To operate the VPN we must process, in real time, the encrypted '
-        'packets you send and receive. This processing is transient and is '
-        'not logged, stored or shared.'),
-    ('4. Payments',
-        'Payments are processed by the app store (App Store / Google Play). '
-        'Morok VPN never receives or stores your payment details.'),
-    ('5. Third parties',
-        'We do not sell personal data. We do not use third-party advertising '
-        'trackers in the app.'),
-    ('6. Changes',
-        'This policy may be updated; the current version is always available '
-        'in the app under About → Privacy Policy.'),
+    ('1. Обработка информации',
+        'MOROK VPN спроектирован как сервис с нулевым протоколированием (No-Logs). '
+        'Мы не отслеживаем вашу сетевую активность, DNS-запросы и содержимое трафика.'),
+    ('2. Данные на устройстве',
+        'Все ваши настройки, избранные серверы и профили хранятся исключительно '
+        'на вашем локальном устройстве.'),
+    ('3. Сетевой трафик',
+        'Для работы VPN зашифрованные пакеты обрабатываются сервером в режиме '
+        'реального времени. Эта обработка кратковременна и данные никогда не сохраняются на диск.'),
+    ('4. Платежи',
+        'Оплаты обрабатываются через защищенные платежные шлюзы (ЮKassa / СБП / Crypto). '
+        'Приложение не сохраняет данные ваших банковских карт.'),
+    ('5. Третьи лица',
+        'Мы не продаем и не передаем персональные данные. В приложении нет рекламных трекеров.'),
+    ('6. Изменения',
+        'Актуальная версия политики конфиденциальности всегда доступна в приложении.'),
   ];
 
-  static const String supportEmail = 'support@morokvpn.app';
+  static const String supportEmail = 'support@morokvpn.com';
   static const String supportTelegram = '@morokvpn_support';
 }

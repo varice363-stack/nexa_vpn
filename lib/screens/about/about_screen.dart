@@ -26,28 +26,15 @@ class AboutScreen extends ConsumerWidget {
           Center(
             child: Column(
               children: [
-                Container(
+                Image.asset(
+                  'assets/images/morok_logo.png',
                   width: 84,
                   height: 84,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(26),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.4),
-                        blurRadius: 30,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.shield_rounded,
-                    size: 40,
-                    color: Colors.white,
-                  ),
+                  fit: BoxFit.contain,
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 const Text(
-                  'Morok VPN',
+                  'MOROK VPN',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
