@@ -8,6 +8,11 @@ class BannerStats {
   final BannerStatsTotals totals;
   final List<BannerStatItem> banners;
 
+  factory BannerStats.empty() => const BannerStats(
+        totals: BannerStatsTotals(impressions: 0, clicks: 0, ctr: 0.0),
+        banners: [],
+      );
+
   factory BannerStats.fromJson(Map<String, dynamic> json) {
     return BannerStats(
       totals: BannerStatsTotals.fromJson(

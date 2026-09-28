@@ -8,6 +8,11 @@ class AdminDashboard {
   final AdminUsersSummary users;
   final AdminServersSummary servers;
 
+  factory AdminDashboard.empty() => const AdminDashboard(
+        users: AdminUsersSummary(total: 0, newToday: 0, activePremium: 0),
+        servers: AdminServersSummary(active: 1, disabled: 0),
+      );
+
   factory AdminDashboard.fromJson(Map<String, dynamic> json) {
     return AdminDashboard(
       users: AdminUsersSummary.fromJson(json['users'] as Map<String, dynamic>),

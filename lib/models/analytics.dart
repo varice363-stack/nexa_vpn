@@ -12,6 +12,13 @@ class AnalyticsOverview {
   final int blockedUsers;
   final double revenueUsd;
 
+  factory AnalyticsOverview.empty() => const AnalyticsOverview(
+        totalUsers: 0,
+        activePremium: 0,
+        blockedUsers: 0,
+        revenueUsd: 0.0,
+      );
+
   factory AnalyticsOverview.fromJson(Map<String, dynamic> json) {
     return AnalyticsOverview(
       totalUsers: json['totalUsers'] as int,

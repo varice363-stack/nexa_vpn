@@ -166,7 +166,7 @@ class _OverviewTab extends ConsumerWidget {
   Widget _buildDashboardCard(
     BuildContext context,
     AppLocalizations l10n,
-    AsyncValue<AdminDashboard?> async,
+    AsyncValue<AdminDashboard> async,
   ) {
     return GlassContainer(
       borderRadius: BorderRadius.circular(20),
@@ -188,11 +188,8 @@ class _OverviewTab extends ConsumerWidget {
           else if (async.hasError)
             Text(l10n.commonError,
                 style: const TextStyle(color: AppColors.danger))
-          else if (async.value == null)
-            Text(l10n.adminNoData,
-                style: const TextStyle(color: AppColors.textSecondary))
           else
-            _buildOverviewGrid(l10n, async.value!),
+            _buildOverviewGrid(l10n, async.value ?? AdminDashboard.empty()),
         ],
       ),
     );
@@ -243,7 +240,7 @@ class _OverviewTab extends ConsumerWidget {
   Widget _buildAnalyticsCard(
     BuildContext context,
     AppLocalizations l10n,
-    AsyncValue<AnalyticsOverview?> async,
+    AsyncValue<AnalyticsOverview> async,
   ) {
     return GlassContainer(
       borderRadius: BorderRadius.circular(20),
@@ -265,11 +262,8 @@ class _OverviewTab extends ConsumerWidget {
           else if (async.hasError)
             Text(l10n.commonError,
                 style: const TextStyle(color: AppColors.danger))
-          else if (async.value == null)
-            Text(l10n.adminNoData,
-                style: const TextStyle(color: AppColors.textSecondary))
           else
-            _buildRevenueStats(l10n, async.value!),
+            _buildRevenueStats(l10n, async.value ?? AnalyticsOverview.empty()),
         ],
       ),
     );
@@ -390,7 +384,7 @@ class _BannersTab extends ConsumerWidget {
   Widget _buildTotalsCard(
     BuildContext context,
     AppLocalizations l10n,
-    AsyncValue<dynamic> async,
+    AsyncValue<BannerStats> async,
   ) {
     return GlassContainer(
       borderRadius: BorderRadius.circular(20),
@@ -412,11 +406,8 @@ class _BannersTab extends ConsumerWidget {
           else if (async.hasError)
             Text(l10n.commonError,
                 style: const TextStyle(color: AppColors.danger))
-          else if (async.value == null)
-            Text(l10n.adminNoData,
-                style: const TextStyle(color: AppColors.textSecondary))
           else
-            _buildTotalsGrid(l10n, async.value),
+            _buildTotalsGrid(l10n, async.value ?? BannerStats.empty()),
         ],
       ),
     );

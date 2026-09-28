@@ -8,19 +8,21 @@ import 'app_providers.dart';
 
 /// Admin dashboard overview.
 final adminDashboardProvider =
-    AsyncNotifierProvider<AdminDashboardNotifier, AdminDashboard?>(
+    AsyncNotifierProvider<AdminDashboardNotifier, AdminDashboard>(
   AdminDashboardNotifier.new,
 );
 
-class AdminDashboardNotifier extends AsyncNotifier<AdminDashboard?> {
+class AdminDashboardNotifier extends AsyncNotifier<AdminDashboard> {
   @override
-  Future<AdminDashboard?> build() async {
+  Future<AdminDashboard> build() async {
     try {
       return await ref.watch(adminRepositoryProvider).getDashboard();
     } on ApiException catch (e) {
       ref.read(loggerProvider).warn('Admin dashboard unavailable: $e',
           source: 'api');
-      return null;
+      return AdminDashboard.empty();
+    } catch (_) {
+      return AdminDashboard.empty();
     }
   }
 
@@ -32,26 +34,30 @@ class AdminDashboardNotifier extends AsyncNotifier<AdminDashboard?> {
     } on ApiException catch (e) {
       ref.read(loggerProvider).warn('Admin dashboard refresh failed: $e',
           source: 'api');
-      state = const AsyncData(null);
+      state = AsyncData(AdminDashboard.empty());
+    } catch (_) {
+      state = AsyncData(AdminDashboard.empty());
     }
   }
 }
 
 /// Analytics overview (users, premium, revenue).
 final analyticsOverviewProvider =
-    AsyncNotifierProvider<AnalyticsOverviewNotifier, AnalyticsOverview?>(
+    AsyncNotifierProvider<AnalyticsOverviewNotifier, AnalyticsOverview>(
   AnalyticsOverviewNotifier.new,
 );
 
-class AnalyticsOverviewNotifier extends AsyncNotifier<AnalyticsOverview?> {
+class AnalyticsOverviewNotifier extends AsyncNotifier<AnalyticsOverview> {
   @override
-  Future<AnalyticsOverview?> build() async {
+  Future<AnalyticsOverview> build() async {
     try {
       return await ref.watch(adminRepositoryProvider).getAnalyticsOverview();
     } on ApiException catch (e) {
       ref.read(loggerProvider).warn('Analytics overview unavailable: $e',
           source: 'api');
-      return null;
+      return AnalyticsOverview.empty();
+    } catch (_) {
+      return AnalyticsOverview.empty();
     }
   }
 
@@ -63,7 +69,9 @@ class AnalyticsOverviewNotifier extends AsyncNotifier<AnalyticsOverview?> {
     } on ApiException catch (e) {
       ref.read(loggerProvider).warn('Analytics overview refresh failed: $e',
           source: 'api');
-      state = const AsyncData(null);
+      state = AsyncData(AnalyticsOverview.empty());
+    } catch (_) {
+      state = AsyncData(AnalyticsOverview.empty());
     }
   }
 }
@@ -83,6 +91,8 @@ class AnalyticsDailyNotifier extends AsyncNotifier<List<AnalyticsDailyRow>> {
       ref.read(loggerProvider).warn('Analytics daily unavailable: $e',
           source: 'api');
       return const [];
+    } catch (_) {
+      return const [];
     }
   }
 
@@ -95,25 +105,29 @@ class AnalyticsDailyNotifier extends AsyncNotifier<List<AnalyticsDailyRow>> {
       ref.read(loggerProvider).warn('Analytics daily refresh failed: $e',
           source: 'api');
       state = const AsyncData([]);
+    } catch (_) {
+      state = const AsyncData([]);
     }
   }
 }
 
 /// Banner statistics (impressions, clicks, CTR).
 final bannerStatsProvider =
-    AsyncNotifierProvider<BannerStatsNotifier, BannerStats?>(
+    AsyncNotifierProvider<BannerStatsNotifier, BannerStats>(
   BannerStatsNotifier.new,
 );
 
-class BannerStatsNotifier extends AsyncNotifier<BannerStats?> {
+class BannerStatsNotifier extends AsyncNotifier<BannerStats> {
   @override
-  Future<BannerStats?> build() async {
+  Future<BannerStats> build() async {
     try {
       return await ref.watch(adminRepositoryProvider).getBannerStats();
     } on ApiException catch (e) {
       ref.read(loggerProvider).warn('Banner stats unavailable: $e',
           source: 'api');
-      return null;
+      return BannerStats.empty();
+    } catch (_) {
+      return BannerStats.empty();
     }
   }
 
@@ -125,7 +139,9 @@ class BannerStatsNotifier extends AsyncNotifier<BannerStats?> {
     } on ApiException catch (e) {
       ref.read(loggerProvider).warn('Banner stats refresh failed: $e',
           source: 'api');
-      state = const AsyncData(null);
+      state = AsyncData(BannerStats.empty());
+    } catch (_) {
+      state = AsyncData(BannerStats.empty());
     }
   }
 }

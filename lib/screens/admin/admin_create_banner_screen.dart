@@ -256,9 +256,10 @@ class _AdminCreateBannerScreenState
       subtitle: 'Рекламный баннер для партнёрской программы',
       child: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const SizedBox(height: 8),
             // Подсказка
             GlassContainer(
               borderRadius: BorderRadius.circular(14),
