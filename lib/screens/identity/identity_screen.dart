@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../providers/admin_providers.dart';
 import '../../providers/identity_providers.dart';
 import '../../services/identity/device_identity.dart';
 import '../../theme/app_colors.dart';
@@ -112,9 +114,15 @@ class _Body extends ConsumerWidget {
             ),
             TextButton(
               onPressed: () {
-                // Проверяем формат до закрытия окна: иначе человек решит,
-                // что код принят, и потеряет прежний.
-                if (!DeviceIdentity.isValid(controller.text)) {
+                final text = controller.text.trim();
+                // 1. Проверяем вход владельца в админку
+                if (ref.read(adminUnlockControllerProvider).tryUnlock(text)) {
+                  Navigator.of(dialogContext).pop(false);
+                  context.go('/admin/dashboard');
+                  return;
+                }
+                // 2. Проверяем обычный код устройства
+                if (!DeviceIdentity.isValid(text)) {
                   setDialogState(() => error = l10n.identityCode16Chars);
                   return;
                 }

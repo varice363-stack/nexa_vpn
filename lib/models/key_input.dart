@@ -105,9 +105,16 @@ class KeyInput {
   static String _normaliseCode(String input) {
     final cleaned =
         input.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+    if (cleaned.isEmpty) return '';
     final body =
         cleaned.startsWith('MOROK') ? cleaned.substring(5) : cleaned;
-    if (body.length != _codeBody) return '';
-    return 'MOROK-${body.substring(0, 4)}-${body.substring(4)}';
+    if (body.isEmpty) return '';
+    if (body.length == 8) {
+      return 'MOROK-${body.substring(0, 4)}-${body.substring(4)}';
+    }
+    if (body.length == 16) {
+      return 'MOROK-${body.substring(0, 4)}-${body.substring(4, 8)}-${body.substring(8, 12)}-${body.substring(12)}';
+    }
+    return 'MOROK-$body';
   }
 }
