@@ -125,44 +125,12 @@ class XrayTunnelManager implements TunnelManager {
       // The plugin turns the share link into a full Xray configuration.
       // Malformed links throw here, before anything native is touched.
       final parsed = FlutterVless.parse(source.uri);
-      var xrayConfig = parsed.getFullConfiguration();
+      final xrayConfig = parsed.getFullConfiguration();
 
-      // === ANTI-CENSORSHIP ENHANCEMENT ===
-      // CRITICAL: Only enhance MOROK-origin keys. Imported keys already have
-      // their own security configuration (Reality, Vision, etc.) injected by
-      // their own panel. Overwriting them with our hardcoded Reality settings
-      // (icloud.com dest, no valid publicKey) BREAKS the connection —
-      // "Tunnel closed before it came up".
-      //
-      // For imported keys, pass the config through unchanged.
-      final isVless = source.uri.toLowerCase().startsWith('vless://');
-      
-      if (isVless && source.isMorok) {
-        const enhancer = XrayProtocolEnhancer();
-        xrayConfig = enhancer.enhance(
-          xrayConfig,
-          enableReality: true,     // Hijack real TLS certificates (Apple, Microsoft)
-          enableVision: true,      // Encrypt protocol-level data
-          enableXhttp: true,       // Mask connection as HTTP traffic
-          enableChromeFp: true,    // Spoof Chrome TLS fingerprint
-          enableEmptySni: true,    // 100% bypass of SNI inspection
-        );
-
-        _logger.info(
-          'Anti-censorship: ${XrayProtocolEnhancer.describeProtection(xrayConfig)}',
-          source: 'vpn',
-        );
-      } else if (isVless && source.isImported) {
-        _logger.info(
-          'Imported key — passing through original config unchanged',
-          source: 'vpn',
-        );
-      } else {
-        _logger.info(
-          'Using ${source.uri.split('://').first.toUpperCase()} protocol (no enhancement needed)',
-          source: 'vpn',
-        );
-      }
+      _logger.info(
+        'Launching tunnel for ${source.label} (${source.host})',
+        source: 'vpn',
+      );
 
       // Password auth on the local SOCKS inbound CANNOT be used with this
       // plugin: `tun2socks` is launched with a hardcoded, credential-free
