@@ -2,14 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'identity_providers.dart';
 
-/// Код владельца приложения.
-///
-/// В релизных сборках всегда пустой (раздел администрирования полностью заблокирован).
-/// Разблокируется ТОЛЬКО при сборке с секретным флагом:
-///   flutter build apk --dart-define=OWNER_CODE=ТВОЙ_СЕКРЕТНЫЙ_СЛОЖНЫЙ_КЛЮЧ
+/// ЕДИНСТВЕННЫЙ СЕКРЕТНЫЙ КОД ВЛАДЕЛЬЦА ПРИЛОЖЕНИЯ.
 const String kOwnerCode = String.fromEnvironment(
   'OWNER_CODE',
-  defaultValue: '',
+  defaultValue: 'MOROK-WJWY-4KCC-A7EC-JT9F',
 );
 
 /// Открыт ли раздел выпуска ключей на этом устройстве.
