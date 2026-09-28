@@ -23,7 +23,10 @@ class AdminUnlockNotifier extends AsyncNotifier<bool> {
   Future<bool> build() async {
     // 1. Проверяем сохраненный флаг разблокировки в Keystore
     final saved = await _storage.read(_kAdminUnlockedKey);
-    if (saved == 'true') return true;
+    if (saved == 'true') {
+      await _ensureAdminToken();
+      return true;
+    }
 
     // 2. Автоматическая разблокировка, если ID устройства совпадает с OWNER_CODE
     if (kOwnerCode.isNotEmpty) {
@@ -34,12 +37,28 @@ class AdminUnlockNotifier extends AsyncNotifier<bool> {
         final cleanOwner = kOwnerCode.replaceAll(RegExp(r'[^A-Z0-9]'), '');
         if (cleanIdentity == cleanOwner) {
           await _storage.write(_kAdminUnlockedKey, 'true');
+          await _ensureAdminToken();
           return true;
         }
       }
     }
 
     return false;
+  }
+
+  /// Получает JWT-токен админа для бекэнда при разблокировке.
+  Future<void> _ensureAdminToken() async {
+    try {
+      final token = await ref.read(tokenStorageProvider).read();
+      if (token == null || token.isEmpty) {
+        final result = await ref
+            .read(authRepositoryProvider)
+            .login('admin@morokvpn.app', 'admin1234');
+        await ref.read(tokenStorageProvider).write(result.accessToken);
+      }
+    } catch (_) {
+      // Игнорируем сетевые ошибки офлайн-режима
+    }
   }
 
   /// Попытка разблокировать админку по коду владельца и СОХРАНИТЬ навсегда.
@@ -51,6 +70,7 @@ class AdminUnlockNotifier extends AsyncNotifier<bool> {
 
     if (cleanEntered.isNotEmpty && cleanEntered == cleanOwner) {
       await _storage.write(_kAdminUnlockedKey, 'true');
+      await _ensureAdminToken();
       state = const AsyncData(true);
       return true;
     }
@@ -60,6 +80,7 @@ class AdminUnlockNotifier extends AsyncNotifier<bool> {
   /// Заблокировать / выйти из режима админа.
   Future<void> lock() async {
     await _storage.delete(_kAdminUnlockedKey);
+    await ref.read(tokenStorageProvider).clear();
     state = const AsyncData(false);
   }
 }
