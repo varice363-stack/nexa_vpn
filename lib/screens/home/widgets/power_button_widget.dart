@@ -87,7 +87,7 @@ class _PowerButtonWidgetState extends ConsumerState<PowerButtonWidget>
                   shape: BoxShape.circle,
                   gradient: isConnected
                       ? const LinearGradient(
-                          colors: [Color(0xFF2DD4BF), Color(0xFF14B8A6)],
+                          colors: [Color(0xFF082F37), Color(0xFF020617)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         )

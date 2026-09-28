@@ -43,6 +43,7 @@ class XrayTunnelManager implements TunnelManager {
 
   @override
   Stream<TunnelPhase> get phases async* {
+    _ensureEngine();
     yield _phase;
     yield* _controller.stream;
   }

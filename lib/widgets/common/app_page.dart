@@ -36,7 +36,13 @@ class AppPage extends StatelessWidget {
                   children: [
                     if (showBackButton)
                       GestureDetector(
-                        onTap: () => Navigator.maybePop(context),
+                        onTap: () {
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          } else {
+                            GoRouter.of(context).go('/');
+                          }
+                        },
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(

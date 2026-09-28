@@ -92,6 +92,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
       subtitle: sources.isEmpty
           ? l10n.serversEmptyTitle
           : l10n.serversAvailable(sources.length),
+      showBackButton: false,
       child: sources.isEmpty
           ? _empty(context, l10n)
           : Column(

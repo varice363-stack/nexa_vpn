@@ -21,6 +21,7 @@ class ProfileScreen extends ConsumerWidget {
     return AppPage(
       title: l10n.profileTitle,
       subtitle: 'Morok VPN',
+      showBackButton: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
