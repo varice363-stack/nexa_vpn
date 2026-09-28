@@ -53,7 +53,13 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap: () => context.pop(),
+                      onTap: () {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go('/identity');
+                        }
+                      },
                       child: Container(
                         padding: const EdgeInsets.all(11),
                         decoration: BoxDecoration(

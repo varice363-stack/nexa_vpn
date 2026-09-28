@@ -24,6 +24,7 @@ class IdentityScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final identity = ref.watch(identityProvider);
+    final isAdmin = ref.watch(adminUnlockedProvider);
 
     return AppPage(
       title: l10n.identityTitle,
@@ -34,22 +35,27 @@ class IdentityScreen extends ConsumerWidget {
           child: Center(child: CircularProgressIndicator()),
         ),
         error: (e, _) => _ErrorCard(message: '$e'),
-        data: (code) => _Body(code: code),
+        data: (code) => _Body(code: code, isAdmin: isAdmin),
       ),
     );
   }
 }
 
 class _Body extends ConsumerWidget {
-  const _Body({required this.code});
+  const _Body({required this.code, required this.isAdmin});
 
   final String code;
+  final bool isAdmin;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (isAdmin) ...[
+          const _AdminCard(),
+          const SizedBox(height: 16),
+        ],
         _CodeCard(code: code),
         const SizedBox(height: 16),
         const _WarningCard(),
@@ -113,20 +119,37 @@ class _Body extends ConsumerWidget {
               child: Text(l10n.commonCancel),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 final text = controller.text.trim();
                 // 1. Проверяем вход владельца в админку
-                if (ref.read(adminUnlockControllerProvider).tryUnlock(text)) {
-                  Navigator.of(dialogContext).pop(false);
-                  context.go('/admin/dashboard');
+                final isOwner = await ref
+                    .read(adminUnlockedNotifierProvider.notifier)
+                    .tryUnlock(text);
+
+                if (isOwner) {
+                  if (dialogContext.mounted) {
+                    Navigator.of(dialogContext).pop(false);
+                  }
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'Код владельца подтвержден! Панель управления доступна ниже.'),
+                        backgroundColor: AppColors.primary,
+                      ),
+                    );
+                  }
                   return;
                 }
+
                 // 2. Проверяем обычный код устройства
                 if (!DeviceIdentity.isValid(text)) {
                   setDialogState(() => error = l10n.identityCode16Chars);
                   return;
                 }
-                Navigator.of(dialogContext).pop(true);
+                if (dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop(true);
+                }
               },
               child: Text(l10n.identityApply),
             ),
@@ -150,6 +173,99 @@ class _Body extends ConsumerWidget {
   }
 }
 
+/// Блок управления владельца — отображается в профиле, когда разблокирован админ-код.
+class _AdminCard extends ConsumerWidget {
+  const _AdminCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GlassContainer(
+      borderRadius: BorderRadius.circular(20),
+      padding: const EdgeInsets.all(20),
+      color: Colors.cyan.withValues(alpha: 0.12),
+      borderColor: Colors.cyan.withValues(alpha: 0.4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.cyan.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.cyan.withValues(alpha: 0.5)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.verified_user_rounded,
+                        size: 14, color: Colors.cyanAccent),
+                    SizedBox(width: 6),
+                    Text(
+                      'РЕЖИМ ВЛАДЕЛЬЦА',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.cyanAccent,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.logout_rounded,
+                    size: 18, color: AppColors.textTertiary),
+                tooltip: 'Заблокировать админку',
+                onPressed: () async {
+                  await ref
+                      .read(adminUnlockedNotifierProvider.notifier)
+                      .lock();
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Режим владельца заблокирован')),
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Панель управления MOROK VPN',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Выпуск ключей, управление серверами, пользователями и баннерами',
+            style: TextStyle(
+              fontSize: 12.5,
+              height: 1.35,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          GlassButton(
+            label: 'Открыть Панель Владельца',
+            icon: Icons.admin_panel_settings_rounded,
+            gradient: const LinearGradient(
+              colors: [Color(0xFF06B6D4), Color(0xFF3B82F6)],
+            ),
+            foreground: Colors.white,
+            onTap: () => context.go('/admin/dashboard'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Сам код, крупно и с кнопкой копирования.
 class _CodeCard extends StatelessWidget {
   const _CodeCard({required this.code});
@@ -159,8 +275,6 @@ class _CodeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    // Разбиваем на строки по две группы: 16 знаков в одну строку на узком
-    // экране не помещаются и переносятся в непредсказуемом месте.
     final parts = code.split('-');
     final head = parts.first;
     final groups = parts.skip(1).toList();
@@ -222,7 +336,7 @@ class _CodeCard extends StatelessWidget {
   }
 }
 
-/// Предупреждение о потере — здесь важна прямота, а не мягкость.
+/// Предупреждение о потере.
 class _WarningCard extends StatelessWidget {
   const _WarningCard();
 

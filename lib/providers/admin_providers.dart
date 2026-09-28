@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../domain/repositories/key_storage.dart';
+import 'app_providers.dart';
 import 'identity_providers.dart';
 
 /// ЕДИНСТВЕННЫЙ СЕКРЕТНЫЙ КОД ВЛАДЕЛЬЦА ПРИЛОЖЕНИЯ.
@@ -8,53 +10,62 @@ const String kOwnerCode = String.fromEnvironment(
   defaultValue: 'MOROK-WJWY-4KCC-A7EC-JT9F',
 );
 
-/// Открыт ли раздел выпуска ключей на этом устройстве.
-///
-/// Работает через ручной ввод кода владельца:
-/// 1. Пользователь нажимает "Войти как админ" в профиле
-/// 2. Вводит код OWNER_CODE (задаётся при сборке)
-/// 3. Если код верный — админка разблокирована
-///
-/// Также автоматически разблокируется, если код устройства совпадает
-/// с OWNER_CODE (для отладки через --dart-define).
-final adminUnlockedProvider = Provider<bool>((ref) {
-  // Проверяем ручную разблокировку через контроллер
-  final controller = ref.watch(adminUnlockControllerProvider);
-  if (controller.isUnlocked) return true;
+const String _kAdminUnlockedKey = 'morok_admin_unlocked';
 
-  // Автоматическая разблокировка — для debug-сборок, где OWNER_CODE совпадает
-  // с кодом устройства (удобно при разработке)
-  if (kOwnerCode.isEmpty) return false;
-  final code = ref.watch(identityProvider).value;
-  if (code == null) return false;
-  if (code == kOwnerCode) return true;
+/// Асинхронный нотификатор состояния админки с постоянным сохранением.
+final adminUnlockedNotifierProvider =
+    AsyncNotifierProvider<AdminUnlockNotifier, bool>(AdminUnlockNotifier.new);
 
-  return false;
-});
+class AdminUnlockNotifier extends AsyncNotifier<bool> {
+  KeyStorage get _storage => ref.read(keyStorageProvider);
 
-/// Провайдер для управления состоянием админки (ввод кода).
-final adminUnlockControllerProvider =
-    Provider<AdminUnlockController>((ref) => AdminUnlockController());
+  @override
+  Future<bool> build() async {
+    // 1. Проверяем сохраненный флаг разблокировки в Keystore
+    final saved = await _storage.read(_kAdminUnlockedKey);
+    if (saved == 'true') return true;
 
-class AdminUnlockController {
-  bool _isUnlocked = false;
+    // 2. Автоматическая разблокировка, если ID устройства совпадает с OWNER_CODE
+    if (kOwnerCode.isNotEmpty) {
+      final identityCode = ref.watch(identityProvider).value;
+      if (identityCode != null) {
+        final cleanIdentity =
+            identityCode.replaceAll(RegExp(r'[^A-Z0-9]'), '');
+        final cleanOwner = kOwnerCode.replaceAll(RegExp(r'[^A-Z0-9]'), '');
+        if (cleanIdentity == cleanOwner) {
+          await _storage.write(_kAdminUnlockedKey, 'true');
+          return true;
+        }
+      }
+    }
 
-  /// Попытка разблокировать админку по коду владельца.
-  /// Возвращает true если код верный.
-  bool tryUnlock(String enteredCode) {
-    final normalised = enteredCode.trim().toUpperCase();
-    if (normalised == kOwnerCode) {
-      _isUnlocked = true;
+    return false;
+  }
+
+  /// Попытка разблокировать админку по коду владельца и СОХРАНИТЬ навсегда.
+  Future<bool> tryUnlock(String enteredCode) async {
+    final cleanEntered =
+        enteredCode.replaceAll(RegExp(r'[^A-Z0-9]'), '').toUpperCase();
+    final cleanOwner =
+        kOwnerCode.replaceAll(RegExp(r'[^A-Z0-9]'), '').toUpperCase();
+
+    if (cleanEntered.isNotEmpty && cleanEntered == cleanOwner) {
+      await _storage.write(_kAdminUnlockedKey, 'true');
+      state = const AsyncData(true);
       return true;
     }
     return false;
   }
 
-  /// Заблокировать админку.
-  void lock() {
-    _isUnlocked = false;
+  /// Заблокировать / выйти из режима админа.
+  Future<void> lock() async {
+    await _storage.delete(_kAdminUnlockedKey);
+    state = const AsyncData(false);
   }
-
-  /// Текущее состояние.
-  bool get isUnlocked => _isUnlocked;
 }
+
+/// Синхронный провайдер булева значения для быстрого чтения в UI.
+final adminUnlockedProvider = Provider<bool>((ref) {
+  final asyncVal = ref.watch(adminUnlockedNotifierProvider);
+  return asyncVal.value ?? false;
+});

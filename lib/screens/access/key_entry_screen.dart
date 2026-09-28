@@ -104,10 +104,20 @@ class _KeyEntryScreenState extends ConsumerState<KeyEntryScreen> {
     try {
       final trimmedText = _controller.text.trim();
       // Check if owner code entered
-      if (ref.read(adminUnlockControllerProvider).tryUnlock(trimmedText)) {
+      final isOwner = await ref
+          .read(adminUnlockedNotifierProvider.notifier)
+          .tryUnlock(trimmedText);
+      if (isOwner) {
         if (!mounted) return;
         _controller.clear();
-        context.go('/admin/dashboard');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Код владельца подтвержден! Панель управления доступна в профиле.'),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+        context.go('/identity');
         return;
       }
 
