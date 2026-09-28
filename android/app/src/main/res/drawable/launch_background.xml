@@ -3,9 +3,9 @@
     <!-- Тёмный фон MOROK VPN -->
     <item android:drawable="@color/splash_background" />
     
-    <!-- Логотип MOROK по центру (vector drawable) -->
+    <!-- Логотип MOROK по центру -->
     <item
-        android:drawable="@drawable/ic_launcher_foreground"
+        android:drawable="@mipmap/ic_launcher_foreground"
         android:gravity="center"
         android:width="120dp"
         android:height="120dp" />
