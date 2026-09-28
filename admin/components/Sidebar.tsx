@@ -28,10 +28,10 @@ export default function Sidebar() {
     <aside className="w-60 shrink-0 h-screen sticky top-0 flex flex-col border-r border-white/10 bg-surface/60 backdrop-blur">
       <div className="px-5 py-5 flex items-center gap-3 border-b border-white/10">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-indigo-500 grid place-items-center text-white font-bold">
-          N
+          M
         </div>
         <div>
-          <div className="font-bold text-sm">Nexa VPN</div>
+          <div className="font-bold text-sm">MOROK VPN</div>
           <div className="text-[11px] text-faint">Админ-панель</div>
         </div>
       </div>

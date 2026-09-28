@@ -35,9 +35,9 @@ export default function LoginPage() {
       <form onSubmit={onSubmit} className="w-full max-w-sm glass-card space-y-4">
         <div className="text-center">
           <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-accent to-indigo-500 grid place-items-center font-bold text-white text-xl">
-            N
+            M
           </div>
-          <h1 className="mt-3 text-xl font-bold">Админ-панель Nexa VPN</h1>
+          <h1 className="mt-3 text-xl font-bold">Админ-панель MOROK VPN</h1>
           <p className="text-sm text-muted">Войдите для управления сервисом</p>
         </div>
         <input
@@ -61,7 +61,7 @@ export default function LoginPage() {
           {loading ? 'Вход…' : 'Войти'}
         </button>
         <p className="text-[11px] text-faint text-center">
-          Админ по умолчанию: admin@nexavpn.app / admin1234
+          Админ по умолчанию: admin@morokvpn.app / admin1234
         </p>
       </form>
     </div>

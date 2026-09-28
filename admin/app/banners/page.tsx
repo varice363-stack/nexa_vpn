@@ -68,9 +68,9 @@ export default function BannersPage() {
   async function uploadImage(b: Banner, file: File) {
     const formData = new FormData();
     formData.append('file', file);
-    const token = localStorage.getItem('nexa_admin_token');
+    const token = localStorage.getItem('morok_admin_token');
     await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api'}/banners/${b.id}/upload`,
+      `${process.env.NEXT_PUBLIC_API_URL ?? 'https://morokvpn.com:8000/app-api'}/banners/${b.id}/upload`,
       {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},

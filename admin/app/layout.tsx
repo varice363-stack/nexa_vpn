@@ -4,8 +4,8 @@ import Sidebar from '@/components/Sidebar';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Nexa VPN Admin',
-  description: 'Nexa VPN administration panel',
+  title: 'MOROK VPN Admin',
+  description: 'MOROK VPN administration panel',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
