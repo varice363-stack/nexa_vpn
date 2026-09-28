@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/admin_dashboard.dart';
 import '../../models/analytics.dart';
+import '../../models/banner_stats.dart';
 import '../../providers/admin_dashboard_providers.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/banner_providers.dart';
@@ -413,7 +414,7 @@ class _BannersTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildTotalsGrid(AppLocalizations l10n, dynamic stats) {
+  Widget _buildTotalsGrid(AppLocalizations l10n, BannerStats stats) {
     final totals = stats.totals;
     return Row(
       children: [
@@ -444,23 +445,13 @@ class _BannersTab extends ConsumerWidget {
   Widget _buildBannersList(
     BuildContext context,
     AppLocalizations l10n,
-    AsyncValue<dynamic> async,
+    AsyncValue<BannerStats> async,
   ) {
     if (async.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (async.hasError || async.value == null) {
-      return GlassContainer(
-        borderRadius: BorderRadius.circular(16),
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          l10n.adminNoData,
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
-      );
-    }
-
-    final banners = async.value.banners as List<dynamic>;
+    final stats = async.value ?? BannerStats.empty();
+    final banners = stats.banners;
     if (banners.isEmpty) {
       return GlassContainer(
         borderRadius: BorderRadius.circular(16),
@@ -655,7 +646,7 @@ class _MetricTile extends StatelessWidget {
 class _BannerStatCard extends ConsumerWidget {
   const _BannerStatCard({required this.banner, required this.l10n});
 
-  final dynamic banner;
+  final BannerStatItem banner;
   final AppLocalizations l10n;
 
   @override
