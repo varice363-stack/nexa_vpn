@@ -20,6 +20,36 @@ export class CreateServerDto {
   ip!: string;
 
   @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  port?: number;
+
+  @IsOptional()
+  @IsString()
+  transport?: string;
+
+  @IsOptional()
+  @IsString()
+  security?: string;
+
+  @IsOptional()
+  @IsString()
+  sni?: string;
+
+  @IsOptional()
+  @IsString()
+  flow?: string;
+
+  @IsOptional()
+  @IsString()
+  publicKey?: string;
+
+  @IsOptional()
+  @IsString()
+  shortId?: string;
+
+  @IsOptional()
   @IsEnum(ServerProtocol)
   protocol?: ServerProtocol;
 
