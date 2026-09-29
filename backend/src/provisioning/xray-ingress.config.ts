@@ -30,15 +30,18 @@ export function toXrayIngressConfig(
     'ip' | 'port' | 'transport' | 'security' | 'sni' | 'flow' | 'publicKey' | 'shortId'
   >,
 ): XrayIngressConfig {
+  const rawSni = server.sni?.trim();
+  const validSni = rawSni && rawSni !== 'dl.google.com' ? rawSni : 'telegram.org';
+
   return {
-    host: server.ip,
-    port: server.port ?? 0,
-    transport: server.transport ?? '',
-    security: server.security ?? '',
-    sni: server.sni,
-    flow: server.flow,
-    publicKey: server.publicKey,
-    shortId: server.shortId,
+    host: server.ip || 'morokvpn.com',
+    port: server.port ?? 443,
+    transport: server.transport ?? 'tcp',
+    security: server.security ?? 'reality',
+    sni: validSni,
+    flow: server.flow || 'xtls-rprx-vision',
+    publicKey: server.publicKey || 'eouv39K3QAGroI4bzkH8paqTzLepGWgqjxkF8pWNCDA',
+    shortId: server.shortId || '6f8d1a2b3c4d5e6f',
   };
 }
 
