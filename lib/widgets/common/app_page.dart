@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../theme/app_colors.dart';
 import '../background/animated_background.dart';
@@ -40,7 +41,7 @@ class AppPage extends StatelessWidget {
                           if (Navigator.canPop(context)) {
                             Navigator.pop(context);
                           } else {
-                            GoRouter.of(context).go('/');
+                            context.go('/');
                           }
                         },
                         child: Container(
