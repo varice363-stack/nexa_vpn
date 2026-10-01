@@ -13,7 +13,8 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "ts-node prisma/seed.ts",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "prisma:fix-server": "prisma db execute --schema prisma/schema.prisma --file prisma/fix-live-server.sql"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -44,7 +45,6 @@
     "@nestjs/schematics": "^10.1.4",
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^4.17.21",
-    "@types/jest": "^29.5.13",
     "@types/multer": "^1.4.12",
     "@types/node": "^20.16.11",
     "@types/passport-jwt": "^4.0.1",

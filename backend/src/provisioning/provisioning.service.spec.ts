@@ -268,12 +268,34 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
     expect(contract.config.unavailableReason).toBe('CONFIGURATION_UNAVAILABLE');
   });
 
-  it('ACTIVE + incomplete ingress params → INGRESS_CONFIG_INVALID', async () => {
+  it('ACTIVE + plain TCP node without optional params → URI, no reality params', async () => {
+    const prisma = makePrisma({
+      vpnServer: {
+        findUnique: jest.fn(async () => ({
+          ...servers[0], // security: 'none'
+          port: null, // sane default 443 applies
+        })),
+      },
+    });
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+
+    const contract = await service.get(user, 'k1');
+
+    expect(contract.config.uri).toMatch(/^vless:\/\/.*@185\.65\.134\.22:443/);
+    // A non-TLS inbound must NOT be dressed up with SNI/flow/pbk defaults.
+    expect(contract.config.uri).not.toContain('sni=');
+    expect(contract.config.uri).not.toContain('flow=');
+    expect(contract.config.uri).not.toContain('pbk=');
+  });
+
+  it('ACTIVE + REALITY node without publicKey → INGRESS_CONFIG_INVALID', async () => {
     const prisma = makePrisma({
       vpnServer: {
         findUnique: jest.fn(async () => ({
           ...servers[0],
-          port: null, // mandatory param missing
+          security: 'reality',
+          publicKey: null, // key material is never invented
+          shortId: null,
         })),
       },
     });
@@ -283,6 +305,28 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
 
     expect(contract.config.uri).toBeNull();
     expect(contract.config.unavailableReason).toBe('INGRESS_CONFIG_INVALID');
+  });
+
+  it('ACTIVE + REALITY node with legacy broken SNI → sni normalised to telegram.org', async () => {
+    const prisma = makePrisma({
+      vpnServer: {
+        findUnique: jest.fn(async () => ({
+          ...servers[0],
+          security: 'reality',
+          sni: 'dl.google.com', // cert mismatch → x509 error on every client
+          flow: null,
+          publicKey: 'eouv39K3QAGroI4bzkH8paqTzLepGWgqjxkF8pWNCDA',
+          shortId: '6f8d1a2b3c4d5e6f',
+        })),
+      },
+    });
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+
+    const contract = await service.get(user, 'k1');
+
+    expect(contract.config.uri).toContain('sni=telegram.org');
+    expect(contract.config.uri).toContain('flow=xtls-rprx-vision');
+    expect(contract.config.uri).not.toContain('dl.google.com');
   });
 
   it('URI is never present in the public server list response', async () => {
