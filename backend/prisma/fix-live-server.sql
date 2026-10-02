@@ -7,10 +7,17 @@
 -- строку: она до сих пор отдаёт клиентам sni=dl.google.com, и sing-box/Hiddify
 -- падают на `x509: certificate is valid for *.telegram.org, not dl.google.com`.
 --
--- Запуск на VPS из каталога backend/:
---   sudo -u postgres psql -d nexa_vpn -f prisma/fix-live-server.sql
--- или, если DATABASE_URL уже в backend/.env:
---   npx prisma db execute --schema prisma/schema.prisma --file prisma/fix-live-server.sql
+-- Запуск на VPS (прод развёрнут в docker-compose, БД — в контейнере
+-- morok_postgres, база morok_vpn, пользователь morok; на хосте psql нет):
+--   cd <каталог с docker-compose.yml>          # обычно /root/nexa_vpn/backend
+--   git pull
+--   docker compose exec -T postgres psql -U morok -d morok_vpn \
+--     -v ON_ERROR_STOP=1 -f - < prisma/fix-live-server.sql
+-- Если репозиторий не поднят — сначала: git clone https://github.com/varice363-stack/nexa_vpn.git
+-- (внутри каталога, где лежит docker-compose.yml, путь = .../nexa_vpn/backend).
+--
+-- Альтернатива, если prisma уже лежит в контейнере morok_backend:
+--   docker compose exec backend sh -lc "cd /app && prisma db execute --schema prisma/schema.prisma --file prisma/fix-live-server.sql"
 --
 -- Скрипт идемпотентен: повторный запуск ничего не меняет.
 

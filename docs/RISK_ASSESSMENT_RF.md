@@ -199,15 +199,18 @@ www.morokvpn.com     -> не светить как «сервер VPN»; либ�
 Файл: `backend/prisma/fix-live-server.sql`
 Скрипт: `npm run prisma:fix-server` (в `backend/`)
 
-На VPS:
+Прод крутится в docker-compose (`morok_postgres`, база `morok_vpn`, пользователь
+`morok`), на хосте psql нет — поэтому на VPS:
 
 ```bash
-cd /var/www/nexa_vpn/backend          # или где лежит репозиторий
-sudo -u postgres psql -d nexa_vpn -f prisma/fix-live-server.sql
-# либо, если DATABASE_URL уже в backend/.env:
-npm run prisma:fix-server
+cd /root/nexa_vpn/backend && git pull
+docker compose exec -T postgres psql -U morok -d morok_vpn \
+  -v ON_ERROR_STOP=1 -f - < prisma/fix-live-server.sql
 curl -s http://morokvpn.com:3000/app-api/servers   # ждём "sni":"telegram.org"
 ```
+
+Каталог, где лежит `docker-compose.yml`, если не угадал:
+`sudo find / -name docker-compose.yml -not -path "*/node_modules/*" 2>/dev/null`.
 
 Ожидаемый результат после применения (проверено на реальной схеме):
 
