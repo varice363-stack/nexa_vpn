@@ -20,6 +20,22 @@ bash <(curl -Ls https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.s
 `bash -n` — чисто. Команды внутри контейнеров на настоящем docker не гонялись —
 тут его нет.
 
+## Быстрый фикс живого узла (одна команда, Termux тоже годится)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/varice363-stack/nexa_vpn/main/deploy/fix-vpn-now.sh | bash
+```
+
+Делает ровно одно: `UPDATE` по id узла (`sni=telegram.org`, `port=443`,
+`security=reality`, `flow=xtls-rprx-vision`, честная локация) и печатает, что
+отдаёт API. Ничего не удаляет, повторный запуск безопасен.
+Хост по умолчанию — `root@78.17.156.139`, можно переопределить:
+`bash -s -- root@NEW_IP`.
+
+Проверено на локальном стенде (Postgres 17 + полная схема из миграций, строка
+`VpnServer` как в проде): `UPDATE 1`, `sni` стал `telegram.org`, `port` стал 443;
+второй запуск — тот же результат.
+
 ## Почему смена IP сама по себе ничего не чинит
 
 Клиент строит URI из строки `VpnServer` в БД (`ip`, `port`, `security`, `sni`,
