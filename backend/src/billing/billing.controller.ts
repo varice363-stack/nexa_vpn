@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 
@@ -6,7 +6,12 @@ import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser, SafeUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { BillingService } from './billing.service';
-import { CheckoutDto } from './dto/checkout.dto';
+import {
+  ApproveCryptoDto,
+  CheckoutDto,
+  RejectCryptoDto,
+  SubmitCryptoHashDto,
+} from './dto/checkout.dto';
 import { WebhookDto } from './dto/webhook.dto';
 
 @ApiTags('billing')
@@ -21,7 +26,53 @@ export class BillingController {
     @Body() dto: CheckoutDto,
     @Headers('idempotency-key') idempotencyKey?: string,
   ) {
-    return this.billing.checkout(user, dto.planId, idempotencyKey);
+    return this.billing.checkout(user, dto.planId, idempotencyKey, dto.cryptoNetwork);
+  }
+
+  // ── USDT (TRC-20 / BEP-20), ручное подтверждение ────────────────────────
+
+  /** POST /billing/crypto/submit — «перевёл, вот хэш». Инвойс: GET /billing/transactions/:id */
+  @Post('crypto/submit')
+  submitCrypto(
+    @CurrentUser() user: SafeUser,
+    @Body() dto: SubmitCryptoHashDto,
+  ) {
+    return this.billing.submitCryptoTxHash(user, dto.transactionId, dto.txHash);
+  }
+
+  /** GET /billing/crypto/wallets — настроен ли приём (для превью в UI). */
+  @Public()
+  @Get('crypto/wallets')
+  cryptoWallets() {
+    return this.billing.publicCryptoConfig();
+  }
+
+  /** GET /billing/crypto/queue?scope=awaiting|unsigned|all — очередь панели. */
+  @Roles(Role.ADMIN)
+  @Get('crypto/queue')
+  cryptoQueue(@Query('scope') scope?: 'awaiting' | 'unsigned' | 'all') {
+    return this.billing.cryptoQueue(scope ?? 'awaiting');
+  }
+
+  /** POST /billing/crypto/:id/approve — деньги пришли → доступ выдан. */
+  @Roles(Role.ADMIN)
+  @Post('crypto/:id/approve')
+  approveCrypto(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ApproveCryptoDto) {
+    return this.billing.approveCryptoPayment(id, dto?.note);
+  }
+
+  /** POST /billing/crypto/:id/reject — отказ с причиной. */
+  @Roles(Role.ADMIN)
+  @Post('crypto/:id/reject')
+  rejectCrypto(@Param('id', ParseUUIDPipe) id: string, @Body() dto: RejectCryptoDto) {
+    return this.billing.rejectCryptoPayment(id, dto.reason);
+  }
+
+  /** POST /billing/crypto/expire — счистить протухшие неоплаченные инвойсы. */
+  @Roles(Role.ADMIN)
+  @Post('crypto/expire')
+  expireCrypto() {
+    return this.billing.expireCryptoInvoices();
   }
 
   /** POST /billing/webhook/:provider — idempotent payment events. */

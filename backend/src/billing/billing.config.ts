@@ -1,14 +1,21 @@
 /**
  * Billing configuration — read from environment variables.
  *
- * PAYMENT_PROVIDER          mock | real (default: mock)
+ * PAYMENT_PROVIDER          mock | real | crypto (default: mock)
+ * USDT_TRC20_ADDRESS / USDT_BEP20_ADDRESS  кошельки приёма (crypto)
+ * USDT_RATE_RUB             1 USDT в ₽ (0 = не пересчитывать, руб == usdt)
+ * CRYPTO_DISCOUNT_RUB       скидка за крипту, ₽ (0 = без скидки)
+ * CRYPTO_INVOICE_TTL_MIN    TTL инвойса, минуты (default 60)
+ * CRYPTO_NETWORK            TRC20 | BEP20 — сеть по умолчанию
  * PAYMENT_SECRET            provider API secret (used by real providers)
  * PAYMENT_WEBHOOK_SECRET    webhook signature secret
  * PAYMENT_RETURN_URL        return URL after checkout
  * BILLING_CLEANUP_INTERVAL_MS  auto-cleanup interval (0 = disabled)
  */
+export type PaymentProviderKind = 'mock' | 'real' | 'crypto';
+
 export interface BillingConfig {
-  provider: 'mock' | 'real';
+  provider: PaymentProviderKind;
   secret: string;
   webhookSecret: string;
   returnUrl: string;
@@ -17,7 +24,9 @@ export interface BillingConfig {
 }
 
 export function loadBillingConfig(): BillingConfig {
-  const provider = process.env.PAYMENT_PROVIDER === 'real' ? 'real' : 'mock';
+  const raw = process.env.PAYMENT_PROVIDER;
+  const provider: PaymentProviderKind =
+    raw === 'real' ? 'real' : raw === 'crypto' ? 'crypto' : 'mock';
   return {
     provider,
     secret: process.env.PAYMENT_SECRET ?? '',

@@ -193,13 +193,24 @@ model PaymentTransaction {
   idempotencyKey    String?         // client-supplied key (checkout dedup)
   webhookEvent      String?         // last webhook event received (payment.paid, ...)
   webhookProcessedAt DateTime?      // last webhook processing timestamp
+
+  // ── USDT (TRC-20 / BEP-20) manual confirmation — TASK #029 ────────────
+  cryptoAddress      String?   // адрес, на который пользователь переводит USDT
+  cryptoNetwork      String?   // TRC20 | BEP20
+  cryptoAmount       Float?    // сумма в USDT: дробный остаток = ключ сверки
+  cryptoExpiresAt    DateTime? // инвойс протух → CANCELLED
+  cryptoTxHash       String?   // @unique: один хэш = одна транзакция (анти-повтор)
+  cryptoSubmittedAt  DateTime? // когда пользователь прислал хэш
+  cryptoReviewedNote String?   // что написал админ при подтверждении/отказе
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
   @@unique([provider, providerPaymentId])
+  @@unique([cryptoTxHash])
   @@index([userId])
   @@index([status])
   @@index([idempotencyKey])
+  @@index([provider, status, cryptoSubmittedAt])
 }
 
 // ── Banner ───────────────────────────────────────────────────────────────

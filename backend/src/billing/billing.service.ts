@@ -9,6 +9,10 @@ import {
   CheckoutResult,
   PaymentProvider,
 } from './payment-provider.interface';
+import {
+  CryptoInvoice,
+  CryptoUsdtProvider,
+} from './providers/crypto-usdt.payment-provider';
 import { PaymentProviderFactory } from './providers/payment-provider.factory';
 
 /**
@@ -30,13 +34,27 @@ import { PaymentProviderFactory } from './providers/payment-provider.factory';
 export class BillingService {
   private readonly config: BillingConfig;
   private readonly providers: Record<string, PaymentProvider>;
+  /**
+   * Инвойсы USDT строит ВСЕГДА готовый провайдер (а не только активный):
+   * оплата криптой — второй способ при активном YooKassa, а не замена.
+   */
+  private readonly crypto: CryptoUsdtProvider;
 
   constructor(private readonly prisma: PrismaService) {
     this.config = loadBillingConfig();
-    // Provider selected via PAYMENT_PROVIDER env — swapping providers
-    // requires zero changes to the billing core.
+
+    // USDT живёт всегда (это второй СПОСОБ оплаты, а не замена основного):
+    // билдинг инвойсов идёт через this.crypto, и он же регистрируется в
+    // реестре провайдеров — ДВА экземпляра разъехались бы по конфигам.
+    const primary = PaymentProviderFactory.create(this.config.provider);
+    this.crypto =
+      this.config.provider === 'crypto' && primary instanceof CryptoUsdtProvider
+        ? primary
+        : new CryptoUsdtProvider();
+
     this.providers = {
-      [this.config.provider]: PaymentProviderFactory.create(this.config.provider),
+      [this.config.provider]: primary,
+      crypto: this.crypto,
     };
     // Keep 'mock' resolvable for webhooks when the real provider is off.
     if (this.config.provider !== 'mock') {
@@ -68,6 +86,7 @@ export class BillingService {
     user: SafeUser,
     planId: string,
     idempotencyKey?: string,
+    cryptoNetwork?: string,
   ): Promise<CheckoutResult> {
     const plan = await this.prisma.subscriptionPlan.findUnique({
       where: { id: planId },
@@ -90,7 +109,20 @@ export class BillingService {
       }
     }
 
-    const provider = this.providers[this.config.provider];
+    // Основной способ оплаты = то, что включено в PAYMENT_PROVIDER; для крипты
+    // это всегда this.crypto (один и тот же экземпляр — иначе конфиг инвойса
+    // и конфиг очереди разошлись бы).
+    const provider =
+      this.config.provider === 'crypto' ? this.crypto : this.providers[this.config.provider];
+    // Инвойс строим ДО записи, чтобы на не настроенном кошельке упасть честно,
+    // а не оставить пользователю висячий PENDING.
+    let invoice: CryptoInvoice | null = null;
+    if (provider === this.crypto) {
+      invoice = this.crypto.buildInvoice(
+        { plan, user, transactionId: idempotencyKey ?? randomUUID(), amount: Number(plan.price), currency: plan.currency },
+        cryptoNetwork,
+      );
+    }
     const transaction = await this.prisma.paymentTransaction.create({
       data: {
         userId: user.id,
@@ -101,8 +133,34 @@ export class BillingService {
         currency: plan.currency,
         status: PaymentStatus.PENDING,
         idempotencyKey: idempotencyKey ?? null,
+        ...(invoice
+          ? {
+              cryptoAddress: invoice.address,
+              cryptoNetwork: invoice.network,
+              cryptoAmount: invoice.usdtAmount,
+              cryptoExpiresAt: new Date(invoice.expiresAt),
+            }
+          : {}),
       },
     });
+
+    // Хвост суммы завязан на id транзакции → пересчитываем на реальном id
+    // и фиксируем в строке (иначе invoice и факт разошлись бы).
+    if (invoice) {
+      invoice = this.crypto.buildInvoice(
+        { plan, user, transactionId: transaction.id, amount: Number(plan.price), currency: plan.currency },
+        invoice.network,
+      );
+      await this.prisma.paymentTransaction.update({
+        where: { id: transaction.id },
+        data: {
+          cryptoAddress: invoice.address,
+          cryptoNetwork: invoice.network,
+          cryptoAmount: invoice.usdtAmount,
+          cryptoExpiresAt: new Date(invoice.expiresAt),
+        },
+      });
+    }
 
     const result = await provider.createPayment({
       plan,
@@ -478,6 +536,132 @@ export class BillingService {
       orderBy: { createdAt: 'desc' },
       include: { user: { select: { id: true, email: true } } },
     });
+  }
+
+  // ── USDT: инвойс, подтверждение покупателем, очередь админа (TASK #029) ──
+
+  /** Покупатель: «я перевёл, вот хэш». Только своя PENDING-крипта. */
+  async submitCryptoTxHash(user: SafeUser, transactionId: string, txHash: string) {
+    const hash = txHash.trim();
+    if (!/^[A-Za-z0-9]{16,128}$/.test(hash)) {
+      throw new BadRequestException('Transaction hash looks invalid');
+    }
+    const tx = await this.prisma.paymentTransaction.findFirst({
+      where: { id: transactionId, userId: user.id },
+    });
+    if (!tx) throw new NotFoundException('Transaction not found');
+    if (tx.provider !== ProviderName.CRYPTO) {
+      throw new BadRequestException('Not a crypto payment');
+    }
+    if (tx.status !== PaymentStatus.PENDING) {
+      throw new BadRequestException(`Payment is already ${tx.status}`);
+    }
+    if (tx.cryptoExpiresAt && tx.cryptoExpiresAt < new Date()) {
+      throw new BadRequestException('Invoice expired — start checkout again');
+    }
+
+    // Анти-переиспользование: один хэш не может закрыть две сделки.
+    const taken = await this.prisma.paymentTransaction.findFirst({
+      where: { cryptoTxHash: hash, id: { not: tx.id } },
+      select: { id: true },
+    });
+    if (taken) throw new BadRequestException('This hash is already attached to another payment');
+
+    const updated = await this.prisma.paymentTransaction.update({
+      where: { id: tx.id },
+      data: { cryptoTxHash: hash, cryptoSubmittedAt: new Date() },
+    });
+    return { accepted: true, transactionId: updated.id, status: updated.status };
+  }
+
+  /**
+   * Панель: очередь на подтверждение.
+   * `awaiting` — прислали хэш; `unsigned` — инвойс выставлен, хэша нет.
+   */
+  async cryptoQueue(scope: 'awaiting' | 'unsigned' | 'all' = 'awaiting') {
+    const where: Record<string, unknown> = {
+      provider: ProviderName.CRYPTO,
+      status: PaymentStatus.PENDING,
+    };
+    if (scope === 'awaiting') where.cryptoSubmittedAt = { not: null };
+    if (scope === 'unsigned') where.cryptoSubmittedAt = null;
+    return this.prisma.paymentTransaction.findMany({
+      where,
+      orderBy: { cryptoSubmittedAt: { sort: 'asc', nulls: 'last' } },
+      include: {
+        user: { select: { id: true, email: true, deviceId: true } },
+        plan: { select: { id: true, name: true, code: true, price: true, durationDays: true } },
+      },
+    });
+  }
+
+  /** Панель: деньги пришли, сверили по хвосту суммы → выдаём доступ. */
+  async approveCryptoPayment(transactionId: string, note?: string) {
+    const tx = await this.prisma.paymentTransaction.findFirst({
+      where: { id: transactionId, provider: ProviderName.CRYPTO },
+      select: { id: true, cryptoTxHash: true },
+    });
+    if (!tx) throw new NotFoundException('Crypto payment not found');
+    if (!tx.cryptoTxHash) {
+      throw new BadRequestException('Buyer has not submitted a hash yet');
+    }
+    // _onPaid сам выставит PAID, подписку и ключ; повторный вызов он и отклонит.
+    const issued = await this._onPaid(transactionId);
+    await this.prisma.paymentTransaction.update({
+      where: { id: transactionId },
+      data: { cryptoReviewedNote: note?.trim() || 'confirmed manually (crypto)' },
+    });
+    return { approved: true, ...issued };
+  }
+
+  /** Панель: отказ (не та сумма / не тот хэш). Транзакция гасится в FAILED. */
+  async rejectCryptoPayment(transactionId: string, reason: string) {
+    const tx = await this.prisma.paymentTransaction.findFirst({
+      where: { id: transactionId, provider: ProviderName.CRYPTO },
+      select: { id: true, status: true },
+    });
+    if (!tx) throw new NotFoundException('Crypto payment not found');
+    if (tx.status === PaymentStatus.PAID) {
+      throw new BadRequestException('Already paid — use refund flow');
+    }
+    await this.prisma.paymentTransaction.update({
+      where: { id: transactionId },
+      data: {
+        status: PaymentStatus.FAILED,
+        cryptoReviewedNote: `rejected: ${reason?.trim() || 'no reason'}`.slice(0, 400),
+      },
+    });
+    return { rejected: true };
+  }
+
+  /**
+   * Панель: настройка приёма. Адреса живут в env, а не в БД — запись в БД
+   * означала бы, что скомпрометированная панель может переписать реквизиты
+   * молча. Здесь только проверка того, что в окружении уже стоит.
+   */
+  /** Для панели: тот же объект, что видит покупатель, + флаг готовности. */
+  cryptoWallets() {
+    return this.crypto.publicInfo();
+  }
+
+  /** Для приложения: только то, что можно показать до checkout. */
+  publicCryptoConfig() {
+    const { configured: _c, ...publicPart } = this.crypto.publicInfo();
+    return publicPart;
+  }
+
+  /** Крон/ручная кнопка: протухшие неоплаченные инвойсы → CANCELLED. */
+  async expireCryptoInvoices() {
+    const res = await this.prisma.paymentTransaction.updateMany({
+      where: {
+        provider: ProviderName.CRYPTO,
+        status: PaymentStatus.PENDING,
+        cryptoExpiresAt: { lt: new Date() },
+        cryptoSubmittedAt: null,
+      },
+      data: { status: PaymentStatus.CANCELLED },
+    });
+    return { cancelled: res.count };
   }
 
   /**
