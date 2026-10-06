@@ -1,6 +1,6 @@
 'use client';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://morokvpn.com:8000/app-api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://78.17.156.139:3000/app-api';
 const TOKEN_KEY = 'morok_admin_token';
 
 export function getToken(): string | null {

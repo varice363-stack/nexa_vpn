@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 
 // Where the NestJS API actually runs (server-side only).
-const API_ORIGIN = process.env.API_PROXY_ORIGIN ?? 'http://localhost:3000';
+// Глобальный префикс бэкенда — /app-api (backend/src/main.ts: setGlobalPrefix).
+// 78.17.156.139 — живой IP после миграции; morokvpn.com не используем: домен
+// припаркован регистратором (verification-hold → 127.0.0.1), см. docs/RISK_ASSESSMENT_RF.md §9.
+const API_ORIGIN = process.env.API_PROXY_ORIGIN ?? 'http://78.17.156.139:3000';
 
 const nextConfig = {
   reactStrictMode: true,
@@ -17,7 +20,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: `${API_ORIGIN}/api/:path*`,
+        destination: `${API_ORIGIN}/app-api/:path*`,
       },
     ];
   },

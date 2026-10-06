@@ -70,7 +70,7 @@ export default function BannersPage() {
     formData.append('file', file);
     const token = localStorage.getItem('morok_admin_token');
     await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL ?? 'https://morokvpn.com:8000/app-api'}/banners/${b.id}/upload`,
+      `${process.env.NEXT_PUBLIC_API_URL ?? 'http://78.17.156.139:3000/app-api'}/banners/${b.id}/upload`,
       {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},

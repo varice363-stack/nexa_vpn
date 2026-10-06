@@ -6,11 +6,12 @@ Web-дашборд управления сервисом: dashboard, users, serv
 
 ```bash
 npm install
-cp .env.example .env.local   # NEXT_PUBLIC_API_URL=http://localhost:3000/api
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL=/api (дефолт и так рабочий)
 npm run dev                  # http://localhost:3001
 ```
 
-Вход: `admin@nexavpn.app / admin1234` (сид backend).
+Вход: `admin@morokvpn.app / admin1234` (сид backend). **Смени пароль сразу** —
+он лежит в открытом виде в `backend/prisma/seed.ts`, а порт 3000 смотрит в интернет.
 
 ## Разделы
 
