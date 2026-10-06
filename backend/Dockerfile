@@ -36,7 +36,8 @@ COPY prisma ./prisma/
 # Install dependencies so prisma CLI is available
 RUN npm ci
 
-# Copy built artifacts and generated prisma client
+# Copy built artifacts and generated prisma client (dist включает seed.js —
+# см. build-скрипт: сид компилируется рядом, чтобы не тянуть ts-node в прод)
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
