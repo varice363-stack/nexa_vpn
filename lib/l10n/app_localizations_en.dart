@@ -9,10 +9,10 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'Morok VPN';
+  String get appName => 'MOROK VPN';
 
   @override
-  String get appTagline => 'Dissolve into the mist';
+  String get appTagline => 'Private • Secure • Fast';
 
   @override
   String get navHome => 'Home';
@@ -74,7 +74,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingBody1 =>
-      'Connect with a single tap. Morok VPN works silently in the background and keeps your session alive.';
+      'Connect with a single tap. MOROK VPN works silently in the background and keeps your session alive.';
 
   @override
   String get onboardingTitle2 => 'SOCKS5 Shield & zero logs';
@@ -147,7 +147,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accessNoActiveKey => 'No active key';
 
   @override
-  String get accessGenerateHint => 'Generate a key to use Morok on any device';
+  String get accessGenerateHint => 'Generate a key to use MOROK on any device';
 
   @override
   String get accessGetAccess => 'Get access';
@@ -265,25 +265,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAutoConnectHint =>
-      'Connect to the fastest server on app launch';
+      'Android reconnects by itself — enable \"Always-on VPN\" in system settings';
 
   @override
-  String get settingsProtocol => 'Protocol';
+  String get settingsKillSwitch => 'Leak protection';
 
   @override
-  String get settingsProtocolHint => 'Tunnel transport protocol';
-
-  @override
-  String get settingsKillSwitch => 'Kill switch';
-
-  @override
-  String get settingsKillSwitchHint => 'Block all traffic if the tunnel drops';
-
-  @override
-  String get settingsDns => 'DNS';
-
-  @override
-  String get settingsDnsHint => 'DNS resolution mode';
+  String get settingsKillSwitchHint =>
+      'Blocking traffic without a tunnel is an Android setting (Android 12+)';
 
   @override
   String get settingsNotifications => 'Notifications';
@@ -301,7 +290,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLogsCleared => 'Logs cleared';
 
   @override
-  String get settingsAbout => 'About Morok VPN';
+  String get settingsAbout => 'About MOROK VPN';
 
   @override
   String get settingsAboutHint => 'Version, privacy policy, changelog';
@@ -381,7 +370,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Upgrade for unlimited data and 4K streaming';
 
   @override
-  String get profileMorokPremium => 'Morok Premium';
+  String get profileNexaPremium => 'MOROK Premium';
 
   @override
   String get profileMyAccess => 'My Access';
@@ -665,7 +654,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your payment history will appear here after the first purchase.';
 
   @override
-  String get consentTitle => 'How Morok VPN uses your connection';
+  String get consentTitle => 'How MOROK VPN uses your connection';
 
   @override
   String get consentIntro =>
@@ -676,7 +665,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get consentPoint1Body =>
-      'Morok VPN uses the Android VpnService to route your device traffic through a server you choose. Android will ask you to allow this the first time you connect.';
+      'MOROK VPN uses the Android VpnService to route your device traffic through a server you choose. Android will ask you to allow this the first time you connect.';
 
   @override
   String get consentPoint2Title => 'Your traffic is encrypted';
@@ -716,7 +705,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keyEntrySubtitle =>
-      'Enter a Morok code, a vless:// link, or a subscription link from any provider';
+      'Enter a MOROK code, a vless:// link, or a subscription link from any provider';
 
   @override
   String get keyEntryHint => 'MOROK-XXXX-XXXX, vless://… or https://…';
@@ -738,6 +727,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keyEntryNoKeyYet => 'Don\'t have a key?';
+
+  @override
+  String get keyEntryDetectedNexa => 'MOROK access code';
 
   @override
   String get keyEntryDetectedMorok => 'Morok access code';
@@ -770,6 +762,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'This code is already used on another device.';
 
   @override
+  String get keyEntrySuccessNexa => 'Access activated';
+
+  @override
   String get keyEntrySuccessMorok => 'Access activated';
 
   @override
@@ -786,7 +781,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keyEntryLocalOnly =>
-      'Stored on this device only — never sent to Morok servers.';
+      'Stored on this device only — never sent to MOROK servers.';
 
   @override
   String get keyEntryDetectedSubscription => 'Provider subscription';
@@ -840,7 +835,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accessGenerateHintLong =>
-      'Get access to generate your personal key — usable in the Morok app and any compatible client.';
+      'Get access to generate your personal key — usable in the MOROK app and any compatible client.';
 
   @override
   String get accessStatusActive => 'ACTIVE';
@@ -1163,4 +1158,189 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonLoading => 'Loading...';
+
+  @override
+  String get powerConnectedSuccessfully => 'Connected successfully';
+
+  @override
+  String get powerDisconnected => 'Disconnected';
+
+  @override
+  String get serverConnectionFailed => 'Connection failed';
+
+  @override
+  String serverRetryAttempt(int attempt, int max) {
+    return 'Retry attempt $attempt of $max';
+  }
+
+  @override
+  String serverConnectingTo(String server) {
+    return 'Connecting to $server...';
+  }
+
+  @override
+  String get devicesTitle => 'Devices';
+
+  @override
+  String get devicesSubtitle => 'Manage your connected devices';
+
+  @override
+  String get devicesLimit => 'Device limit';
+
+  @override
+  String get devicesNoConnections => 'No devices connected yet';
+
+  @override
+  String get devicesLimitReached => 'Device limit reached';
+
+  @override
+  String devicesSlotsAvailable(int count) {
+    return '$count slots available';
+  }
+
+  @override
+  String get devicesJustNow => 'Just now';
+
+  @override
+  String devicesMinutesAgo(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String devicesHoursAgo(int hours) {
+    return '$hours hours ago';
+  }
+
+  @override
+  String devicesDaysAgo(int days) {
+    return '$days days ago';
+  }
+
+  @override
+  String get devicesDisconnect => 'Disconnect device';
+
+  @override
+  String get devicesDisconnectTitle => 'Disconnect device?';
+
+  @override
+  String devicesDisconnectBody(String name) {
+    return 'Device $name will be disconnected from your account.';
+  }
+
+  @override
+  String devicesDisconnected(String name) {
+    return 'Device $name disconnected';
+  }
+
+  @override
+  String get devicesEmpty =>
+      'You haven\'t connected any devices yet. Connect through the app and it will appear here.';
+
+  @override
+  String get devicesUpgradeTitle => 'Need more devices?';
+
+  @override
+  String get devicesUpgradeBody =>
+      'Upgrade to Premium to connect up to 5 devices simultaneously.';
+
+  @override
+  String get devicesUpgradeButton => 'Upgrade plan';
+
+  @override
+  String get trialTitle => 'Free Trial';
+
+  @override
+  String get trialSubtitle => 'Try MOROK VPN for free';
+
+  @override
+  String get trialBenefitTitle => '3 days free';
+
+  @override
+  String get trialBenefitSubtitle =>
+      'Full access to all features without restrictions';
+
+  @override
+  String get trialPeriod7Days => '3-day trial period';
+
+  @override
+  String get trialFeatureUnlimited => 'Unlimited traffic';
+
+  @override
+  String get trialFeatureAllServers => 'Access to all servers';
+
+  @override
+  String get trialFeature3Devices => 'Connect up to 3 devices';
+
+  @override
+  String get trialFeatureFullProtection => 'Full VLESS + Reality protection';
+
+  @override
+  String get trialActivateButton => 'Activate free trial';
+
+  @override
+  String get trialNoPayment => 'No credit card required';
+
+  @override
+  String get trialViewAllPlans => 'View all plans';
+
+  @override
+  String get trialActivated => 'Trial activated!';
+
+  @override
+  String trialActivatedBody(int days) {
+    return 'You have $days days of full access without restrictions';
+  }
+
+  @override
+  String get trialActiveTitle => 'Trial is active';
+
+  @override
+  String get trialActiveSubtitle => 'Enjoy full access';
+
+  @override
+  String trialDaysLeft(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'days',
+      one: 'day',
+    );
+    return '$days $_temp0';
+  }
+
+  @override
+  String trialHoursLeft(int hours) {
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
+      locale: localeName,
+      other: 'hours',
+      one: 'hour',
+    );
+    return '$hours $_temp0';
+  }
+
+  @override
+  String get trialRemaining => 'remaining';
+
+  @override
+  String get trialActiveFeatures => 'What\'s included:';
+
+  @override
+  String get trialUpgradeTitle => 'Don\'t want to limit yourself?';
+
+  @override
+  String get trialUpgradeSubtitle =>
+      'Upgrade to a paid plan and get even more features';
+
+  @override
+  String get trialUpgradeButton => 'Choose a plan';
+
+  @override
+  String get subscriptionActivated => 'Subscription activated';
+
+  @override
+  String get planNowActive => 'plan is now active';
+
+  @override
+  String get freePlanActivated => 'You have 3 GB of free traffic per month';
 }

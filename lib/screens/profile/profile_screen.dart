@@ -39,7 +39,7 @@ class ProfileScreen extends ConsumerWidget {
             onTap: () => context.push('/settings'),
           ),
           const SizedBox(height: 20),
-          SectionHeader(title: 'БЕЗОПАСНОСТЬ'),
+          const SectionHeader(title: 'БЕЗОПАСНОСТЬ'),
           GlassListTile(
             icon: Icons.shield_rounded,
             title: 'SOCKS5 Shield',

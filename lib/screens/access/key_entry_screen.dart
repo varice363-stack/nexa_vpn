@@ -151,7 +151,11 @@ class _KeyEntryScreenState extends ConsumerState<KeyEntryScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.keyEntrySuccessMorok)),
         );
-        context.go('/access');
+        // Маршрута '/access' в роутере нет (есть '/key' и '/' — домашний
+        // экран с тумблером). Попадание в несуществующий путь = пустой экран
+        // сразу после «ключ активирован», т.е. пользователь видел успех и
+        // проваливался в никуда.
+        context.go('/');
       }
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = _messageFor(l10n, e));

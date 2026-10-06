@@ -19,17 +19,17 @@ class ProtectedCard extends ConsumerWidget {
       final hours = duration.inHours.toString().padLeft(2, '0');
       final minutes = (duration.inMinutes % 60).toString().padLeft(2, '0');
       final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
-      return '${hours}ч ${minutes}м ${seconds}с';
+      return '$hoursч $minutesм $secondsс';
     }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
-            const Color(0xFF0A0F1E),
-            const Color(0xFF151A28),
+            Color(0xFF0A0F1E),
+            Color(0xFF151A28),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

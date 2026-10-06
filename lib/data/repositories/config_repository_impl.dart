@@ -2,7 +2,6 @@ import '../../domain/repositories/config_repository.dart';
 import '../../models/app_settings.dart';
 import '../../models/premium_plan.dart';
 import '../../models/user_profile.dart';
-import '../../models/vpn_config.dart';
 import '../datasources/local_settings_datasource.dart';
 
 /// [ConfigRepository] backed by [LocalSettingsDatasource] (SharedPreferences).
@@ -25,29 +24,13 @@ class ConfigRepositoryImpl implements ConfigRepository {
 
   @override
   Future<AppSettings> getSettings() async {
-    VpnProtocol protocol = VpnProtocol.wireguard;
-    for (final p in VpnProtocol.values) {
-      if (p.name == _local.protocol) protocol = p;
-    }
-    DnsPreference dns = DnsPreference.automatic;
-    for (final d in DnsPreference.values) {
-      if (d.name == _local.dns) dns = d;
-    }
     return AppSettings(
-      protocol: protocol,
-      dns: dns,
-      killSwitch: _local.killSwitch,
-      autoConnect: _local.autoConnect,
       notificationsEnabled: _local.notificationsEnabled,
     );
   }
 
   @override
   Future<void> saveSettings(AppSettings settings) async {
-    await _local.setString('settings.protocol', settings.protocol.name);
-    await _local.setString('settings.dns', settings.dns.name);
-    await _local.setBool('settings.kill_switch', settings.killSwitch);
-    await _local.setBool('settings.auto_connect', settings.autoConnect);
     await _local.setBool(
       'settings.notifications',
       settings.notificationsEnabled,

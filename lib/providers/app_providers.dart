@@ -26,9 +26,7 @@ import '../repositories/banner_repository_impl.dart';
 import '../repositories/notification_repository_impl.dart';
 import '../repositories/server_repository_impl.dart';
 import '../repositories/subscription_repository_impl.dart';
-import '../services/killswitch_service.dart';
 import '../services/api/api_client.dart';
-import '../services/api/api_config.dart';
 import '../services/api/token_storage.dart';
 import '../services/notification_service.dart';
 import '../services/security/ssl_pinning_service.dart';
@@ -149,13 +147,6 @@ final notificationServiceProvider = Provider<NotificationService>(
     return service;
   },
 );
-
-/// Kill Switch service — создаётся лениво, не блокирует запуск.
-final killSwitchProvider = Provider<KillSwitchService>((ref) {
-  final service = KillSwitchService(logger: AppLogger());
-  ref.onDispose(service.dispose);
-  return service;
-});
 
 /// Security service — создаётся лениво, не блокирует запуск.
 final securityServiceProvider = Provider<SecurityService>((ref) {

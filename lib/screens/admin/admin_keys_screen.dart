@@ -59,7 +59,7 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
   }
 
   Future<void> _issue() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _issuing = true;
       _error = null;
@@ -103,7 +103,7 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     // Экран умеет выпускать коды на продажу, поэтому проверка стоит здесь,
     // а не только в меню: попасть сюда по прямой ссылке нельзя.
     // Признак владельца — совпадение кода устройства с OWNER_CODE сборки.

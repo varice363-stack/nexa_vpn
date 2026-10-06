@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/utils/app_logger.dart';
 
 /// Anti-tampering service.
@@ -43,8 +42,6 @@ class AntiTamperService {
 
   Future<bool> _validateAndroidSignature() async {
     try {
-      final packageInfo = await PackageInfo.fromPlatform();
-      
       // Get APK signature via platform channel
       final String? signature = await _channel.invokeMethod('getApkSignature');
       
@@ -77,8 +74,6 @@ class AntiTamperService {
 
   Future<bool> _validateIOSSignature() async {
     try {
-      final packageInfo = await PackageInfo.fromPlatform();
-      
       // Get bundle signature via platform channel
       final String? signature = await _channel.invokeMethod('getBundleSignature');
       

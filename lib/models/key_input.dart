@@ -33,8 +33,6 @@ class KeyInput {
 
   bool get isValid => kind != KeyInputKind.unknown;
 
-  static const _codeBody = 8;
-
   /// Classifies raw input from the text field.
   ///
   /// Deliberately forgiving: people paste with stray whitespace, in the

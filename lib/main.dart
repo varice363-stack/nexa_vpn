@@ -9,7 +9,6 @@ import 'app/app.dart';
 import 'firebase_options.dart';
 import 'providers/app_providers.dart';
 import 'services/api/api_config.dart';
-import 'services/killswitch_service.dart';
 import 'services/security/security_service.dart';
 import 'core/utils/app_logger.dart';
 
@@ -21,15 +20,6 @@ Future<void> main() async {
 
   // Local persistence
   final prefs = await SharedPreferences.getInstance();
-
-  // Initialize Kill Switch service (native platform channel)
-  try {
-    final killSwitchService = KillSwitchService(logger: AppLogger());
-    await killSwitchService.initialize();
-  } catch (e) {
-    // Non-fatal: Kill Switch just won't work on this platform
-    debugPrint('Kill Switch initialization skipped: $e');
-  }
 
   // Run security checks in release mode — NON-FATAL, only logs
   if (kReleaseMode) {

@@ -10,10 +10,10 @@ class PartnerBanner extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
-            const Color(0xFF6C63FF),
-            const Color(0xFF4834D4),
+            Color(0xFF6C63FF),
+            Color(0xFF4834D4),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

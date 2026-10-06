@@ -1,40 +1,22 @@
-import 'vpn_config.dart';
-
-/// User-editable application settings, persisted via [ConfigRepository].
+/// Persisted user settings.
+///
+/// Состав намеренно короткий: сюда входят только те переключатели, которые
+/// во что-то упираются. Протокол, DNS и «kill switch» отсюда удалены, потому
+/// что туннель строится исключительно из контракта сервера
+/// (XrayTunnelManager.startTunnel не читает VpnConfig ни в одном поле) —
+/// кнопки меняли цифру в SharedPreferences и больше ничего.
+/// Защита от утечек и автоподключение живут в системной панели Android
+/// (см. services/system_vpn_settings.dart), поэтому в настройках это переход,
+/// а не переключатель.
 class AppSettings {
   const AppSettings({
-    this.protocol = VpnProtocol.wireguard,
-    this.dns = DnsPreference.automatic,
-    this.killSwitch = false,
-    this.autoConnect = false,
     this.notificationsEnabled = true,
   });
 
-  final VpnProtocol protocol;
-  final DnsPreference dns;
-  final bool killSwitch;
-  final bool autoConnect;
   final bool notificationsEnabled;
 
-  /// The tunnel-facing subset of the settings.
-  VpnConfig get vpnConfig => VpnConfig(
-        protocol: protocol,
-        dns: dns,
-        killSwitch: killSwitch,
-      );
-
-  AppSettings copyWith({
-    VpnProtocol? protocol,
-    DnsPreference? dns,
-    bool? killSwitch,
-    bool? autoConnect,
-    bool? notificationsEnabled,
-  }) {
+  AppSettings copyWith({bool? notificationsEnabled}) {
     return AppSettings(
-      protocol: protocol ?? this.protocol,
-      dns: dns ?? this.dns,
-      killSwitch: killSwitch ?? this.killSwitch,
-      autoConnect: autoConnect ?? this.autoConnect,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
     );
   }

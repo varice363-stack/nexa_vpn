@@ -64,10 +64,10 @@ class _StatItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             colors: [
-              const Color(0xFF0A0F1E),
-              const Color(0xFF151A28),
+              Color(0xFF0A0F1E),
+              Color(0xFF151A28),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,

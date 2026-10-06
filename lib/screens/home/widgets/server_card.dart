@@ -20,10 +20,10 @@ class ServerCard extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
-            const Color(0xFF0A0F1E),
-            const Color(0xFF151A28),
+            Color(0xFF0A0F1E),
+            Color(0xFF151A28),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

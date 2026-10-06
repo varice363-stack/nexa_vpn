@@ -8,7 +8,6 @@ import '../../domain/services/tunnel_manager.dart';
 import '../../models/connection_source.dart';
 import '../../models/vpn_config.dart';
 import '../../models/vpn_status.dart';
-import 'xray_protocol_enhancer.dart';
 
 /// Production tunnel backed by Xray-core through `flutter_vless`.
 ///

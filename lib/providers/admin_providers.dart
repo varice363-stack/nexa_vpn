@@ -68,6 +68,8 @@ class AdminUnlockNotifier extends AsyncNotifier<bool> {
     final cleanOwner =
         kOwnerCode.replaceAll(RegExp(r'[^A-Z0-9]'), '').toUpperCase();
 
+    // kOwnerCode пуст → сборка вообще не имеет админ-входа (публичные APK).
+    if (kOwnerCode.isEmpty) return false;
     if (cleanEntered.isNotEmpty && cleanEntered == cleanOwner) {
       await _storage.write(_kAdminUnlockedKey, 'true');
       await _ensureAdminToken();

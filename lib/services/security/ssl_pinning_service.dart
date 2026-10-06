@@ -30,18 +30,17 @@ class SslPinningService {
   /// Empty by default — add via [registerPin] after VPS deployment.
   final Map<String, List<String>> _knownPins = {};
 
-  /// Whether pinning is actively enforced (pins exist for the host).
-  bool _strictModeEnabled = false;
-
   /// Загружает пины из конфига (вызывается при старте).
   /// В production замените на реальные значения.
   void loadProductionPins() {
-    // После деплоя VPS раскомментируйте и подставьте реальные пины:
+    // Пины имеет смысл добавлять только когда API переведён на HTTPS:
+    // сейчас он отдаётся по http://IP:3000 (сертификата нет), поэтому любой
+    // пин означал бы «отклонять весь трафик». registerPin() оставлен как
+    // единственный путь включить проверку после включения TLS.
     // registerPin('api.morokvpn.app', 'REPLACE_WITH_REAL_SHA256_BASE64=');
-    // _strictModeEnabled = true;
 
     if (_logger != null) {
-      _logger!.info(
+      _logger.info(
         'SSL pinning: ${_knownPins.isEmpty ? "disabled (no pins configured)" : "${_knownPins.length} host(s) pinned"}',
         source: 'ssl',
       );

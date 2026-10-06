@@ -38,6 +38,26 @@ class ApiClient {
   final SslPinningService _sslPinningService;
   final String _baseUrl;
 
+  /// Запросы, для которых у клиента есть права администратора (только
+  /// владелец-сборка). Всё остальное идёт под обычным JWT.
+  static bool _isAdminCall(String method, String path) {
+    if (path.startsWith('/admin/') || path.startsWith('/analytics/')) return true;
+    if (path.startsWith('/banners/') && path != '/banners') return true; // all/activate/stats
+    if (path == '/servers/all' || path.startsWith('/users/')) return true;
+    if (path == '/provisioning/all' ||
+        path == '/provisioning/issue' ||
+        path.startsWith('/provisioning/xray/')) {
+      return true;
+    }
+    if (path.startsWith('/billing/')) {
+      // клиентские пути (checkout, crypto/submit, crypto/wallets) — без кода
+      return !path.startsWith('/billing/crypto/submit') &&
+          !path.startsWith('/billing/crypto/wallets') &&
+          !path.startsWith('/billing/checkout');
+    }
+    return false;
+  }
+
   /// Rate limiting: минимальный интервал между запросами.
   static const _minRequestInterval = Duration(milliseconds: 500);
   DateTime? _lastRequestTime;
@@ -85,10 +105,15 @@ class ApiClient {
     final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      // X-Owner-Code — только для личной (владелец) сборки, переданной при
+      // X-Owner-Code — только для личной (владелец) сборки, код передан при
       // сборке: --dart-define=OWNER_CODE=... . В публичной сборке пусто →
       // заголовок не отправляется вообще.
-      if (kOwnerCode.isNotEmpty) 'X-Owner-Code': kOwnerCode,
+      //
+      // И на владелецской сборке он едет НЕ в каждом запросе: заголовок — это
+      // ключ ко ВСЕМУ API (гард бэкенда пускает с ним на любой @Roles(ADMIN)
+      // маршрут), поэтому светить его в /auth/me и в лендинге баннеров нельзя.
+      if (kOwnerCode.isNotEmpty && _isAdminCall(method, path))
+        'X-Owner-Code': kOwnerCode,
       if (token != null && token.isNotEmpty)
         'Authorization': 'Bearer $token',
     };

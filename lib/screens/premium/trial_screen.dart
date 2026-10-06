@@ -156,7 +156,7 @@ class _TrialBenefitsCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       l10n.trialBenefitSubtitle,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
                       ),
@@ -185,7 +185,7 @@ class _TrialOfferCard extends StatelessWidget {
       child: Column(
         children: [
           // Price
-          Text(
+          const Text(
             '0 ₽',
             style: TextStyle(
               fontSize: 48,
@@ -196,7 +196,7 @@ class _TrialOfferCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             l10n.trialPeriod7Days,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
               color: AppColors.textSecondary,
             ),
@@ -212,7 +212,7 @@ class _TrialOfferCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.check_circle,
                       color: AppColors.success,
                       size: 20,
@@ -251,7 +251,7 @@ class _NoPaymentRequiredNote extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
+        const Icon(
           Icons.lock_outline,
           size: 16,
           color: AppColors.textSecondary,
@@ -259,7 +259,7 @@ class _NoPaymentRequiredNote extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           l10n.trialNoPayment,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 13,
             color: AppColors.textSecondary,
           ),
@@ -332,7 +332,7 @@ class _TrialCountdownCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             l10n.trialRemaining,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
               color: AppColors.textSecondary,
             ),
@@ -417,7 +417,7 @@ class _UpgradeToPaidCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.workspace_premium,
                 color: AppColors.primary,
                 size: 24,
@@ -437,7 +437,7 @@ class _UpgradeToPaidCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             l10n.trialUpgradeSubtitle,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               color: AppColors.textSecondary,
             ),

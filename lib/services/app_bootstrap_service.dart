@@ -87,9 +87,7 @@ class AppBootstrapService {
     // No authenticated user? Auto-register this device on the backend
     // so the admin dashboard can see it. We await this — without the token
     // the app opens as "guest" and the user won't see their stats.
-    if (user == null) {
-      user = await _autoRegisterIfPossible();
-    }
+    user ??= await _autoRegisterIfPossible();
 
     _logger.info(
       'Bootstrap done: onboarding=$onboarding authenticated=${user != null}',

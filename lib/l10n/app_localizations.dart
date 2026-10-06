@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'Morok VPN'**
+  /// **'MOROK VPN'**
   String get appName;
 
   /// No description provided for @appTagline.
@@ -227,7 +227,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingBody1.
   ///
   /// In en, this message translates to:
-  /// **'Connect with a single tap. Morok VPN works silently in the background and keeps your session alive.'**
+  /// **'Connect with a single tap. MOROK VPN works silently in the background and keeps your session alive.'**
   String get onboardingBody1;
 
   /// No description provided for @onboardingTitle2.
@@ -365,7 +365,7 @@ abstract class AppLocalizations {
   /// No description provided for @accessGenerateHint.
   ///
   /// In en, this message translates to:
-  /// **'Generate a key to use Morok on any device'**
+  /// **'Generate a key to use MOROK on any device'**
   String get accessGenerateHint;
 
   /// No description provided for @accessGetAccess.
@@ -593,44 +593,20 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAutoConnectHint.
   ///
   /// In en, this message translates to:
-  /// **'Connect to the fastest server on app launch'**
+  /// **'Android reconnects by itself — enable \"Always-on VPN\" in system settings'**
   String get settingsAutoConnectHint;
-
-  /// No description provided for @settingsProtocol.
-  ///
-  /// In en, this message translates to:
-  /// **'Protocol'**
-  String get settingsProtocol;
-
-  /// No description provided for @settingsProtocolHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Tunnel transport protocol'**
-  String get settingsProtocolHint;
 
   /// No description provided for @settingsKillSwitch.
   ///
   /// In en, this message translates to:
-  /// **'Kill switch'**
+  /// **'Leak protection'**
   String get settingsKillSwitch;
 
   /// No description provided for @settingsKillSwitchHint.
   ///
   /// In en, this message translates to:
-  /// **'Block all traffic if the tunnel drops'**
+  /// **'Blocking traffic without a tunnel is an Android setting (Android 12+)'**
   String get settingsKillSwitchHint;
-
-  /// No description provided for @settingsDns.
-  ///
-  /// In en, this message translates to:
-  /// **'DNS'**
-  String get settingsDns;
-
-  /// No description provided for @settingsDnsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'DNS resolution mode'**
-  String get settingsDnsHint;
 
   /// No description provided for @settingsNotifications.
   ///
@@ -665,7 +641,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAbout.
   ///
   /// In en, this message translates to:
-  /// **'About Morok VPN'**
+  /// **'About MOROK VPN'**
   String get settingsAbout;
 
   /// No description provided for @settingsAboutHint.
@@ -818,11 +794,11 @@ abstract class AppLocalizations {
   /// **'Upgrade for unlimited data and 4K streaming'**
   String get profileUpgradeHint;
 
-  /// No description provided for @profileMorokPremium.
+  /// No description provided for @profileNexaPremium.
   ///
   /// In en, this message translates to:
-  /// **'Morok Premium'**
-  String get profileMorokPremium;
+  /// **'MOROK Premium'**
+  String get profileNexaPremium;
 
   /// No description provided for @profileMyAccess.
   ///
@@ -1349,7 +1325,7 @@ abstract class AppLocalizations {
   /// No description provided for @consentTitle.
   ///
   /// In en, this message translates to:
-  /// **'How Morok VPN uses your connection'**
+  /// **'How MOROK VPN uses your connection'**
   String get consentTitle;
 
   /// No description provided for @consentIntro.
@@ -1367,7 +1343,7 @@ abstract class AppLocalizations {
   /// No description provided for @consentPoint1Body.
   ///
   /// In en, this message translates to:
-  /// **'Morok VPN uses the Android VpnService to route your device traffic through a server you choose. Android will ask you to allow this the first time you connect.'**
+  /// **'MOROK VPN uses the Android VpnService to route your device traffic through a server you choose. Android will ask you to allow this the first time you connect.'**
   String get consentPoint1Body;
 
   /// No description provided for @consentPoint2Title.
@@ -1439,7 +1415,7 @@ abstract class AppLocalizations {
   /// No description provided for @keyEntrySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Enter a Morok code, a vless:// link, or a subscription link from any provider'**
+  /// **'Enter a MOROK code, a vless:// link, or a subscription link from any provider'**
   String get keyEntrySubtitle;
 
   /// No description provided for @keyEntryHint.
@@ -1483,6 +1459,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Don\'t have a key?'**
   String get keyEntryNoKeyYet;
+
+  /// No description provided for @keyEntryDetectedNexa.
+  ///
+  /// In en, this message translates to:
+  /// **'MOROK access code'**
+  String get keyEntryDetectedNexa;
 
   /// No description provided for @keyEntryDetectedMorok.
   ///
@@ -1538,6 +1520,12 @@ abstract class AppLocalizations {
   /// **'This code is already used on another device.'**
   String get keyEntryErrorUsed;
 
+  /// No description provided for @keyEntrySuccessNexa.
+  ///
+  /// In en, this message translates to:
+  /// **'Access activated'**
+  String get keyEntrySuccessNexa;
+
   /// No description provided for @keyEntrySuccessMorok.
   ///
   /// In en, this message translates to:
@@ -1571,7 +1559,7 @@ abstract class AppLocalizations {
   /// No description provided for @keyEntryLocalOnly.
   ///
   /// In en, this message translates to:
-  /// **'Stored on this device only — never sent to Morok servers.'**
+  /// **'Stored on this device only — never sent to MOROK servers.'**
   String get keyEntryLocalOnly;
 
   /// No description provided for @keyEntryDetectedSubscription.
@@ -1655,7 +1643,7 @@ abstract class AppLocalizations {
   /// No description provided for @accessGenerateHintLong.
   ///
   /// In en, this message translates to:
-  /// **'Get access to generate your personal key — usable in the Morok app and any compatible client.'**
+  /// **'Get access to generate your personal key — usable in the MOROK app and any compatible client.'**
   String get accessGenerateHintLong;
 
   /// No description provided for @accessStatusActive.
@@ -2257,6 +2245,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading...'**
   String get commonLoading;
+
+  /// No description provided for @powerConnectedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected successfully'**
+  String get powerConnectedSuccessfully;
+
+  /// No description provided for @powerDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get powerDisconnected;
+
+  /// No description provided for @serverConnectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed'**
+  String get serverConnectionFailed;
+
+  /// No description provided for @serverRetryAttempt.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry attempt {attempt} of {max}'**
+  String serverRetryAttempt(int attempt, int max);
+
+  /// No description provided for @serverConnectingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to {server}...'**
+  String serverConnectingTo(String server);
+
+  /// No description provided for @devicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices'**
+  String get devicesTitle;
+
+  /// No description provided for @devicesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your connected devices'**
+  String get devicesSubtitle;
+
+  /// No description provided for @devicesLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Device limit'**
+  String get devicesLimit;
+
+  /// No description provided for @devicesNoConnections.
+  ///
+  /// In en, this message translates to:
+  /// **'No devices connected yet'**
+  String get devicesNoConnections;
+
+  /// No description provided for @devicesLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Device limit reached'**
+  String get devicesLimitReached;
+
+  /// No description provided for @devicesSlotsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} slots available'**
+  String devicesSlotsAvailable(int count);
+
+  /// No description provided for @devicesJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get devicesJustNow;
+
+  /// No description provided for @devicesMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min ago'**
+  String devicesMinutesAgo(int minutes);
+
+  /// No description provided for @devicesHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} hours ago'**
+  String devicesHoursAgo(int hours);
+
+  /// No description provided for @devicesDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days ago'**
+  String devicesDaysAgo(int days);
+
+  /// No description provided for @devicesDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect device'**
+  String get devicesDisconnect;
+
+  /// No description provided for @devicesDisconnectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect device?'**
+  String get devicesDisconnectTitle;
+
+  /// No description provided for @devicesDisconnectBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Device {name} will be disconnected from your account.'**
+  String devicesDisconnectBody(String name);
+
+  /// No description provided for @devicesDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Device {name} disconnected'**
+  String devicesDisconnected(String name);
+
+  /// No description provided for @devicesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t connected any devices yet. Connect through the app and it will appear here.'**
+  String get devicesEmpty;
+
+  /// No description provided for @devicesUpgradeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Need more devices?'**
+  String get devicesUpgradeTitle;
+
+  /// No description provided for @devicesUpgradeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Premium to connect up to 5 devices simultaneously.'**
+  String get devicesUpgradeBody;
+
+  /// No description provided for @devicesUpgradeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade plan'**
+  String get devicesUpgradeButton;
+
+  /// No description provided for @trialTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Trial'**
+  String get trialTitle;
+
+  /// No description provided for @trialSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Try MOROK VPN for free'**
+  String get trialSubtitle;
+
+  /// No description provided for @trialBenefitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'3 days free'**
+  String get trialBenefitTitle;
+
+  /// No description provided for @trialBenefitSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Full access to all features without restrictions'**
+  String get trialBenefitSubtitle;
+
+  /// No description provided for @trialPeriod7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'3-day trial period'**
+  String get trialPeriod7Days;
+
+  /// No description provided for @trialFeatureUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited traffic'**
+  String get trialFeatureUnlimited;
+
+  /// No description provided for @trialFeatureAllServers.
+  ///
+  /// In en, this message translates to:
+  /// **'Access to all servers'**
+  String get trialFeatureAllServers;
+
+  /// No description provided for @trialFeature3Devices.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect up to 3 devices'**
+  String get trialFeature3Devices;
+
+  /// No description provided for @trialFeatureFullProtection.
+  ///
+  /// In en, this message translates to:
+  /// **'Full VLESS + Reality protection'**
+  String get trialFeatureFullProtection;
+
+  /// No description provided for @trialActivateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate free trial'**
+  String get trialActivateButton;
+
+  /// No description provided for @trialNoPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'No credit card required'**
+  String get trialNoPayment;
+
+  /// No description provided for @trialViewAllPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'View all plans'**
+  String get trialViewAllPlans;
+
+  /// No description provided for @trialActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial activated!'**
+  String get trialActivated;
+
+  /// No description provided for @trialActivatedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {days} days of full access without restrictions'**
+  String trialActivatedBody(int days);
+
+  /// No description provided for @trialActiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial is active'**
+  String get trialActiveTitle;
+
+  /// No description provided for @trialActiveSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoy full access'**
+  String get trialActiveSubtitle;
+
+  /// No description provided for @trialDaysLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} {days, plural, =1{day} other{days}}'**
+  String trialDaysLeft(int days);
+
+  /// No description provided for @trialHoursLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} {hours, plural, =1{hour} other{hours}}'**
+  String trialHoursLeft(int hours);
+
+  /// No description provided for @trialRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'remaining'**
+  String get trialRemaining;
+
+  /// No description provided for @trialActiveFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s included:'**
+  String get trialActiveFeatures;
+
+  /// No description provided for @trialUpgradeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t want to limit yourself?'**
+  String get trialUpgradeTitle;
+
+  /// No description provided for @trialUpgradeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to a paid plan and get even more features'**
+  String get trialUpgradeSubtitle;
+
+  /// No description provided for @trialUpgradeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a plan'**
+  String get trialUpgradeButton;
+
+  /// No description provided for @subscriptionActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription activated'**
+  String get subscriptionActivated;
+
+  /// No description provided for @planNowActive.
+  ///
+  /// In en, this message translates to:
+  /// **'plan is now active'**
+  String get planNowActive;
+
+  /// No description provided for @freePlanActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'You have 3 GB of free traffic per month'**
+  String get freePlanActivated;
 }
 
 class _AppLocalizationsDelegate

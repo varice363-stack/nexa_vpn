@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../l10n/app_localizations.dart';
 import '../../models/promo_banner.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/banner_providers.dart';
@@ -266,11 +265,11 @@ class _AdminCreateBannerScreenState
               padding: const EdgeInsets.all(12),
               color: AppColors.primary.withValues(alpha: 0.05),
               borderColor: AppColors.primary.withValues(alpha: 0.2),
-              child: Row(
+              child: const Row(
                 children: [
-                  const Icon(Icons.info_outline, size: 18, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  const Expanded(
+                  Icon(Icons.info_outline, size: 18, color: AppColors.primary),
+                  SizedBox(width: 8),
+                  Expanded(
                     child: Text(
                       'Если сервер недоступен, баннер сохранится локально.',
                       style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
@@ -484,7 +483,7 @@ class _AdminCreateBannerScreenState
                       ),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Column(
+                    child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
@@ -492,7 +491,7 @@ class _AdminCreateBannerScreenState
                           size: 48,
                           color: AppColors.primary,
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Text(
                           'Выбрать из галереи',
                           style: TextStyle(
@@ -501,7 +500,7 @@ class _AdminCreateBannerScreenState
                             color: AppColors.primary,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
                           'Любой формат и размер',
                           style: TextStyle(

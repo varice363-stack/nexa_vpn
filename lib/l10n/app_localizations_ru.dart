@@ -9,10 +9,10 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get appName => 'Morok VPN';
+  String get appName => 'MOROK VPN';
 
   @override
-  String get appTagline => 'Растворись в мороке';
+  String get appTagline => 'Приватно • Безопасно • Быстро';
 
   @override
   String get navHome => 'Главная';
@@ -148,7 +148,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get accessGenerateHint =>
-      'Создайте ключ, чтобы пользоваться Morok на любом устройстве';
+      'Создайте ключ, чтобы пользоваться MOROK на любом устройстве';
 
   @override
   String get accessGetAccess => 'Получить доступ';
@@ -266,26 +266,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsAutoConnectHint =>
-      'Подключаться к самому быстрому серверу при запуске';
+      'Android подключает приложение сам — включите «Постоянный VPN» в системной панели';
 
   @override
-  String get settingsProtocol => 'Протокол';
-
-  @override
-  String get settingsProtocolHint => 'Транспортный протокол туннеля';
-
-  @override
-  String get settingsKillSwitch => 'Аварийное отключение';
+  String get settingsKillSwitch => 'Защита от утечек';
 
   @override
   String get settingsKillSwitchHint =>
-      'Блокировать весь трафик при обрыве туннеля';
-
-  @override
-  String get settingsDns => 'DNS';
-
-  @override
-  String get settingsDnsHint => 'Режим разрешения DNS-имён';
+      'Блокировка трафика без туннеля включается в настройках Android (Android 12+)';
 
   @override
   String get settingsNotifications => 'Уведомления';
@@ -304,7 +292,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsLogsCleared => 'Журнал очищен';
 
   @override
-  String get settingsAbout => 'О приложении Morok VPN';
+  String get settingsAbout => 'О приложении MOROK VPN';
 
   @override
   String get settingsAboutHint =>
@@ -385,7 +373,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Оформите Premium для безлимита и качества 4K';
 
   @override
-  String get profileMorokPremium => 'Morok Premium';
+  String get profileNexaPremium => 'MOROK Premium';
 
   @override
   String get profileMyAccess => 'Мой доступ';
@@ -671,7 +659,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'История платежей появится здесь после первой покупки.';
 
   @override
-  String get consentTitle => 'Как Morok VPN работает с вашим соединением';
+  String get consentTitle => 'Как MOROK VPN работает с вашим соединением';
 
   @override
   String get consentIntro =>
@@ -682,7 +670,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get consentPoint1Body =>
-      'Morok VPN использует системный интерфейс Android VpnService, чтобы направлять трафик устройства через выбранный вами сервер. При первом подключении Android запросит на это разрешение.';
+      'MOROK VPN использует системный интерфейс Android VpnService, чтобы направлять трафик устройства через выбранный вами сервер. При первом подключении Android запросит на это разрешение.';
 
   @override
   String get consentPoint2Title => 'Трафик шифруется';
@@ -722,7 +710,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get keyEntrySubtitle =>
-      'Введите код Morok, ссылку vless:// или ссылку на подписку от любого провайдера';
+      'Введите код MOROK, ссылку vless:// или ссылку на подписку от любого провайдера';
 
   @override
   String get keyEntryHint => 'MOROK-XXXX-XXXX, vless://… или https://…';
@@ -744,6 +732,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get keyEntryNoKeyYet => 'Нет ключа?';
+
+  @override
+  String get keyEntryDetectedNexa => 'Код доступа MOROK';
 
   @override
   String get keyEntryDetectedMorok => 'Код доступа Morok';
@@ -777,6 +768,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Этот код уже используется на другом устройстве.';
 
   @override
+  String get keyEntrySuccessNexa => 'Доступ активирован';
+
+  @override
   String get keyEntrySuccessMorok => 'Доступ активирован';
 
   @override
@@ -793,7 +787,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get keyEntryLocalOnly =>
-      'Хранится только на этом устройстве — на серверы Morok не передаётся.';
+      'Хранится только на этом устройстве — на серверы MOROK не передаётся.';
 
   @override
   String get keyEntryDetectedSubscription => 'Подписка провайдера';
@@ -848,7 +842,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get accessGenerateHintLong =>
-      'Получите доступ для создания персонального ключа — работает в приложении Morok и любом совместимом клиенте.';
+      'Получите доступ для создания персонального ключа — работает в приложении MOROK и любом совместимом клиенте.';
 
   @override
   String get accessStatusActive => 'АКТИВЕН';
@@ -1173,4 +1167,189 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get commonLoading => 'Загрузка...';
+
+  @override
+  String get powerConnectedSuccessfully => 'Подключено успешно';
+
+  @override
+  String get powerDisconnected => 'Отключено';
+
+  @override
+  String get serverConnectionFailed => 'Ошибка подключения';
+
+  @override
+  String serverRetryAttempt(int attempt, int max) {
+    return 'Попытка $attempt из $max';
+  }
+
+  @override
+  String serverConnectingTo(String server) {
+    return 'Подключение к $server...';
+  }
+
+  @override
+  String get devicesTitle => 'Устройства';
+
+  @override
+  String get devicesSubtitle => 'Управляйте подключёнными устройствами';
+
+  @override
+  String get devicesLimit => 'Лимит устройств';
+
+  @override
+  String get devicesNoConnections => 'Пока нет подключённых устройств';
+
+  @override
+  String get devicesLimitReached => 'Достигнут лимит устройств';
+
+  @override
+  String devicesSlotsAvailable(int count) {
+    return '$count слотов свободно';
+  }
+
+  @override
+  String get devicesJustNow => 'Только что';
+
+  @override
+  String devicesMinutesAgo(int minutes) {
+    return '$minutes мин. назад';
+  }
+
+  @override
+  String devicesHoursAgo(int hours) {
+    return '$hours ч. назад';
+  }
+
+  @override
+  String devicesDaysAgo(int days) {
+    return '$days дн. назад';
+  }
+
+  @override
+  String get devicesDisconnect => 'Отключить устройство';
+
+  @override
+  String get devicesDisconnectTitle => 'Отключить устройство?';
+
+  @override
+  String devicesDisconnectBody(String name) {
+    return 'Устройство $name будет отключено от аккаунта.';
+  }
+
+  @override
+  String devicesDisconnected(String name) {
+    return 'Устройство $name отключено';
+  }
+
+  @override
+  String get devicesEmpty =>
+      'Вы ещё не подключали устройства. Подключитесь через приложение, и оно появится здесь.';
+
+  @override
+  String get devicesUpgradeTitle => 'Нужно больше устройств?';
+
+  @override
+  String get devicesUpgradeBody =>
+      'Перейдите на Premium для подключения до 5 устройств одновременно.';
+
+  @override
+  String get devicesUpgradeButton => 'Обновить тариф';
+
+  @override
+  String get trialTitle => 'Пробный период';
+
+  @override
+  String get trialSubtitle => 'Попробуйте MOROK VPN бесплатно';
+
+  @override
+  String get trialBenefitTitle => '3 дня бесплатно';
+
+  @override
+  String get trialBenefitSubtitle =>
+      'Полный доступ ко всем функциям без ограничений';
+
+  @override
+  String get trialPeriod7Days => 'Пробный период 3 дня';
+
+  @override
+  String get trialFeatureUnlimited => 'Безлимитный трафик';
+
+  @override
+  String get trialFeatureAllServers => 'Доступ ко всем серверам';
+
+  @override
+  String get trialFeature3Devices => 'Подключение до 3 устройств';
+
+  @override
+  String get trialFeatureFullProtection => 'Полная защита VLESS + Reality';
+
+  @override
+  String get trialActivateButton => 'Активировать пробный период';
+
+  @override
+  String get trialNoPayment => 'Привязка карты не требуется';
+
+  @override
+  String get trialViewAllPlans => 'Посмотреть все тарифы';
+
+  @override
+  String get trialActivated => 'Пробный период активирован!';
+
+  @override
+  String trialActivatedBody(int days) {
+    return 'У вас $days дней полного доступа без ограничений';
+  }
+
+  @override
+  String get trialActiveTitle => 'Пробный период активен';
+
+  @override
+  String get trialActiveSubtitle => 'Наслаждайтесь полным доступом';
+
+  @override
+  String trialDaysLeft(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'дней',
+      one: 'день',
+    );
+    return '$days $_temp0';
+  }
+
+  @override
+  String trialHoursLeft(int hours) {
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
+      locale: localeName,
+      other: 'часов',
+      one: 'час',
+    );
+    return '$hours $_temp0';
+  }
+
+  @override
+  String get trialRemaining => 'осталось';
+
+  @override
+  String get trialActiveFeatures => 'Что включено:';
+
+  @override
+  String get trialUpgradeTitle => 'Не хотите ограничивать себя?';
+
+  @override
+  String get trialUpgradeSubtitle =>
+      'Перейдите на платный тариф и получите ещё больше возможностей';
+
+  @override
+  String get trialUpgradeButton => 'Выбрать тариф';
+
+  @override
+  String get subscriptionActivated => 'Подписка активирована';
+
+  @override
+  String get planNowActive => 'тариф теперь активен';
+
+  @override
+  String get freePlanActivated => 'У вас 3 ГБ бесплатного трафика в месяц';
 }

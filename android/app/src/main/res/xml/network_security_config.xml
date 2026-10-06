@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Разрешаем http:// ТОЛЬКО нашему API-узлу. Раньше стоял
+  android:usesCleartextTraffic="true", т.е. любой http:// запрос из приложения
+  (в том числе в сторонние библиотеки и будущие редиректы) шёл открытым.
+  Бэкенд пока живёт на IP без TLS — когда появится домен с сертификатом,
+  замените IP на <domain includeSubdomains="true">morokvpn.com</domain> и
+  уберите permit-cleartext.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">78.17.156.139</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="false"/>
+</network-security-config>

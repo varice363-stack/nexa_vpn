@@ -19,7 +19,6 @@ class DevicesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
     final subscription = ref.watch(subscriptionProvider);
 
     return subscription.when(
@@ -319,9 +318,9 @@ class _DeviceCard extends StatelessWidget {
                 ),
               );
             },
-            child: Text(
+            child: const Text(
               'Отключить',
-              style: const TextStyle(color: AppColors.danger),
+              style: TextStyle(color: AppColors.danger),
             ),
           ),
         ],

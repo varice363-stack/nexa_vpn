@@ -42,9 +42,10 @@ final vpnServiceProvider = Provider<VpnService>(
   (ref) {
     final service = VpnServiceImpl(
       tunnel: ref.watch(tunnelManagerProvider),
-      configProvider: () =>
-          ref.read(settingsProvider).value?.vpnConfig ??
-          const VpnConfig(),
+      // Настройки пользователя туннелю не передаются: конфигурация целиком
+      // приходит из контракта ключа (source). VpnConfig остаётся пустым
+      // контрактом «ничего не переопределяем».
+      configProvider: () => const VpnConfig(),
       logger: ref.watch(loggerProvider),
     )..init();
     ref

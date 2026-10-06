@@ -1,5 +1,3 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import '../../core/utils/app_logger.dart';
 import 'root_detection_service.dart';
 import 'debugger_detection_service.dart';

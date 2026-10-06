@@ -75,7 +75,7 @@ class VpnServiceImpl implements VpnService {
   ConnectionSource? _activeSource;
   VpnStatus _status = VpnStatus.disconnected;
   bool _pendingDisconnect = false;
-  bool _autoReconnectEnabled = true;
+  final bool _autoReconnectEnabled = true;
   Timer? _reconnectDebounce;
   
   // Performance metrics

@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../domain/repositories/key_storage.dart';
 import '../models/promo_banner.dart';
 import '../services/api/api_exception.dart';
 import 'app_providers.dart';

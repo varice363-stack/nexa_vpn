@@ -273,12 +273,12 @@ class _SmokePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final blobs = [
-      _SmokeBlob(x: 0.3, y: 0.4, size: 200, speed: 0.3, alpha: 0.04),
-      _SmokeBlob(x: 0.7, y: 0.5, size: 240, speed: 0.4, alpha: 0.03),
-      _SmokeBlob(x: 0.5, y: 0.3, size: 180, speed: 0.35, alpha: 0.035),
-      _SmokeBlob(x: 0.2, y: 0.7, size: 220, speed: 0.25, alpha: 0.025),
-      _SmokeBlob(x: 0.8, y: 0.6, size: 190, speed: 0.45, alpha: 0.03),
-      _SmokeBlob(x: 0.5, y: 0.5, size: 300, speed: 0.2, alpha: 0.02),
+      const _SmokeBlob(x: 0.3, y: 0.4, size: 200, speed: 0.3, alpha: 0.04),
+      const _SmokeBlob(x: 0.7, y: 0.5, size: 240, speed: 0.4, alpha: 0.03),
+      const _SmokeBlob(x: 0.5, y: 0.3, size: 180, speed: 0.35, alpha: 0.035),
+      const _SmokeBlob(x: 0.2, y: 0.7, size: 220, speed: 0.25, alpha: 0.025),
+      const _SmokeBlob(x: 0.8, y: 0.6, size: 190, speed: 0.45, alpha: 0.03),
+      const _SmokeBlob(x: 0.5, y: 0.5, size: 300, speed: 0.2, alpha: 0.02),
     ];
     
     for (final blob in blobs) {

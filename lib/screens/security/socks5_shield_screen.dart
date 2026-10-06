@@ -68,25 +68,25 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
           GlassContainer(
             borderRadius: BorderRadius.circular(20),
             padding: const EdgeInsets.all(24),
-            child: Column(
+            child: const Column(
               children: [
-                const Socks5ShieldIndicator(
+                Socks5ShieldIndicator(
                   status: Socks5ShieldStatus.protected,
                   size: 80,
                   showLabel: false,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Text(
                   'Ваш SOCKS5 защищён',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
-                const Text(
+                SizedBox(height: 8),
+                Text(
                   'Morok VPN — единственный VPN, который защищает\nлокальный SOCKS5 прокси паролем',
                   style: TextStyle(
                     fontSize: 14,
@@ -294,9 +294,11 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
   }
 
   Widget _buildPortResult(Socks5ScanResult result) {
+    // Единственный источник правды — сам сканер: «уязвим» = порт открыт и
+    // пуста авторизация. Раньше здесь лежала копия условия, и она могла
+    // разойтись с real status в любой момент.
     final isVulnerable = result.isVulnerable;
     final isClosed = !result.isOpen;
-    final isProtected = result.isOpen && result.isAuthenticated;
 
     return GlassContainer(
       borderRadius: BorderRadius.circular(12),
@@ -307,14 +309,14 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
           Icon(
             isClosed
                 ? Icons.check_circle_rounded
-                : isProtected
-                    ? Icons.shield_rounded
-                    : Icons.dangerous_rounded,
+                : isVulnerable
+                    ? Icons.dangerous_rounded
+                    : Icons.shield_rounded,
             color: isClosed
                 ? Colors.green
-                : isProtected
-                    ? Colors.blue
-                    : Colors.red,
+                : isVulnerable
+                    ? Colors.red
+                    : Colors.blue,
             size: 20,
           ),
           const SizedBox(width: 12),
@@ -344,17 +346,17 @@ class _Socks5ShieldScreenState extends ConsumerState<Socks5ShieldScreen> {
           Text(
             isClosed
                 ? 'Закрыт ✓'
-                : isProtected
-                    ? 'Защищён'
-                    : 'Уязвим!',
+                : isVulnerable
+                    ? 'Уязвим!'
+                    : 'Защищён',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: isClosed
                   ? Colors.green
-                  : isProtected
-                      ? Colors.blue
-                      : Colors.red,
+                  : isVulnerable
+                      ? Colors.red
+                      : Colors.blue,
             ),
           ),
         ],

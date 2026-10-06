@@ -5,8 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 
 import '../../models/app_settings.dart';
-import '../../models/vpn_config.dart';
-import '../../providers/killswitch_providers.dart';
+import '../../services/system_vpn_settings.dart';
 import '../../providers/locale_providers.dart';
 import '../../providers/settings_providers.dart';
 import '../../theme/app_colors.dart';
@@ -38,40 +37,11 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: l10n.keyEntrySubtitle,
             onTap: () => context.push('/key'),
           ),
-          _SegmentedSetting<AppSettings, VpnProtocol>(
-            title: l10n.settingsProtocol,
-            subtitle: l10n.settingsProtocolHint,
-            values: VpnProtocol.values,
-            labelOf: (p) => p.label,
-            selected: settings.protocol,
-            onChanged: (p) =>
-                ref.read(settingsProvider.notifier).setProtocol(p),
-          ),
-          _SegmentedSetting<AppSettings, DnsPreference>(
-            title: l10n.settingsDns,
-            subtitle: l10n.settingsDnsHint,
-            values: DnsPreference.values,
-            labelOf: (d) => d.label,
-            selected: settings.dns,
-            onChanged: (d) => ref.read(settingsProvider.notifier).setDns(d),
-          ),
           SectionHeader(title: l10n.settingsSectionPrivacy),
-          _ToggleRow(
+          _ActionRow(
             title: l10n.settingsKillSwitch,
             subtitle: l10n.settingsKillSwitchHint,
-            value: settings.killSwitch,
-            onChanged: (v) async {
-              // Update settings first
-              await ref.read(settingsProvider.notifier).setKillSwitch(v);
-              
-              // Enable/disable native Kill Switch service
-              final killSwitchService = ref.read(killSwitchServiceProvider);
-              if (v) {
-                await killSwitchService.enable();
-              } else {
-                await killSwitchService.disable();
-              }
-            },
+            onTap: () => _openSystemVpnPanel(context),
           ),
           _ToggleRow(
             title: l10n.settingsNotifications,
@@ -81,12 +51,10 @@ class SettingsScreen extends ConsumerWidget {
                 ref.read(settingsProvider.notifier).setNotificationsEnabled(v),
           ),
           SectionHeader(title: l10n.settingsSectionBehavior),
-          _ToggleRow(
+          _ActionRow(
             title: l10n.settingsAutoConnect,
             subtitle: l10n.settingsAutoConnectHint,
-            value: settings.autoConnect,
-            onChanged: (v) =>
-                ref.read(settingsProvider.notifier).setAutoConnect(v),
+            onTap: () => _openSystemVpnPanel(context),
           ),
           SectionHeader(title: l10n.settingsSectionApp),
           _LanguageRow(
@@ -106,96 +74,19 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _SegmentedSetting<TState, TValue> extends StatelessWidget {
-  const _SegmentedSetting({
-    required this.title,
-    required this.subtitle,
-    required this.values,
-    required this.labelOf,
-    required this.selected,
-    required this.onChanged,
-  });
-
-  final String title;
-  final String subtitle;
-  final List<TValue> values;
-  final String Function(TValue) labelOf;
-  final TValue selected;
-  final ValueChanged<TValue> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassContainer(
-      borderRadius: BorderRadius.circular(18),
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final value in values)
-                GestureDetector(
-                  onTap: () => onChanged(value),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      gradient: value == selected
-                          ? AppColors.primaryGradient
-                          : null,
-                      color: value == selected
-                          ? null
-                          : Colors.white.withValues(alpha: 0.05),
-                      border: Border.all(
-                        color: value == selected
-                            ? Colors.transparent
-                            : Colors.white.withValues(alpha: 0.08),
-                      ),
-                    ),
-                    child: Text(
-                      labelOf(value),
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: value == selected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: value == selected
-                            ? Colors.white
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+/// Системная панель «Постоянный VPN»: только там Android отдаёт настоящую
+/// блокировку трафика без туннеля и автоподключение. Само приложение включить
+/// это не может, поэтому ряд не переключатель, а переход — иначе пользователь
+/// думал бы, что защита уже включена.
+Future<void> _openSystemVpnPanel(BuildContext context) async {
+  final ok = await systemVpnSettings.openSystemPanel();
+  if (!context.mounted || ok) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Панель VPN недоступна на этой версии Android'),
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
 }
 
 class _ToggleRow extends StatelessWidget {

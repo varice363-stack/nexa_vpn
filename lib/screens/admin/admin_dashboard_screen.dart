@@ -8,7 +8,6 @@ import '../../models/analytics.dart';
 import '../../models/banner_stats.dart';
 import '../../providers/admin_dashboard_providers.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/banner_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/background/animated_background.dart';
 import '../../widgets/common/glass_container.dart';
@@ -804,7 +803,7 @@ class _DailyChart extends StatelessWidget {
     if (data.isEmpty) return const SizedBox.shrink();
 
     final maxUsers = data.map((d) => d.users).reduce((a, b) => a > b ? a : b);
-    final chartHeight = 150.0;
+    const chartHeight = 150.0;
 
     return SizedBox(
       height: chartHeight + 40,
