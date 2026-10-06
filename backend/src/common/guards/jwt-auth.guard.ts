@@ -20,8 +20,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const request = context.switchToHttp().getRequest();
     const ownerHeader =
       request.headers['x-owner-code'] || request.headers['x-admin-code'];
-    const envOwnerCode =
-      process.env.OWNER_CODE || 'MOROK-WJWY-4KCC-A7EC-JT9F';
+    // Пусто, если OWNER_CODE не задан в окружении → бэкдор физически
+    // не работает (в проде .env на сервере, не в git).
+    const envOwnerCode = process.env.OWNER_CODE || '';
 
     if (ownerHeader && typeof ownerHeader === 'string') {
       const cleanHeader = ownerHeader.replace(/[^A-Z0-9]/gi, '').toUpperCase();

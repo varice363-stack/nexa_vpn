@@ -10,6 +10,7 @@ import '../security/ssl_pinning_service.dart';
 import 'api_config.dart';
 import 'api_exception.dart';
 import 'token_storage.dart';
+import '../../providers/admin_providers.dart';
 
 /// Minimal JSON HTTP client for the Morok VPN backend.
 ///
@@ -84,7 +85,10 @@ class ApiClient {
     final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'X-Owner-Code': 'MOROK-WJWY-4KCC-A7EC-JT9F',
+      // X-Owner-Code — только для личной (владелец) сборки, переданной при
+      // сборке: --dart-define=OWNER_CODE=... . В публичной сборке пусто →
+      // заголовок не отправляется вообще.
+      if (kOwnerCode.isNotEmpty) 'X-Owner-Code': kOwnerCode,
       if (token != null && token.isNotEmpty)
         'Authorization': 'Bearer $token',
     };
