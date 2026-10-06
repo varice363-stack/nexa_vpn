@@ -26,8 +26,11 @@ abstract final class ApiConfig {
       return _initializedUrl!;
     }
     
-    // 3. Дефолт для продакшена
-    return 'http://morokvpn.com:3000/app-api';
+    // 3. Дефолт для продакшена.
+    //    Голый IP, а не morokvpn.com: домен сейчас припаркован регистратором
+    //    (verification-hold → A-запись 127.0.0.1), см. docs/RISK_ASSESSMENT_RF.md §9.
+    //    После подтверждения e-mail у регистратора можно вернуть домен.
+    return 'http://78.17.156.139:3000/app-api';
   }
 
   /// Initialized URL from SharedPreferences (set during app startup).
