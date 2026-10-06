@@ -4,11 +4,11 @@ import '../domain/repositories/key_storage.dart';
 import 'app_providers.dart';
 import 'identity_providers.dart';
 
-/// ЕДИНСТВЕННЫЙ СЕКРЕТНЫЙ КОД ВЛАДЕЛЬЦА ПРИЛОЖЕНИЯ.
-const String kOwnerCode = String.fromEnvironment(
-  'OWNER_CODE',
-  defaultValue: 'MOROK-WJWY-4KCC-A7EC-JT9F',
-);
+/// Код владельца. Значение по умолчанию — ПУСТО: без
+/// `--dart-define=OWNER_CODE=...` сборка не имеет админ-входа вообще.
+/// (Раньше здесь был вшит реальный код — любой, кто распаковал бы публичный
+/// APK, получал админку. Не возвращать.)
+const String kOwnerCode = String.fromEnvironment('OWNER_CODE', defaultValue: '');
 
 const String _kAdminUnlockedKey = 'morok_admin_unlocked';
 
