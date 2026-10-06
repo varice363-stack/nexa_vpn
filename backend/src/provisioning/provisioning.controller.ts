@@ -7,6 +7,7 @@ import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { AccessActivationService } from './access-activation.service';
 import { ProvisioningService } from './provisioning.service';
+import { XrayClientSyncService } from './xray-client-sync.service';
 import { CreateKeyDto } from './dto/create-key.dto';
 import { IssueCodeDto, RedeemCodeDto } from './dto/redeem-code.dto';
 
@@ -16,7 +17,26 @@ export class ProvisioningController {
   constructor(
     private readonly provisioning: ProvisioningService,
     private readonly activation: AccessActivationService,
+    private readonly xraySync: XrayClientSyncService,
   ) {}
+
+  /**
+   * Админ: состояние «кого пускает ядро».
+   * desired = сколько активных ключей в базе, published = сколько уже
+   * выложено файлом узлу, nodeClients = сколько ядро реально применил.
+   */
+  @Roles(Role.ADMIN)
+  @Get('xray/status')
+  xrayStatus() {
+    return this.xraySync.status();
+  }
+
+  /** Админ: выложить список ключей узлу немедленно (без ожидания интервала). */
+  @Roles(Role.ADMIN)
+  @Post('xray/sync')
+  xraySyncNow() {
+    return this.xraySync.sync();
+  }
 
   /**
    * Public: redeem an access code — no account required.
@@ -79,7 +99,10 @@ export class ProvisioningController {
   }
 
   @Delete(':id')
-  revoke(@CurrentUser() user: SafeUser, @Param('id', ParseUUIDPipe) id: string) {
-    return this.provisioning.revoke(user, id);
+  async revoke(@CurrentUser() user: SafeUser, @Param('id', ParseUUIDPipe) id: string) {
+    const res = await this.provisioning.revoke(user, id);
+    // Отозванный ключ обязан исчезнуть из ядра, иначе «отключить» ничего не отключает.
+    await this.xraySync.sync().catch(() => null);
+    return res;
   }
 }

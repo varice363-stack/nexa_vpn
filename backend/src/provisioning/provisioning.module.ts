@@ -5,11 +5,12 @@ import { AccessActivationService } from './access-activation.service';
 import { ProvisioningController } from './provisioning.controller';
 import { ProvisioningService } from './provisioning.service';
 import { VlessConfigService } from './vless-config.service';
+import { XrayClientSyncService } from './xray-client-sync.service';
 
 @Module({
   imports: [SubscriptionsModule],
   controllers: [ProvisioningController],
-  providers: [ProvisioningService, AccessActivationService, VlessConfigService],
-  exports: [ProvisioningService, AccessActivationService],
+  providers: [ProvisioningService, AccessActivationService, VlessConfigService, XrayClientSyncService],
+  exports: [ProvisioningService, AccessActivationService, XrayClientSyncService],
 })
 export class ProvisioningModule {}

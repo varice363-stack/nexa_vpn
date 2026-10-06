@@ -37,13 +37,16 @@ const provisioning = {
   })),
 } as any;
 
+/** Publish в ядро — побочный effect, в тестах не нужен, но аргумент обязательный. */
+const xraySync = { sync: jest.fn(async () => ({ written: 0, path: '/dev/null' })) } as any;
+
 describe('AccessActivationService', () => {
   beforeEach(() => jest.clearAllMocks());
 
   describe('issue', () => {
     it('creates an unbound key carrying a redemption code', async () => {
       const prisma = makePrisma();
-      const svc = new AccessActivationService(prisma, provisioning);
+      const svc = new AccessActivationService(prisma, provisioning, xraySync);
 
       const key = await svc.issue({ name: 'Promo', durationDays: 30 });
 
@@ -55,7 +58,7 @@ describe('AccessActivationService', () => {
 
     it('treats a missing duration as a lifetime key', async () => {
       const prisma = makePrisma();
-      const svc = new AccessActivationService(prisma, provisioning);
+      const svc = new AccessActivationService(prisma, provisioning, xraySync);
 
       await svc.issue({});
       expect(prisma.accessKey.create.mock.calls[0][0].data.expiresAt).toBeNull();
@@ -75,7 +78,7 @@ describe('AccessActivationService', () => {
 
     it('activates without an account', async () => {
       const prisma = makePrisma([{ ...base }]);
-      const svc = new AccessActivationService(prisma, provisioning);
+      const svc = new AccessActivationService(prisma, provisioning, xraySync);
 
       const key = await svc.redeem('MOROK-AAAA-BBBB', 'phone-1');
 
@@ -86,7 +89,7 @@ describe('AccessActivationService', () => {
 
     it('is idempotent on the same device (reinstall must not lock out)', async () => {
       const prisma = makePrisma([{ ...base }]);
-      const svc = new AccessActivationService(prisma, provisioning);
+      const svc = new AccessActivationService(prisma, provisioning, xraySync);
 
       const first = await svc.redeem('MOROK-AAAA-BBBB', 'phone-1');
       const activatedAt = first.activatedAt;
@@ -98,7 +101,7 @@ describe('AccessActivationService', () => {
 
     it('refuses a code already bound to another device', async () => {
       const prisma = makePrisma([{ ...base, boundDevice: 'phone-1' }]);
-      const svc = new AccessActivationService(prisma, provisioning);
+      const svc = new AccessActivationService(prisma, provisioning, xraySync);
 
       await expect(svc.redeem('MOROK-AAAA-BBBB', 'phone-2')).rejects.toThrow(
         BadRequestException,
@@ -109,6 +112,7 @@ describe('AccessActivationService', () => {
       const revoked = new AccessActivationService(
         makePrisma([{ ...base, status: 'REVOKED' }]),
         provisioning,
+        xraySync,
       );
       await expect(revoked.redeem('MOROK-AAAA-BBBB')).rejects.toThrow(
         /CODE_REVOKED/,
@@ -117,6 +121,7 @@ describe('AccessActivationService', () => {
       const expired = new AccessActivationService(
         makePrisma([{ ...base, expiresAt: new Date(Date.now() - 1000) }]),
         provisioning,
+        xraySync,
       );
       await expect(expired.redeem('MOROK-AAAA-BBBB')).rejects.toThrow(
         /CODE_EXPIRED/,
@@ -124,7 +129,7 @@ describe('AccessActivationService', () => {
     });
 
     it('reports an unknown code as not found', async () => {
-      const svc = new AccessActivationService(makePrisma(), provisioning);
+      const svc = new AccessActivationService(makePrisma(), provisioning, xraySync);
       await expect(svc.redeem('MOROK-ZZZZ-ZZZZ')).rejects.toThrow(
         NotFoundException,
       );
@@ -132,14 +137,14 @@ describe('AccessActivationService', () => {
 
     it('normalises sloppy input before lookup', async () => {
       const prisma = makePrisma([{ ...base }]);
-      const svc = new AccessActivationService(prisma, provisioning);
+      const svc = new AccessActivationService(prisma, provisioning, xraySync);
 
       await expect(svc.redeem('morok aaaa bbbb', 'phone-1')).resolves.toBeTruthy();
     });
 
     it('rejects a malformed code without touching the database', async () => {
       const prisma = makePrisma();
-      const svc = new AccessActivationService(prisma, provisioning);
+      const svc = new AccessActivationService(prisma, provisioning, xraySync);
 
       await expect(svc.redeem('nope')).rejects.toThrow(BadRequestException);
       expect(prisma.accessKey.findUnique).not.toHaveBeenCalled();
@@ -157,7 +162,7 @@ describe('AccessActivationService', () => {
 
     it('binds an anonymous key to the account', async () => {
       const prisma = makePrisma([{ ...base }]);
-      const svc = new AccessActivationService(prisma, provisioning);
+      const svc = new AccessActivationService(prisma, provisioning, xraySync);
 
       const key = await svc.claim('MOROK-AAAA-BBBB', 'user-1');
       expect(key.userId).toBe('user-1');
@@ -165,7 +170,7 @@ describe('AccessActivationService', () => {
 
     it('never steals a key owned by someone else', async () => {
       const prisma = makePrisma([{ ...base, userId: 'user-2' }]);
-      const svc = new AccessActivationService(prisma, provisioning);
+      const svc = new AccessActivationService(prisma, provisioning, xraySync);
 
       await expect(svc.claim('MOROK-AAAA-BBBB', 'user-1')).rejects.toThrow(
         /CODE_OWNED_BY_ANOTHER_ACCOUNT/,
@@ -174,7 +179,7 @@ describe('AccessActivationService', () => {
 
     it('is idempotent for the same owner', async () => {
       const prisma = makePrisma([{ ...base, userId: 'user-1' }]);
-      const svc = new AccessActivationService(prisma, provisioning);
+      const svc = new AccessActivationService(prisma, provisioning, xraySync);
 
       await expect(svc.claim('MOROK-AAAA-BBBB', 'user-1')).resolves.toBeTruthy();
     });
@@ -193,7 +198,7 @@ describe('AccessActivationService', () => {
           expiresAt: null,
         },
       ]);
-      const svc = new AccessActivationService(prisma, provisioning);
+      const svc = new AccessActivationService(prisma, provisioning, xraySync);
 
       const result = await svc.redeemToContract('MOROK-AAAA-BBBB', 'phone-1');
 

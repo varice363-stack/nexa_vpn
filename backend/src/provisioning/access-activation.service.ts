@@ -6,6 +6,7 @@ import {
 import { randomUUID } from 'crypto';
 
 import { PrismaService } from '../common/prisma/prisma.service';
+import { XrayClientSyncService } from './xray-client-sync.service';
 import { generateAccessCode, normaliseAccessCode } from './access-code';
 import { ProvisioningService } from './provisioning.service';
 
@@ -20,7 +21,24 @@ export class AccessActivationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly provisioning: ProvisioningService,
+    private readonly xraySync: XrayClientSyncService,
   ) {}
+
+  /**
+   * Ядро должно узнать о ключе в том же запросе, которым ключ выдан: иначе
+   * первые ~30 секунд после активации клиент получает валидный vless://, по
+   * которому нельзя подключиться. Ошибка publish не валит выдачу — интервал
+   * в onApplicationBootstrap догонит.
+   */
+  private async publish() {
+    try {
+      return await this.xraySync.sync();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('[xray-sync] publish failed:', (err as Error).message);
+      return null;
+    }
+  }
 
   /**
    * Redeems a code and returns the full key contract, VLESS config
@@ -113,7 +131,7 @@ export class AccessActivationService {
       throw new BadRequestException('CODE_ALREADY_USED');
     }
 
-    return this.prisma.accessKey.update({
+    const updated = await this.prisma.accessKey.update({
       where: { id: key.id },
       data: {
         activatedAt: key.activatedAt ?? new Date(),
@@ -121,6 +139,8 @@ export class AccessActivationService {
         lastUsedAt: new Date(),
       },
     });
+    await this.publish();
+    return updated;
   }
 
   /**

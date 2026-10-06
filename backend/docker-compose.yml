@@ -36,11 +36,17 @@ services:
       CORS_ORIGINS: "*"
       OWNER_CODE: "MOROK-WJWY-4KCC-A7EC-JT9F"
       UPLOADS_DIR: "uploads"
+      # TASK #030: куда выкладывать список ключей для ядра Xray. Файл читает
+      # хостовый cron (deploy/xray-sync/sync-xray-clients.py), он же применяет
+      # его к конфигу и дёргает SIGHUP. Если каталога нет (разработка) — синк тихо skip.
+      XRAY_CLIENTS_FILE: "/var/lib/morok/xray-clients.json"
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
       - backend_uploads:/app/uploads
+      # двусторонний канал с узлом: бэкенд пишет список, хост читает его cron'ом
+      - /var/lib/morok:/var/lib/morok
   admin:
     build:
       context: ../admin
