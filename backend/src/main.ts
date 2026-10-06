@@ -6,6 +6,9 @@ import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import { join } from 'path';
 
+/** Единый источник правды для URL-префикса API (совпадает с API_BASE_URL в приложении). */
+export const API_PREFIX = 'app-api';
+
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -112,7 +115,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   // ── Global prefix ──────────────────────────────────────────────────────
-  app.setGlobalPrefix('app-api');
+  app.setGlobalPrefix(API_PREFIX);
 
   // ── Static files (uploads) ────────────────────────────────────────────
   // Serve uploaded banner images in all environments
@@ -144,7 +147,7 @@ async function bootstrap() {
   const host = process.env.HOST || '0.0.0.0';
   await app.listen(port, host);
   // eslint-disable-next-line no-console
-  console.log(`Morok VPN API ready → http://${host}:${port}/api`);
+  console.log(`Morok VPN API ready → http://${host}:${port}/${API_PREFIX}`);
   if (process.env.NODE_ENV !== 'production') {
     // eslint-disable-next-line no-console
     console.log(`Swagger docs → http://${host}:${port}/api/docs`);
