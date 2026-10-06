@@ -11,7 +11,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
-    "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:seed": "ts-node --files prisma/seed.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "prisma:fix-server": "prisma db execute --schema prisma/schema.prisma --file prisma/fix-live-server.sql"
