@@ -37,8 +37,9 @@ services:
       OWNER_CODE: "MOROK-WJWY-4KCC-A7EC-JT9F"
       UPLOADS_DIR: "uploads"
       # TASK #030: куда выкладывать список ключей для ядра Xray. Файл читает
-      # хостовый cron (deploy/xray-sync/sync-xray-clients.py), он же применяет
-      # его к конфигу и дёргает SIGHUP. Если каталога нет (разработка) — синк тихо skip.
+      # хостовый cron (deploy/xray-sync/build-xray-config.py), который собирает
+      # из него конфиг ядра и перезапускает morok-xray. Если каталога нет
+      # (разработка/другой сервер) — синк тихо skip, выдача ключа не падает.
       XRAY_CLIENTS_FILE: "/var/lib/morok/xray-clients.json"
     depends_on:
       postgres:
