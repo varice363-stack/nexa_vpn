@@ -65,3 +65,6 @@ pg/
 
 # Служебный файл рядом с репозиторием, не для git
 fix_and_build.ps1
+
+# tsc build info
+*.tsbuildinfo
