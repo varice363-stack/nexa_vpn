@@ -18,6 +18,7 @@ const BILLING_NAV = [
   { href: '/subscriptions', label: 'Подписки', icon: '🔁' },
   { href: '/transactions', label: 'Платежи', icon: '💳' },
   { href: '/keys', label: 'Ключи доступа', icon: '🔑' },
+  { href: '/crypto', label: 'Оплата USDT', icon: '🪙' },
 ];
 
 export default function Sidebar() {

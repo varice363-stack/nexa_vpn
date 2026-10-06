@@ -169,3 +169,33 @@ export interface AdminAccessKey {
     status: string;
   } | null;
 }
+
+/** GET /billing/crypto/wallets — публичный статус приёма USDT (без адресов). */
+export interface CryptoWallets {
+  enabled: boolean;
+  networks: Array<'TRC20' | 'BEP20'>;
+  defaultNetwork: 'TRC20' | 'BEP20';
+  rateRub: number;
+  discountRub: number;
+  invoiceTtlMinutes: number;
+}
+
+/** GET /billing/crypto/queue — строка очереди ручных подтверждений. */
+export interface CryptoTransaction {
+  id: string;
+  userId: string;
+  provider: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  createdAt: string;
+  cryptoAddress: string | null;
+  cryptoNetwork: 'TRC20' | 'BEP20' | null;
+  cryptoAmount: number | null;
+  cryptoExpiresAt: string | null;
+  cryptoTxHash: string | null;
+  cryptoSubmittedAt: string | null;
+  cryptoReviewedNote: string | null;
+  user?: { id: string; email: string; deviceId: string | null } | null;
+  plan?: { id: string; name: string; code: string; price: number; durationDays: number } | null;
+}
