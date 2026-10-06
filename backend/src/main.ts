@@ -56,7 +56,7 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Owner-Code'],
   });
 
   // ── Rate Limiting ──────────────────────────────────────────────────────
@@ -104,12 +104,18 @@ async function bootstrap() {
     legacyHeaders: false,
   });
 
-  app.use('/api', limiter);
-  app.use('/api/auth/login', authLimiter);
-  app.use('/api/auth/register', authLimiter);
-  app.use('/api/auth/auto-register', autoRegisterLimiter); // CRITICAL: prevent mass registration
-  app.use('/api/billing/webhook', webhookLimiter); // CRITICAL: prevent DoS
-  app.use('/api/provisioning/redeem', redeemLimiter); // CRITICAL: prevent brute force
+  // ВАЖНО: префикс — именно API_PREFIX ('app-api'). Раньше все шесть
+  // ограничителей висели на '/api/…', т.е. на несуществующем пути, и
+  // «10 попыток активации в час» / «10 логинов» не срабатывали никогда:
+  // подбор кода доступа шёл без какого-либо троттлинга.
+  app.use(`/${API_PREFIX}`, limiter);
+  app.use(`/${API_PREFIX}/auth/login`, authLimiter);
+  app.use(`/${API_PREFIX}/auth/register`, authLimiter);
+  app.use(`/${API_PREFIX}/auth/auto-register`, autoRegisterLimiter); // mass registration
+  app.use(`/${API_PREFIX}/auth/promote-to-admin`, authLimiter); // подбор OWNER_CODE
+  app.use(`/${API_PREFIX}/billing/webhook`, webhookLimiter); // DoS / поддельные события
+  app.use(`/${API_PREFIX}/provisioning/redeem`, redeemLimiter); // brute force кодов
+  app.use(`/${API_PREFIX}/provisioning/code/`, redeemLimiter); // тот же подбор через lookup
 
   // ── Validation ─────────────────────────────────────────────────────────
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
@@ -119,6 +125,10 @@ async function bootstrap() {
 
   // ── Static files (uploads) ────────────────────────────────────────────
   // Serve uploaded banner images in all environments
+  // Публичный путь = '/uploads/…': ровно такой относительный URL сохраняется
+  // в Banner.imageUrl (banners.controller) и печатается и в приложении, и в
+  // панели. Не переносим его под API_PREFIX — это обломало бы все уже
+  // загруженные картинки.
   app.useStaticAssets(join(process.cwd(), process.env.UPLOADS_DIR || 'uploads'), {
     prefix: '/uploads',
   });
@@ -137,7 +147,7 @@ async function bootstrap() {
       .addBearerAuth()
       .build();
     const document = SwaggerModule.createDocument(app, swaggerConfig);
-    SwaggerModule.setup('api/docs', app, document);
+    SwaggerModule.setup(`${API_PREFIX}/docs`, app, document);
   }
 
   // ── Start ──────────────────────────────────────────────────────────────
@@ -150,7 +160,7 @@ async function bootstrap() {
   console.log(`Morok VPN API ready → http://${host}:${port}/${API_PREFIX}`);
   if (process.env.NODE_ENV !== 'production') {
     // eslint-disable-next-line no-console
-    console.log(`Swagger docs → http://${host}:${port}/api/docs`);
+    console.log(`Swagger docs → http://${host}:${port}/${API_PREFIX}/docs`);
   }
 }
 

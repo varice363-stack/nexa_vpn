@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'crypto';
+
 import { Body, Controller, Get, Post, UnauthorizedException } from '@nestjs/common';
 
 import { Public } from '../common/decorators/public.decorator';
@@ -50,7 +52,16 @@ export class AuthController {
     @CurrentUser() user: SafeUser,
   ) {
     const expectedCode = process.env.OWNER_CODE;
-    if (!expectedCode || dto.ownerCode !== expectedCode) {
+    if (!expectedCode) {
+      // Сборка без OWNER_CODE не имеет админ-входа вообще (и не должна
+      // отличать «неверный код» от «кода нет» — это подсказка атакующему).
+      throw new UnauthorizedException('Invalid owner code');
+    }
+    const a = Buffer.from(String(dto.ownerCode ?? ''));
+    const b = Buffer.from(expectedCode);
+    // Сравнение без утечки по времени: этот эндпоинт — единственная дверь,
+    // где код подбирают, а не просто подставляют в заголовок.
+    if (a.length !== b.length || !timingSafeEqual(a, b)) {
       throw new UnauthorizedException('Invalid owner code');
     }
     

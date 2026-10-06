@@ -6,6 +6,19 @@ import { CreateServerDto } from './dto/create-server.dto';
 import { UpdateServerDto } from './dto/update-server.dto';
 import { QueryServersDto } from './dto/query-servers.dto';
 
+/** Поля, которые видно неаутентифицированному клиенту. */
+export const PUBLIC_SERVER_FIELDS = {
+  id: true,
+  name: true,
+  country: true,
+  countryCode: true,
+  city: true,
+  protocol: true,
+  load: true,
+  ping: true,
+  premium: true,
+} as const;
+
 @Injectable()
 export class ServersService {
   constructor(private readonly prisma: PrismaService) {}
@@ -15,8 +28,17 @@ export class ServersService {
    * Extended for automatic best-node selection: optional filters
    * (country, premium), sort (ping | load) and row limit.
    */
+  /**
+   * Публичная витрина: страна/город/задержка/нагрузка.
+   *
+   * Ip, port, publicKey и shortId отсюда убраны намеренно. Реальный конфиг
+   * подключения клиент получает только вместе с ключом (toContract), а голые
+   * «адрес + Reality-ключи» в открытом списке — это приглашение для сканеров:
+   * зная их, чужой хост пытается рукопожатие к нашему ядру и нагружает его.
+   */
   async findActive(query: QueryServersDto = {}) {
     return this.prisma.vpnServer.findMany({
+      select: PUBLIC_SERVER_FIELDS,
       where: {
         status: ServerStatus.ACTIVE,
         ...(query.country

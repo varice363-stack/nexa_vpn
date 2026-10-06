@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../common/prisma/prisma.service';
+import { PUBLIC_SERVER_FIELDS } from '../servers/servers.service';
 
 /**
  * VPN server catalog.
@@ -18,6 +19,7 @@ export class VpnService {
     return this.prisma.vpnServer.findMany({
       where: { status: 'ACTIVE' },
       orderBy: { ping: 'asc' },
+      select: PUBLIC_SERVER_FIELDS,
     });
   }
 }

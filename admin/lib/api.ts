@@ -1,6 +1,10 @@
 'use client';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://78.17.156.139:3000/app-api';
+// По умолчанию — тот же origin, '/api/*' (Next проксирует на бэкенд по
+// API_PROXY_ORIGIN из next.config.mjs). Прямой URL в проде не нужен и вреден:
+// он зашивался в бандл на этапе build и превращал панель в «доступен только
+// с того адреса, откуда его собрали».
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api';
 const TOKEN_KEY = 'morok_admin_token';
 
 export function getToken(): string | null {
