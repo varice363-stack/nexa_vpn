@@ -28,6 +28,7 @@
     "@nestjs/platform-express": "^10.4.4",
     "@nestjs/swagger": "^7.4.2",
     "@prisma/client": "^5.22.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.16.11",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
