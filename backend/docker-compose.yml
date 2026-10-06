@@ -41,6 +41,24 @@ services:
         condition: service_healthy
     volumes:
       - backend_uploads:/app/uploads
+  admin:
+    build:
+      context: ../admin
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: /api
+    image: morok_admin:latest
+    container_name: morok_admin
+    restart: unless-stopped
+    # network_mode: host — чтобы прокси /api → 127.0.0.1:3000 видел morok_backend,
+    # который опубликован на хосте и не состоит в сети этого compose-файла.
+    network_mode: host
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      API_PROXY_ORIGIN: ${ADMIN_API_PROXY_ORIGIN:-http://127.0.0.1:3000}
+    depends_on:
+      - backend
 
 volumes:
   pgdata:

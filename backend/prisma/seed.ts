@@ -32,11 +32,15 @@ async function main() {
     data: { isActive: false },
   });
 
-  // Admin account: admin@morokvpn.app / admin1234
-  const adminHash = await bcrypt.hash('admin1234', 10);
+  // Админ панели (Next.js /login) — email + пароль. Пароль берётся из
+  // ADMIN_PASSWORD: сменить пароль = поменять значение в docker-compose.yml
+  // и выполнить `docker compose exec backend npm run prisma:seed`.
+  // Дефолт admin1234 оставлен только для локальной разработки.
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin1234';
+  const adminHash = await bcrypt.hash(adminPassword, 10);
   await prisma.user.upsert({
     where: { email: 'admin@morokvpn.app' },
-    update: {},
+    update: { passwordHash: adminHash, role: Role.ADMIN },
     create: {
       email: 'admin@morokvpn.app',
       passwordHash: adminHash,
@@ -95,7 +99,7 @@ async function main() {
     },
   });
 
-  console.log('Seed complete: admin@morokvpn.app / admin1234, user@morokvpn.app / user1234, 6 servers.');
+  console.log(`Seed complete: admin@morokvpn.app (пароль ${process.env.ADMIN_PASSWORD ? 'из ADMIN_PASSWORD' : 'дефолтный'}), user@morokvpn.app / user1234.`);
 }
 
 main()
