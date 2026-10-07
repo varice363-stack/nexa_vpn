@@ -10,8 +10,9 @@ cp .env.example .env.local   # NEXT_PUBLIC_API_URL=/api (дефолт и так 
 npm run dev                  # http://localhost:3001
 ```
 
-Вход: `admin@morokvpn.app / admin1234` (сид backend). **Смени пароль сразу** —
-он лежит в открытом виде в `backend/prisma/seed.ts`, а порт 3000 смотрит в интернет.
+Вход: `admin@morokvpn.app`, пароль — из `ADMIN_PASSWORD` в `backend/.env`
+(файл вне гита, `chmod 600`). Сид перебивает пароль только когда его
+запускают: `docker compose exec backend npm run prisma:seed`.
 
 ## Разделы
 

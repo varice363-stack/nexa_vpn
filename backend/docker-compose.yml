@@ -6,9 +6,11 @@ services:
     container_name: morok_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: morok
-      POSTGRES_PASSWORD: morok_db_password_2026
-      POSTGRES_DB: morok_vpn
+      # Секреты живут в backend/.env (не в гите). Файл создаётся один раз при
+      # установке: см. DEPLOY.md / deploy/bootstrap.sh.
+      POSTGRES_USER: ${DB_USER:-morok}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?backend/.env: DB_PASSWORD не задан}
+      POSTGRES_DB: ${DB_NAME:-morok_vpn}
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
@@ -31,10 +33,13 @@ services:
       NODE_ENV: production
       PORT: 3000
       HOST: "0.0.0.0"
-      DATABASE_URL: "postgresql://morok:morok_db_password_2026@postgres:5432/morok_vpn?schema=public"
-      JWT_SECRET: "morok_jwt_super_secret_key_2026_production_secure_777"
-      CORS_ORIGINS: "*"
-      OWNER_CODE: "MOROK-WJWY-4KCC-A7EC-JT9F"
+      DATABASE_URL: "postgresql://${DB_USER:-morok}:${DB_PASSWORD:?}@postgres:5432/${DB_NAME:-morok_vpn}?schema=public"
+      JWT_SECRET: ${JWT_SECRET:?backend/.env: JWT_SECRET не задан}
+      # Пароль администратора панели (только для prisma:seed), код владельца
+      # админ-эндпоинтов и адрес, которому разрешено ходить по http.
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      OWNER_CODE: ${OWNER_CODE:?backend/.env: OWNER_CODE не задан}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
       UPLOADS_DIR: "uploads"
       # TASK #030: куда выкладывать список ключей для ядра Xray. Файл читает
       # хостовый cron (deploy/xray-sync/build-xray-config.py), который собирает

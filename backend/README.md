@@ -23,11 +23,17 @@ npm run prisma:seed
 
 # 3. Запуск
 cp .env.example .env
-npm run start:dev                     # http://localhost:3000/api
+npm run start:dev                     # http://localhost:3000/app-api
 ```
 
-Seed-аккаунты: `admin@nexavpn.app / admin1234`, `user@nexavpn.app / user1234`.
-Сид создаёт 6 серверов, зеркалирующих клиентский каталог.
+Сид (`npm run prisma:seed`) заводит `admin@morokvpn.app` с паролем из
+`ADMIN_PASSWORD` (backend/.env) и служебную учётку `user@morokvpn.app`.
+Без `ADMIN_PASSWORD` ставится дефолт `admin1234` — только для локальной
+разработки, на проде так оставлять нельзя.
+
+Секретов в репозитории нет: `JWT_SECRET`, `OWNER_CODE`, `DB_PASSWORD`,
+`ADMIN_PASSWORD` читаются из `backend/.env` (в `.gitignore`, `chmod 600`),
+compose не стартует без них. `backend/.env.example` — шаблон, не значение.
 
 ## Структура
 

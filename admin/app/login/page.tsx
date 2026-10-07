@@ -60,9 +60,6 @@ export default function LoginPage() {
         <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? 'Вход…' : 'Войти'}
         </button>
-        <p className="text-[11px] text-faint text-center">
-          Админ по умолчанию: admin@morokvpn.app / admin1234
-        </p>
       </form>
     </div>
   );

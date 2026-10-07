@@ -64,7 +64,7 @@ async function main() {
 
   // Main active MOROK VLESS Reality server
   await prisma.vpnServer.upsert({
-    where: { ip: '72.35.246.168' },
+    where: { ip: '78.17.156.139' },
     update: {
       name: 'MOROK Fast NL-01',
       country: 'Netherlands',
@@ -84,7 +84,7 @@ async function main() {
       country: 'Netherlands',
       countryCode: 'NL',
       city: 'Amsterdam',
-      ip: '72.35.246.168',
+      ip: '78.17.156.139',
       port: 443,
       transport: 'tcp',
       security: 'reality',

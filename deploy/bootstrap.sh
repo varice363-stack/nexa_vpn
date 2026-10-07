@@ -74,15 +74,25 @@ if [ -f .env ]; then
 else
   log "создаю .env с свежими секретами"
   umask 077
+  # Все секреты — только здесь. docker-compose.yml подставляет их через ${...}
+  # и отказывается стартовать без DB_PASSWORD/JWT_SECRET/OWNER_CODE, так что
+  # Литералы в гите больше не нужны (в 2026 они там и были — ротировано).
+  hex() { openssl rand -hex "$1"; }
+  ALPH='0123456789ABCDEFGHJKLMNPQRSTUVWXYZ'
+  code() { openssl rand -base64 48 | tr -dc "$ALPH" | cut -c1-"$1"; }
   {
     echo "NODE_ENV=production"
-    echo "JWT_SECRET=$(openssl rand -hex 32)"
-    echo "OWNER_CODE=MOROK-$(openssl rand -hex 2 | tr 'a-f' 'A-F')-$(openssl rand -hex 2 | tr 'a-f' 'A-F')-$(openssl rand -hex 2 | tr 'a-f' 'A-F')-$(openssl rand -hex 2 | tr 'a-f' 'A-F')"
+    echo "DB_USER=morok"
+    echo "DB_NAME=morok_vpn"
+    echo "DB_PASSWORD=$(code 32)"
+    echo "JWT_SECRET=$(hex 48)"
+    echo "ADMIN_PASSWORD=$(code 24)"
+    echo "OWNER_CODE=MOROK-$(code 4)-$(code 4)-$(code 4)-$(code 4)"
+    echo "CORS_ORIGINS=*"
   } > .env
   chmod 600 .env
   warn "код владельца: $(grep OWNER_CODE .env | cut -d= -f2) — сохрани его, на сервере его больше нигде нет"
-  warn "внимание: пароли БД и JWT сейчас дефолтные из docker-compose.yml. Для прода"
-  warn "смени их в backend/docker-compose.yml и в DATABASE_URL, затем: docker compose up -d"
+  warn "пароль панели: $(grep ADMIN_PASSWORD .env | cut -d= -f2) (вход admin@morokvpn.app)"
 fi
 
 # ── 4. контейнеры ────────────────────────────────────────────────────────
