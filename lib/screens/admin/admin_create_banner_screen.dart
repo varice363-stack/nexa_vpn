@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import '../../widgets/common/admin_back_guard.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -234,9 +235,10 @@ class _AdminCreateBannerScreenState
       }
       switch (e.statusCode) {
         case 401:
-          return 'Сессия истекла. Выйдите и войдите снова.';
+          return 'Сервер не признал доступ владельца. Проверьте, что сборка '
+              'собрана с --dart-define=OWNER_CODE=...';
         case 403:
-          return 'Недостаточно прав. Нужна роль ADMIN.';
+          return 'Код владельца принят, но прав не хватает.';
         case 400:
           return 'Неверные данные. Проверьте заполнение полей.';
         case 409:
@@ -250,7 +252,8 @@ class _AdminCreateBannerScreenState
 
   @override
   Widget build(BuildContext context) {
-    return AppPage(
+    return AdminBackGuard(
+      child: AppPage(
       title: 'Создать баннер',
       subtitle: 'Рекламный баннер для партнёрской программы',
       child: Form(
@@ -366,6 +369,7 @@ class _AdminCreateBannerScreenState
             const SizedBox(height: 24),
           ],
         ),
+      ),
       ),
     );
   }

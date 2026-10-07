@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_providers.dart';
 
-const _deviceIdKey = 'morok_device_id';
+/// Ключ один на двоих с app_providers (оттуда же идёт перевыдача токена).
+const _deviceIdKey = kDeviceIdKey;
 
 /// Stable per-installation identifier.
 ///

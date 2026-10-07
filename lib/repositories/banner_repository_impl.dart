@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import '../core/utils/app_logger.dart';
 import '../domain/repositories/banner_repository.dart';
 import '../models/promo_banner.dart';
+import '../providers/admin_providers.dart';
 import '../services/api/api_client.dart';
 import '../services/api/api_config.dart';
 import '../services/api/api_exception.dart';
@@ -125,6 +126,12 @@ class BannerRepositoryImpl implements BannerRepository {
     final request = http.MultipartRequest('POST', uri);
     if (token != null && token.isNotEmpty) {
       request.headers['Authorization'] = 'Bearer $token';
+    }
+    // Загрузка идёт мимо ApiClient (multipart), и раньше поэтому совсем без
+    // кода владельца: маршрут @Roles(ADMIN), бэкенд отвечал 401, а экран —
+    // «Сессия истекла. Выйдите и войдите снова», хотя баннер уже был создан.
+    if (kOwnerCode.isNotEmpty) {
+      request.headers['X-Owner-Code'] = kOwnerCode;
     }
     
     final file = await http.MultipartFile.fromPath('file', imageFile.path);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/common/admin_back_guard.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -108,7 +109,8 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
     // а не только в меню: попасть сюда по прямой ссылке нельзя.
     // Признак владельца — совпадение кода устройства с OWNER_CODE сборки.
     if (!ref.watch(adminUnlockedProvider)) {
-      return AppPage(
+      return AdminBackGuard(
+        child: AppPage(
         title: l10n.adminOwnerSection,
         child: Padding(
           padding: const EdgeInsets.only(top: 40),
@@ -117,10 +119,12 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
             style: const TextStyle(color: AppColors.textSecondary),
           ),
         ),
+      ),
       );
     }
 
-    return AppPage(
+    return AdminBackGuard(
+      child: AppPage(
       title: l10n.adminTitle,
       subtitle: l10n.adminSubtitle,
       child: Column(
@@ -154,6 +158,7 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
           const SizedBox(height: 4),
           _keysList(context, l10n),
         ],
+      ),
       ),
     );
   }

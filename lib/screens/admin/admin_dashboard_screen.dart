@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../widgets/common/admin_back_guard.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/admin_dashboard.dart';
@@ -41,8 +42,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      body: AnimatedBackground(
+    // Аппаратная «назад» на вершине стека закрывала приложение целиком.
+    return AdminBackGuard(
+      child: Scaffold(
+        body: AnimatedBackground(
         child: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,6 +133,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             ],
           ),
         ),
+      ),
       ),
     );
   }

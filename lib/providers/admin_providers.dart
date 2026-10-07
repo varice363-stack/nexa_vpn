@@ -8,7 +8,8 @@ import 'identity_providers.dart';
 /// `--dart-define=OWNER_CODE=...` сборка не имеет админ-входа вообще.
 /// (Раньше здесь был вшит реальный код — любой, кто распаковал бы публичный
 /// APK, получал админку. Не возвращать.)
-const String kOwnerCode = String.fromEnvironment('OWNER_CODE', defaultValue: '');
+const String kOwnerCode =
+    String.fromEnvironment('OWNER_CODE', defaultValue: '');
 
 const String _kAdminUnlockedKey = 'morok_admin_unlocked';
 
@@ -23,21 +24,16 @@ class AdminUnlockNotifier extends AsyncNotifier<bool> {
   Future<bool> build() async {
     // 1. Проверяем сохраненный флаг разблокировки в Keystore
     final saved = await _storage.read(_kAdminUnlockedKey);
-    if (saved == 'true') {
-      await _ensureAdminToken();
-      return true;
-    }
+    if (saved == 'true') return true;
 
     // 2. Автоматическая разблокировка, если ID устройства совпадает с OWNER_CODE
     if (kOwnerCode.isNotEmpty) {
       final identityCode = ref.watch(identityProvider).value;
       if (identityCode != null) {
-        final cleanIdentity =
-            identityCode.replaceAll(RegExp(r'[^A-Z0-9]'), '');
+        final cleanIdentity = identityCode.replaceAll(RegExp(r'[^A-Z0-9]'), '');
         final cleanOwner = kOwnerCode.replaceAll(RegExp(r'[^A-Z0-9]'), '');
         if (cleanIdentity == cleanOwner) {
           await _storage.write(_kAdminUnlockedKey, 'true');
-          await _ensureAdminToken();
           return true;
         }
       }
@@ -46,20 +42,16 @@ class AdminUnlockNotifier extends AsyncNotifier<bool> {
     return false;
   }
 
-  /// Получает JWT-токен админа для бекэнда при разблокировке.
-  Future<void> _ensureAdminToken() async {
-    try {
-      final token = await ref.read(tokenStorageProvider).read();
-      if (token == null || token.isEmpty) {
-        final result = await ref
-            .read(authRepositoryProvider)
-            .login('admin@morokvpn.app', 'admin1234');
-        await ref.read(tokenStorageProvider).write(result.accessToken);
-      }
-    } catch (_) {
-      // Игнорируем сетевые ошибки офлайн-режима
-    }
-  }
+  // Почему здесь БОЛЬШЕ нет «логина администратора»:
+  //
+  // Метод _ensureAdminToken входил на проде под admin@morokvpn.app с паролем
+  // admin1234 из исходников и клал полученный JWT в токен ПОЛЬЗОВАТЕЛЯ. Это
+  // (а) мусорный доступ — пароль в репозитории, в публичной сборке он не
+  // передаётся, а бэкенд его давно не принимает → запрос падал, ошибка
+  // глоталась catch, и админ-экраны шли без токена; (б) портил сессию
+  // владельца, подменяя его собственный токен. Администратором владелецская
+  // сборка становится по заголовку X-Owner-Code (ApiClient), поэтому токен
+  // для админ-вызовов не нужен вовсе.
 
   /// Попытка разблокировать админку по коду владельца и СОХРАНИТЬ навсегда.
   Future<bool> tryUnlock(String enteredCode) async {
@@ -72,7 +64,6 @@ class AdminUnlockNotifier extends AsyncNotifier<bool> {
     if (kOwnerCode.isEmpty) return false;
     if (cleanEntered.isNotEmpty && cleanEntered == cleanOwner) {
       await _storage.write(_kAdminUnlockedKey, 'true');
-      await _ensureAdminToken();
       state = const AsyncData(true);
       return true;
     }
@@ -80,9 +71,12 @@ class AdminUnlockNotifier extends AsyncNotifier<bool> {
   }
 
   /// Заблокировать / выйти из режима админа.
+  ///
+  /// Токен пользователя НЕ трогается: режим админа держится на заголовке
+  /// X-Owner-Code, а чистить из-за этого пользовательскую сессию — значит
+  /// «за блокировку админки» платить выходом из приложения.
   Future<void> lock() async {
     await _storage.delete(_kAdminUnlockedKey);
-    await ref.read(tokenStorageProvider).clear();
     state = const AsyncData(false);
   }
 }

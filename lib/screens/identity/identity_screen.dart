@@ -258,7 +258,9 @@ class _AdminCard extends ConsumerWidget {
               colors: [Color(0xFF06B6D4), Color(0xFF3B82F6)],
             ),
             foreground: Colors.white,
-            onTap: () => context.go('/admin/dashboard'),
+            // push, а не go: go обнуляет стек, и после «назад» приложение
+            // закрывалось целиком — выталкивать было нечего.
+            onTap: () => context.push('/admin/dashboard'),
           ),
         ],
       ),

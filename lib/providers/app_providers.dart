@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/api/api_config.dart';
 import '../core/utils/app_logger.dart';
 import '../data/datasources/local_settings_datasource.dart';
 import '../data/repositories/config_repository_impl.dart';
@@ -65,14 +68,48 @@ final sslPinningServiceProvider = Provider<SslPinningService>(
   (ref) => SslPinningService(ref.watch(loggerProvider)),
 );
 
+/// Ключ стабильного id устройства в SharedPreferences (см. deviceIdProvider).
+const kDeviceIdKey = 'morok_device_id';
+
 /// HTTP client for the Morok VPN backend.
-final apiClientProvider = Provider<ApiClient>(
-  (ref) => ApiClient(
+final apiClientProvider = Provider<ApiClient>((ref) {
+  final client = ApiClient(
     tokenStorage: ref.watch(tokenStorageProvider),
     logger: ref.watch(loggerProvider),
     sslPinningService: ref.watch(sslPinningServiceProvider),
-  ),
-);
+  );
+  // 401 → сначала одна попытка перевыпустить токен, а не выбрасывать
+  // пользователя. /auth/auto-register делает это по device-id: сервер находит
+  // аккаунт и отдаёт новый JWT. Экрана «войти по паролю» в приложении нет,
+  // поэтому прежний путь «сессия истекла → выйдите и войдите снова» был тупиком:
+  // админ-экраны на 8-й день жизни токена просто переставали что-либо писать.
+  client.refreshToken = () async {
+    final deviceId =
+        ref.read(sharedPreferencesProvider).getString(kDeviceIdKey);
+    if (deviceId == null || deviceId.isEmpty) return false;
+    try {
+      // Напрямую, без AuthRepository: он сам построен поверх apiClientProvider,
+      // и из колбэка получил бы цикл провайдеров.
+      final res = await http
+          .post(
+            Uri.parse('${ApiConfig.resolvedBaseUrl}/auth/auto-register'),
+            headers: const {'Content-Type': 'application/json'},
+            body: jsonEncode(
+                {'deviceId': deviceId, 'platform': 'android-refresh'}),
+          )
+          .timeout(const Duration(seconds: 15));
+      if (res.statusCode >= 400) return false;
+      final token = (jsonDecode(res.body) as Map)['accessToken'] as String?;
+      if (token == null || token.isEmpty) return false;
+      await ref.read(tokenStorageProvider).write(token);
+      return true;
+    } catch (e) {
+      ref.read(loggerProvider).warn('token refresh failed: $e', source: 'auth');
+      return false;
+    }
+  };
+  return client;
+});
 
 // ── Repositories ──────────────────────────────────────────────────────────
 

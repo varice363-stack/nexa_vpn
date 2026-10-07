@@ -38,26 +38,6 @@ class ApiClient {
   final SslPinningService _sslPinningService;
   final String _baseUrl;
 
-  /// Запросы, для которых у клиента есть права администратора (только
-  /// владелец-сборка). Всё остальное идёт под обычным JWT.
-  static bool _isAdminCall(String method, String path) {
-    if (path.startsWith('/admin/') || path.startsWith('/analytics/')) return true;
-    if (path.startsWith('/banners/') && path != '/banners') return true; // all/activate/stats
-    if (path == '/servers/all' || path.startsWith('/users/')) return true;
-    if (path == '/provisioning/all' ||
-        path == '/provisioning/issue' ||
-        path.startsWith('/provisioning/xray/')) {
-      return true;
-    }
-    if (path.startsWith('/billing/')) {
-      // клиентские пути (checkout, crypto/submit, crypto/wallets) — без кода
-      return !path.startsWith('/billing/crypto/submit') &&
-          !path.startsWith('/billing/crypto/wallets') &&
-          !path.startsWith('/billing/checkout');
-    }
-    return false;
-  }
-
   /// Rate limiting: минимальный интервал между запросами.
   static const _minRequestInterval = Duration(milliseconds: 500);
   DateTime? _lastRequestTime;
@@ -100,23 +80,7 @@ class ApiClient {
       );
     }
 
-    final token = await _tokenStorage.read();
-
-    final headers = <String, String>{
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      // X-Owner-Code — только для личной (владелец) сборки, код передан при
-      // сборке: --dart-define=OWNER_CODE=... . В публичной сборке пусто →
-      // заголовок не отправляется вообще.
-      //
-      // И на владелецской сборке он едет НЕ в каждом запросе: заголовок — это
-      // ключ ко ВСЕМУ API (гард бэкенда пускает с ним на любой @Roles(ADMIN)
-      // маршрут), поэтому светить его в /auth/me и в лендинге баннеров нельзя.
-      if (kOwnerCode.isNotEmpty && _isAdminCall(method, path))
-        'X-Owner-Code': kOwnerCode,
-      if (token != null && token.isNotEmpty)
-        'Authorization': 'Bearer $token',
-    };
+    final headers = await buildHeaders();
 
     _logger?.debug('$method $path', source: 'api');
 
@@ -133,12 +97,40 @@ class ApiClient {
     );
   }
 
+  /// Заголовки каждого запроса. Вынесено, чтобы повтор после 401 собрал их
+  /// заново — уже со свежим токеном.
+  Future<Map<String, String>> buildHeaders() async {
+    final token = await _tokenStorage.read();
+    return <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      // X-Owner-Code — только для личной (владелец) сборки, код передан при
+      // сборке: --dart-define=OWNER_CODE=... . В публичной сборке пусто →
+      // заголовок не отправляется вообще (админки в ней нет).
+      //
+      // Едет в ЛЮБОМ запросе владелецской сборки. Раньше путь сверялся со
+      // списком-белым: /banners/<id>/upload в него не входил, загрузка картинки
+      // уходила без кода, бэкенд отвечал 401, а экран рисовал «Сессия истекла».
+      if (kOwnerCode.isNotEmpty) 'X-Owner-Code': kOwnerCode,
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
+  }
+
+  /// Экземпляр хранилища токенов: обработчик refreshToken должен писать новый
+  /// JWT в то же хранилище, из которого читает клиент.
+  TokenStorage get tokenStorage => _tokenStorage;
+
+  /// Позволяет приложению перевыпустить токен вместо принудительного выхода.
+  /// Возвращает true, если токен обновлён (тогда запрос будет повторён).
+  Future<bool> Function()? refreshToken;
+
   Future<dynamic> _executeRequest(
     String method,
     Uri uri,
     Map<String, String> headers,
-    Object? body,
-  ) async {
+    Object? body, {
+    bool allowRefresh = true,
+  }) async {
     late http.Response response;
     try {
       response = switch (method) {
@@ -172,7 +164,22 @@ class ApiClient {
       return decoded;
     }
 
-    // 401 — сессия истекла
+    // 401 — сессия истекла.
+    //
+    // Выбрасывать в logout сразу нельзя: токен живёт 7 дней (JWT_EXPIRES_IN), а
+    // экрана входа по паролю в приложении нет — «выйдите и войдите снова» было
+    // тупиком, а не инструкцией. Сначала одна автоматическая перевыдача токена и
+    // повтор запроса; logout — только если перевыдача не удалась.
+    if (response.statusCode == 401 && allowRefresh && await refreshToken?.call() == true) {
+      _logger?.info('401 → token refreshed, retrying $method $uri', source: 'api');
+      return _executeRequest(
+        method,
+        uri,
+        await buildHeaders(),
+        body,
+        allowRefresh: false,
+      );
+    }
     if (response.statusCode == 401) {
       _logger?.warn('401 Unauthorized — clearing token', source: 'api');
       await _tokenStorage.clear();
