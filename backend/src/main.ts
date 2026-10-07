@@ -45,19 +45,24 @@ async function bootstrap() {
       // Mobile apps don't send Origin header, so we allow them
       // But we MUST validate if Origin IS present
       if (!origin) {
-        // No Origin header - likely mobile app or curl/Postman
-        // Allow for development, but in production this should be restricted
+        // No Origin header — мобильное приложение (Dart-клиент не шлёт Origin),
+        // curl, health-check'и. Пускаем: CORS их не касается в принципе.
         return callback(null, true);
       }
-      
-      // Check if origin is in whitelist
-      if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
-        callback(null, true);
-      } else {
-        // SECURITY: Log suspicious origin attempts
-        console.warn(`[SECURITY] Blocked CORS request from origin: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
+
+      // '*' НЕ разрешаем для запросов С Origin: вместе с credentials:true это
+      // давало бы любому сайту доступ к API от имени пользователя.
+      if (allowedOrigins.includes('*')) {
+        console.warn(`[SECURITY] Blocked CORS request from origin: ${origin} (CORS_ORIGINS=*)`);
+        return callback(new Error('Not allowed by CORS'));
       }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      // SECURITY: Log suspicious origin attempts
+      console.warn(`[SECURITY] Blocked CORS request from origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],

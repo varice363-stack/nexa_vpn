@@ -39,7 +39,11 @@ services:
       # админ-эндпоинтов и адрес, которому разрешено ходить по http.
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       OWNER_CODE: ${OWNER_CODE:?no-backend-env}
-      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      # '*' был значением по умолчанию: бэкенд отдавал Access-Control-Allow-Origin
+      # ЛЮБОМУ сайту вместе с credentials:true. Нативному приложению Origin не
+      # нужен (Dart-клиент его не шлёт), поэтому переменная обязательна и
+      # перечисляет только браузерские источники (панель, dev-сборки).
+      CORS_ORIGINS: ${CORS_ORIGINS:?no-cors-origins-set}
       UPLOADS_DIR: "uploads"
       # TASK #030: куда выкладывать список ключей для ядра Xray. Файл читает
       # хостовый cron (deploy/xray-sync/build-xray-config.py), который собирает

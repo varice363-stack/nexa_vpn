@@ -88,7 +88,7 @@ else
     echo "JWT_SECRET=$(hex 48)"
     echo "ADMIN_PASSWORD=$(code 24)"
     echo "OWNER_CODE=MOROK-$(code 4)-$(code 4)-$(code 4)-$(code 4)"
-    echo "CORS_ORIGINS=*"
+    echo "CORS_ORIGINS=http://localhost:3000,http://localhost:8080"
   } > .env
   chmod 600 .env
   warn "код владельца: $(grep OWNER_CODE .env | cut -d= -f2) — сохрани его, на сервере его больше нигде нет"
