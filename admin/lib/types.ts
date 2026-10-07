@@ -149,7 +149,10 @@ export interface BillingTransaction {
 
 export interface AdminAccessKey {
   id: string;
-  userId: string;
+  /** null у кода, который ещё не привязан ни к одному аккаунту (выдан «на продажу»). */
+  userId: string | null;
+  /** Код для ввода покупателем (MOROK-XXXX-XXXX). */
+  code: string | null;
   deviceId: string | null;
   serverId: string | null;
   name: string;

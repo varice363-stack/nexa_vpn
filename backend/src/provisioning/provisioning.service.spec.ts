@@ -229,16 +229,59 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
     expect(updateCall.data.status).toBe('REVOKED');
   });
 
-  it('admin allKeys includes the assigned server + its status', async () => {
+  it('admin allKeys выбирает сервер со статусом и код доступа', async () => {
     const prisma = makePrisma();
     const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
 
     await service.allKeys();
 
     const call = (prisma.accessKey.findMany as jest.Mock).mock.calls[0][0];
-    expect(call.include.server.select).toMatchObject({
+    // Prisma не разрешает select+include вместе: связи живут внутри select.
+    expect(call.include).toBeUndefined();
+    expect(call.select.server.select).toMatchObject({
       id: true, name: true, status: true,
     });
+    // code обязателен: без него панель не показывает то, что вводит покупатель.
+    expect(call.select.code).toBe(true);
+  });
+
+  it('admin revokeAny не режет по userId владельца (баг панели: 404 вместо отзыва)', async () => {
+    const prisma = makePrisma({
+      accessKey: {
+        findUnique: jest.fn(async () => activeKey),
+        update: jest.fn(async (args: { data: Record<string, unknown> }) => ({
+          ...activeKey,
+          ...args.data,
+        })),
+        updateMany: jest.fn(async () => ({ count: 1 })),
+      },
+    });
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+
+    const res = await service.revokeAny('k1');
+
+    const update = (prisma.accessKey.update as jest.Mock).mock.calls[0][0];
+    expect(update.where).toEqual({ id: 'k1' });
+    expect(update.data.status).toBe('REVOKED');
+    expect(res).toMatchObject({ revoked: true, id: 'k1' });
+    expect(prisma.accessKey.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('admin revokeAny на уже отозванном — без записи и без ошибки', async () => {
+    const prisma = makePrisma({
+      accessKey: {
+        findUnique: jest.fn(async () => ({ ...activeKey, status: 'REVOKED' })),
+        update: jest.fn(),
+        updateMany: jest.fn(async () => ({ count: 1 })),
+      },
+    });
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+
+    const res = await service.revokeAny('k1');
+
+    expect(res).toMatchObject({ revoked: false, alreadyRevoked: true });
+    expect(prisma.accessKey.update).not.toHaveBeenCalled();
+    expect(prisma.accessKey.updateMany).not.toHaveBeenCalled();
   });
 
   it('ACTIVE + assigned server in MAINTENANCE → config null + reason', async () => {

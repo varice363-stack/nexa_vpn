@@ -5,7 +5,7 @@ import { FormEvent, useCallback, useEffect, useState } from 'react';
 import Badge from '@/components/Badge';
 import Modal from '@/components/Modal';
 import PageHeader from '@/components/PageHeader';
-import { api } from '@/lib/api';
+import { api, apiBase } from '@/lib/api';
 import { Banner, BannerPlacement, BannerStats } from '@/lib/types';
 
 const EMPTY_FORM = {
@@ -69,14 +69,25 @@ export default function BannersPage() {
     const formData = new FormData();
     formData.append('file', file);
     const token = localStorage.getItem('morok_admin_token');
-    await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL ?? 'http://78.17.156.139:3000/app-api'}/banners/${b.id}/upload`,
-      {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      },
-    );
+    // Тот же origin, что и у остальных запросов панели ('/api' → прокси).
+    // Раньше сюда был вшит http://78.17.156.139:3000/app-api: загрузка
+    // работала, только если панель открыта по этому адресу, и ловила CORS,
+    // когда панель стоит на другом хосте.
+    const res = await fetch(`${apiBase()}/banners/${b.id}/upload`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try {
+        const body = await res.json();
+        msg = Array.isArray(body.message) ? body.message.join('; ') : (body.message ?? msg);
+      } catch {
+        /* пустой/не-json ответ */
+      }
+      setError(`Не удалось загрузить картинку: ${msg}`);
+    }
     load();
   }
 

@@ -98,6 +98,19 @@ export class ProvisioningController {
     return this.provisioning.create(user, dto);
   }
 
+  /**
+   * Admin: отозвать ключ пользователя. Объявлен ДО пользовательского
+   * DELETE ':id' — Nest матчит маршруты в порядке объявления, и без этого
+   * «admin-revoke» уехал бы в ParseUUIDPipe.
+   */
+  @Roles(Role.ADMIN)
+  @Delete('admin-revoke/:id')
+  async adminRevoke(@Param('id', ParseUUIDPipe) id: string) {
+    const res = await this.provisioning.revokeAny(id);
+    await this.xraySync.sync().catch(() => null);
+    return res;
+  }
+
   @Delete(':id')
   async revoke(@CurrentUser() user: SafeUser, @Param('id', ParseUUIDPipe) id: string) {
     const res = await this.provisioning.revoke(user, id);

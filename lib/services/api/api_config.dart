@@ -52,6 +52,32 @@ abstract final class ApiConfig {
     }
   }
 
+  /// Origin бэкенда без префикса `/app-api` — оттуда же раздаётся статика
+  /// (`/uploads/…`: картинки баннеров, загруженные через панель).
+  ///
+  /// Баннер хранит `imageUrl` относительным путём (так его пишет
+  /// `banners.controller.upload`), а `/uploads` сознательно не перенесён под
+  /// API_PREFIX. Без этого шага `Image.network('/uploads/x.png')` — битая
+  /// картинка, потому что у относительного URI нет ни схемы, ни хоста.
+  static String get baseOrigin {
+    final uri = Uri.tryParse(resolvedBaseUrl);
+    if (uri == null || uri.host.isEmpty) return '';
+    final port = uri.hasPort ? ':${uri.port}' : '';
+    return '${uri.scheme}://${uri.host}$port';
+  }
+
+  /// Полностью разрешённый URL картинки/файла с сервера.
+  static String resolveAssetUrl(String path) {
+    if (path.isEmpty) return path;
+    final uri = Uri.tryParse(path);
+    if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+      return path;
+    }
+    final origin = baseOrigin;
+    if (origin.isEmpty) return path;
+    return path.startsWith('/') ? '$origin$path' : '$origin/$path';
+  }
+
   /// Per-request timeout.
   static const Duration timeout = Duration(seconds: 12);
   

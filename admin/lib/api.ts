@@ -5,6 +5,15 @@
 // он зашивался в бандл на этапе build и превращал панель в «доступен только
 // с того адреса, откуда его собрали».
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api';
+
+/**
+ * Абсолютный адрес бэкенда для тех мест, где fetch() нельзя заменить на api():
+ * multipart-загрузка картинки баннера. Относительный '/api' остаётся
+ * относительным — он и так ловится прокси-правилом из next.config.mjs.
+ */
+export function apiBase(): string {
+  return API_URL.startsWith('/') ? API_URL : `${API_URL}`;
+}
 const TOKEN_KEY = 'morok_admin_token';
 
 export function getToken(): string | null {

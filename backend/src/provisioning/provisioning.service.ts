@@ -94,14 +94,59 @@ export class ProvisioningService {
     return { revoked: true, id };
   }
 
+  /**
+   * Admin: отозвать ЛЮБОЙ ключ.
+   *
+   * revoke() выше фильтрует по userId, потому что это пользовательский
+   * эндпоинт («моё устройство»). Панель ходит с JWT администратора, и
+   * updateMany с where { id, userId: <id админа> } не находил ни одной
+   * строки: «Отозвать ключ» в панели отдавал 404 «Key not found» и ключ
+   * продолжал работать. Для админа привязка по владельцу не имеет смысла —
+   * берём только id.
+   */
+  async revokeAny(id: string) {
+    const key = await this.prisma.accessKey.findUnique({ where: { id } });
+    if (!key) throw new NotFoundException('Key not found');
+    if (key.status === 'REVOKED') return { revoked: false, id, alreadyRevoked: true };
+    await this.prisma.accessKey.update({
+      where: { id },
+      data: { status: 'REVOKED' },
+    });
+    return { revoked: true, id };
+  }
+
   /** Admin: all keys with user emails + assigned server (admin panel). */
   async allKeys() {
+    // Либо select, либо include — Prisma не разрешает смешивать, поэтому
+    // связи перечислены внутри select. `code` отдаём намеренно: без него
+    // панель не может показать покупателю то, что он вводит в приложении.
+    // Сюда же не попадают приватные ключи ядра и всё, что не нужно UI.
     return this.prisma.accessKey.findMany({
       orderBy: { createdAt: 'desc' },
-      include: {
+      select: {
+        id: true,
+        userId: true,
+        code: true,
+        deviceId: true,
+        serverId: true,
+        name: true,
+        protocol: true,
+        uuid: true,
+        status: true,
+        createdAt: true,
+        expiresAt: true,
+        lastUsedAt: true,
+        activatedAt: true,
         user: { select: { id: true, email: true } },
         server: {
-          select: { id: true, name: true, country: true, city: true, ip: true, status: true },
+          select: {
+            id: true,
+            name: true,
+            country: true,
+            city: true,
+            ip: true,
+            status: true,
+          },
         },
       },
     });

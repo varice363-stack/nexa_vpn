@@ -22,6 +22,14 @@ const nextConfig = {
         source: '/api/:path*',
         destination: `${API_ORIGIN}/app-api/:path*`,
       },
+      {
+        // Картинки баннеров. Бэкенд кладёт их в ./uploads и раздаёт как
+        // статику СВОИМ процессом, поэтому в базе лежит относительный
+        // '/uploads/xxx.png'. Без этого правила <img src='/uploads/…'> в
+        // панели означал бы «ищи файл рядом с index.html панели», т.е. 404.
+        source: '/uploads/:path*',
+        destination: `${API_ORIGIN}/uploads/:path*`,
+      },
     ];
   },
 };

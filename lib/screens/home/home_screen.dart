@@ -98,8 +98,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     const SizedBox(height: 14),
                   ],
                   
-                  // Баннер партнёрки
-                  const PartnerBanner(),
+                  // Баннеры с сервера (панель «Баннеры»); если их нет —
+                  // статичная партнёрка.
+                  const HomeBannerStrip(),
                 ],
               ),
             ),
