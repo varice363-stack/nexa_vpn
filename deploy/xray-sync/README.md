@@ -10,7 +10,18 @@
 ```
 backend (XrayClientSyncService)  →  /var/lib/morok/xray-clients.json
                                     (том :/var/lib/morok, плюс интервал 30 с)
-cron (sync-xray-clients.py)      →  читает файл → правит XRAY_CONFIG → docker kill -HUP
+cron (build-xray-config.py, на хосте — /usr/local/bin/morok-build-xray-config)
+                                 → пересобирает /etc/morok/xray/config.json из
+                                   /var/lib/morok/xray-clients.json и, если
+                                   набор клиентов изменился, systemctl reload
+                                   morok-xray. Ядро больше НЕ живёт в Marzban:
+                                   sync-xray-clients.py (правка
+                                   /var/lib/marzban/xray_config.json) остался
+                                   только для панелей на Marzban и на бою
+                                  morok-узла не используется — проверять
+                                   «синхронизирован ли список» надо по
+                                   mtime /etc/morok/xray/config.json и
+                                   GET /app-api/provisioning/xray/status.
 ```
 
 Файл, а не API и не сокет docker: у бэкенда нет и не должно быть прав на
