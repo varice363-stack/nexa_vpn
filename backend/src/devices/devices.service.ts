@@ -19,6 +19,13 @@ import { CreateDeviceDto } from './dto/create-device.dto';
  */
 const CORE_SYNC_SCRIPT = '/usr/local/bin/morok-build-xray-config';
 
+/** Как ключ «принадлежит» устройству: по FK или по незабранным в аккаунт отпечаткам. */
+function keyMatch(device: { id: string; name: string }) {
+  return {
+    OR: [{ deviceId: device.id }, { AND: [{ boundDevice: device.name }, { userId: null }] }],
+  };
+}
+
 @Injectable()
 export class DevicesService {
   constructor(private readonly prisma: PrismaService) {}
@@ -32,12 +39,12 @@ export class DevicesService {
 
     return Promise.all(
       devices.map(async (d) => {
-        // boundDevice — «сырой» отпечаток с устройства, он же имя записи.
+        // Учёт ключей: по FK устройства либо по отпечатку, но только если
+        // ключ ещё не claim'нут аккаунтом (иначе чужой ключ мог бы «прилипнуть»
+        // к совпадению строк — Device.name уникальностью не защищён).
+        const owned = keyMatch(d);
         const bound = await this.prisma.accessKey.count({
-          where: {
-            status: 'ACTIVE',
-            OR: [{ deviceId: d.id }, { boundDevice: d.name }],
-          },
+          where: { status: 'ACTIVE', AND: [owned] },
         });
         return {
           deviceId: d.id,
@@ -69,10 +76,10 @@ export class DevicesService {
    * потому что boundDevice был занят. Кнопка «Отключить устройство» в
    * приложении вообще ничего не делала (TODO вместо вызова) — теперь делает.
    *
-   * Статус ключа при этом становится REVOKED, т.е. доступ к ядру теряется СРАЗУ
-   * (иное было бы враньём: «отключили», а трафик идёт). Восстановление —
-   * повторное введение того же кода на новом устройстве: POST
-   * /provisioning/key/transfer снимает REVOKED, если привязка снята.
+   * Статус ключа при этом становится REVOKED, т.е. доступ к ядру теряется
+   * СРАЗУ (иное было бы враньём: «отключили», а трафик идёт). Восстановление —
+   * то же действие, что делает покупатель на новом телефоне: ввести код
+   * заново. redeem() принимает REVOKED-без-привязки и возвращает ему ACTIVE.
    */
   async revoke(user: SafeUser, id: string) {
     const device = await this.prisma.device.findFirst({
@@ -90,9 +97,12 @@ export class DevicesService {
   async unbindKeysFromDevice(userId: string, device: { id: string; name: string }) {
     const keys = await this.prisma.accessKey.findMany({
       where: {
-        userId,
         status: 'ACTIVE',
-        OR: [{ deviceId: device.id }, { boundDevice: device.name }],
+        // Совпадение по FK или по отпечатку — но не шире. Раньше фильтр был
+        // «userId ключа = userId владельца», из-за чего ключи, активированные
+        // кодом без аккаунта (userId=null), никогда не отвязывались: в проде
+        // отзыв устройства отдавал unboundKeys: 0 и делал вид, что всё хорошо.
+        AND: [keyMatch(device)],
       },
       select: { id: true },
     });

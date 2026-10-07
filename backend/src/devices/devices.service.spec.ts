@@ -68,7 +68,10 @@ describe('DevicesService', () => {
     expect(rows[0].lastConnectedAt).toBeInstanceOf(Date);
     // «сырой» отпечаток участвует в поиске ключей, иначе счётчик был бы нулевым
     const where = prisma.accessKey.count.mock.calls[0][0].where;
-    expect(where.OR).toEqual([{ deviceId: 'd1' }, { boundDevice: expect.any(String) }]);
+    expect(where.AND[0].OR).toEqual([
+      { deviceId: 'd1' },
+      { AND: [{ boundDevice: expect.any(String) }, { userId: null }] },
+    ]);
   });
 
   it('revoke() помечает устройство отозванным И снимает привязку с ключей', async () => {
@@ -100,6 +103,23 @@ describe('DevicesService', () => {
       unboundKeys: 0,
     });
     expect(prisma.accessKey.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('отвязывает и ключ без аккаунта (userId=null), но не чужой claim\'нутый', async () => {
+    const prisma = makePrisma({
+      devices: [{ id: 'd1', userId: 'u1', name: 'fp-1', revokedAt: null }],
+      // updateMany в стабе применяет data ко всем строкам, поэтому проверяем
+      // только фильтр — именно в нём вся безопасность операции.
+      keys: [{ id: 'k1' }],
+    });
+    const svc = new DevicesService(prisma);
+
+    await svc.revoke(user, 'd1');
+
+    const where = prisma.accessKey.findMany.mock.calls[0][0].where;
+    expect(where.status).toBe('ACTIVE');
+    expect(where.userId).toBeUndefined();
+    expect(where.AND[0].OR[1].AND[1]).toEqual({ userId: null });
   });
 
   it('чужое/несуществующее устройство — 404, без побочных записей', async () => {
