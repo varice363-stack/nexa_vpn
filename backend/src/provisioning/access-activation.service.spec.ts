@@ -110,11 +110,20 @@ describe('AccessActivationService', () => {
 
     it('rejects revoked and expired codes distinctly', async () => {
       const revoked = new AccessActivationService(
-        makePrisma([{ ...base, status: 'REVOKED' }]),
+        makePrisma([
+          {
+            ...base,
+            status: 'REVOKED',
+            // отозван ВЛАДЕЛЬЦЕМ продукта: привязка и дата активации на месте,
+            // такой код вернуть нельзя (в отличие от «отвязанного от телефона»)
+            boundDevice: 'phone-1',
+            activatedAt: new Date('2026-01-01T00:00:00.000Z'),
+          },
+        ]),
         provisioning,
         xraySync,
       );
-      await expect(revoked.redeem('MOROK-AAAA-BBBB')).rejects.toThrow(
+      await expect(revoked.redeem('MOROK-AAAA-BBBB', 'phone-2')).rejects.toThrow(
         /CODE_REVOKED/,
       );
 
@@ -140,6 +149,21 @@ describe('AccessActivationService', () => {
       const svc = new AccessActivationService(prisma, provisioning, xraySync);
 
       await expect(svc.redeem('morok aaaa bbbb', 'phone-1')).resolves.toBeTruthy();
+    });
+
+    it('revives a code that was unbound from a device (перенос на новый телефон)', async () => {
+      // Так выглядит ключ после «отвязать устройство» в приложении:
+      // status=REVOKED, но ни привязки, ни даты активации.
+      const prisma = makePrisma([
+        { ...base, status: 'REVOKED', boundDevice: null, activatedAt: null },
+      ]);
+      const svc = new AccessActivationService(prisma, provisioning, xraySync);
+
+      const key = await svc.redeem('MOROK-AAAA-BBBB', 'phone-2');
+
+      expect(key.status).toBe('ACTIVE');
+      expect(key.boundDevice).toBe('phone-2');
+      expect(key.activatedAt).toBeInstanceOf(Date);
     });
 
     it('rejects a malformed code without touching the database', async () => {

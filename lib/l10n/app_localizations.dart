@@ -1517,7 +1517,7 @@ abstract class AppLocalizations {
   /// No description provided for @keyEntryErrorUsed.
   ///
   /// In en, this message translates to:
-  /// **'This code is already used on another device.'**
+  /// **'This code is bound to another device. To move it: Settings → Devices → unbind the old one, then enter the code here.'**
   String get keyEntryErrorUsed;
 
   /// No description provided for @keyEntrySuccessNexa.
@@ -2359,6 +2359,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Device {name} disconnected'**
   String devicesDisconnected(String name);
+
+  /// No description provided for @devicesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the device list'**
+  String get devicesLoadFailed;
+
+  /// No description provided for @devicesNoKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'No keys bound'**
+  String get devicesNoKeys;
+
+  /// No description provided for @devicesKeysBound.
+  ///
+  /// In en, this message translates to:
+  /// **'Bound keys: {count}'**
+  String devicesKeysBound(int count);
+
+  /// No description provided for @devicesUnbind.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbind'**
+  String get devicesUnbind;
+
+  /// No description provided for @devicesUnbindTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbind this device?'**
+  String get devicesUnbindTitle;
+
+  /// No description provided for @devicesUnbindBody.
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” will be marked as revoked and its access keys unbound. The code can be entered on a new phone.'**
+  String devicesUnbindBody(String name);
+
+  /// No description provided for @devicesUnbindConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbind'**
+  String get devicesUnbindConfirm;
+
+  /// No description provided for @devicesUnbindFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not unbind the device: {error}'**
+  String devicesUnbindFailed(String error);
 
   /// No description provided for @devicesEmpty.
   ///

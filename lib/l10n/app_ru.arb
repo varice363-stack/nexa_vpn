@@ -271,7 +271,7 @@
   "keyEntryErrorNotFound": "Код не найден. Проверьте, нет ли опечатки.",
   "keyEntryErrorRevoked": "Этот код отозван.",
   "keyEntryErrorExpired": "Срок действия кода истёк.",
-  "keyEntryErrorUsed": "Этот код уже используется на другом устройстве.",
+  "keyEntryErrorUsed": "Код привязан к другому устройству. Чтобы перенести: «Настройки → Устройства» → отвязать старое, затем ввести код здесь.",
   "keyEntrySuccessNexa": "Доступ активирован",
   "keyEntrySuccessMorok": "Доступ активирован",
   "keyEntrySuccessVless": "Ключ добавлен",
@@ -504,6 +504,17 @@
     }
   },
   "devicesDisconnected": "Устройство {name} отключено",
+  "devicesLoadFailed": "Не удалось загрузить список устройств",
+  "devicesNoKeys": "Ключи не привязаны",
+  "devicesKeysBound": "Привязано ключей: {count}",
+  "@devicesKeysBound": {"placeholders": {"count": {"type": "int"}}},
+  "devicesUnbind": "Отвязать",
+  "devicesUnbindTitle": "Отвязать устройство?",
+  "devicesUnbindBody": "Устройство «{name}» будет отмечено как отозванное, а его ключи отвязаны. Код можно будет ввести на новом телефоне.",
+  "@devicesUnbindBody": {"placeholders": {"name": {"type": "String"}}},
+  "devicesUnbindConfirm": "Отвязать",
+  "devicesUnbindFailed": "Не удалось отвязать устройство: {error}",
+  "@devicesUnbindFailed": {"placeholders": {"error": {"type": "String"}}},
   "@devicesDisconnected": {
     "placeholders": {
       "name": { "type": "String" }

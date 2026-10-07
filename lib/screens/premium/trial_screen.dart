@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -278,9 +279,7 @@ class _ViewAllPlansButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: TextButton(
-        onPressed: () {
-          // TODO: Navigate to subscription plans screen
-        },
+        onPressed: () => context.go('/premium'),
         child: Text(l10n.trialViewAllPlans),
       ),
     );
@@ -445,9 +444,9 @@ class _UpgradeToPaidCard extends StatelessWidget {
           const SizedBox(height: 16),
           GlassButton(
             label: l10n.trialUpgradeButton,
-            onTap: () {
-              // TODO: Navigate to subscription plans screen
-            },
+            // Кнопка вела в никуда: TODO вместо навигации. Тарифы живут на
+            // /premium — это единственный экран с планами в приложении.
+            onTap: () => context.go('/premium'),
           ),
         ],
       ),

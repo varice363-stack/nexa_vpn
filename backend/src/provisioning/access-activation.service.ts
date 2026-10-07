@@ -119,7 +119,12 @@ export class AccessActivationService {
       throw new NotFoundException('CODE_NOT_FOUND');
     }
     if (key.status === 'REVOKED') {
-      throw new BadRequestException('CODE_REVOKED');
+      // REVOKED + пустые привязки/активация = ключ был ОТВЯЗАН от устройства
+      // (DevicesService.revoke), а не отозван владельцем продукта. Иначе
+      // «перенос на новый телефон» выглядел бы как потерянная покупка: код
+      // есть, а ввести его нельзя.
+      const unbound = !key.boundDevice && !key.deviceId && !key.activatedAt;
+      if (!unbound) throw new BadRequestException('CODE_REVOKED');
     }
     if (key.expiresAt && key.expiresAt.getTime() < Date.now()) {
       throw new BadRequestException('CODE_EXPIRED');
@@ -134,6 +139,8 @@ export class AccessActivationService {
     const updated = await this.prisma.accessKey.update({
       where: { id: key.id },
       data: {
+        // повторная активация отвязанного ключа возвращает ему статус
+        status: key.status === 'REVOKED' ? 'ACTIVE' : key.status,
         activatedAt: key.activatedAt ?? new Date(),
         boundDevice: deviceId ?? key.boundDevice,
         lastUsedAt: new Date(),

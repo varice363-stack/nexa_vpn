@@ -765,7 +765,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get keyEntryErrorUsed =>
-      'Этот код уже используется на другом устройстве.';
+      'Код привязан к другому устройству. Чтобы перенести: «Настройки → Устройства» → отвязать старое, затем ввести код здесь.';
 
   @override
   String get keyEntrySuccessNexa => 'Доступ активирован';
@@ -1239,6 +1239,36 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String devicesDisconnected(String name) {
     return 'Устройство $name отключено';
+  }
+
+  @override
+  String get devicesLoadFailed => 'Не удалось загрузить список устройств';
+
+  @override
+  String get devicesNoKeys => 'Ключи не привязаны';
+
+  @override
+  String devicesKeysBound(int count) {
+    return 'Привязано ключей: $count';
+  }
+
+  @override
+  String get devicesUnbind => 'Отвязать';
+
+  @override
+  String get devicesUnbindTitle => 'Отвязать устройство?';
+
+  @override
+  String devicesUnbindBody(String name) {
+    return 'Устройство «$name» будет отмечено как отозванное, а его ключи отвязаны. Код можно будет ввести на новом телефоне.';
+  }
+
+  @override
+  String get devicesUnbindConfirm => 'Отвязать';
+
+  @override
+  String devicesUnbindFailed(String error) {
+    return 'Не удалось отвязать устройство: $error';
   }
 
   @override

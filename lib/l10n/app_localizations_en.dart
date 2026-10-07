@@ -759,7 +759,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keyEntryErrorUsed =>
-      'This code is already used on another device.';
+      'This code is bound to another device. To move it: Settings → Devices → unbind the old one, then enter the code here.';
 
   @override
   String get keyEntrySuccessNexa => 'Access activated';
@@ -1230,6 +1230,36 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String devicesDisconnected(String name) {
     return 'Device $name disconnected';
+  }
+
+  @override
+  String get devicesLoadFailed => 'Could not load the device list';
+
+  @override
+  String get devicesNoKeys => 'No keys bound';
+
+  @override
+  String devicesKeysBound(int count) {
+    return 'Bound keys: $count';
+  }
+
+  @override
+  String get devicesUnbind => 'Unbind';
+
+  @override
+  String get devicesUnbindTitle => 'Unbind this device?';
+
+  @override
+  String devicesUnbindBody(String name) {
+    return '“$name” will be marked as revoked and its access keys unbound. The code can be entered on a new phone.';
+  }
+
+  @override
+  String get devicesUnbindConfirm => 'Unbind';
+
+  @override
+  String devicesUnbindFailed(String error) {
+    return 'Could not unbind the device: $error';
   }
 
   @override

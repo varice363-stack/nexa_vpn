@@ -271,7 +271,7 @@
   "keyEntryErrorNotFound": "Code not found. Check for typos.",
   "keyEntryErrorRevoked": "This code has been revoked.",
   "keyEntryErrorExpired": "This code has expired.",
-  "keyEntryErrorUsed": "This code is already used on another device.",
+  "keyEntryErrorUsed": "This code is bound to another device. To move it: Settings → Devices → unbind the old one, then enter the code here.",
   "keyEntrySuccessNexa": "Access activated",
   "keyEntrySuccessMorok": "Access activated",
   "keyEntrySuccessVless": "Key imported",
@@ -504,6 +504,17 @@
     }
   },
   "devicesDisconnected": "Device {name} disconnected",
+  "devicesLoadFailed": "Could not load the device list",
+  "devicesNoKeys": "No keys bound",
+  "devicesKeysBound": "Bound keys: {count}",
+  "@devicesKeysBound": {"placeholders": {"count": {"type": "int"}}},
+  "devicesUnbind": "Unbind",
+  "devicesUnbindTitle": "Unbind this device?",
+  "devicesUnbindBody": "“{name}” will be marked as revoked and its access keys unbound. The code can be entered on a new phone.",
+  "@devicesUnbindBody": {"placeholders": {"name": {"type": "String"}}},
+  "devicesUnbindConfirm": "Unbind",
+  "devicesUnbindFailed": "Could not unbind the device: {error}",
+  "@devicesUnbindFailed": {"placeholders": {"error": {"type": "String"}}},
   "@devicesDisconnected": {
     "placeholders": {
       "name": { "type": "String" }
