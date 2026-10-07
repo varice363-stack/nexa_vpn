@@ -25,6 +25,13 @@ import { promises as fs } from 'fs';
 export const XRAY_CLIENTS_PATH =
   process.env.XRAY_CLIENTS_FILE?.trim() || '/var/lib/morok/xray-clients.json';
 
+export const XRAY_SYNC_STATE_PATH =
+  process.env.XRAY_SYNC_STATE_FILE?.trim() || '/var/lib/morok/xray-sync.state';
+
+/** Реальный конфиг ядра: то, что morok-xray.service читает при старте/reload. */
+export const XRAY_CORE_CONFIG_PATH =
+  process.env.XRAY_CORE_CONFIG_FILE?.trim() || '/etc/morok/xray/config.json';
+
 export interface XrayClientEntry {
   id: string;
   email: string;
@@ -113,34 +120,56 @@ export class XrayClientSyncService implements OnApplicationBootstrap {
   }
 
   /**
-   * Что видит панель: сколько должно быть, сколько ядро подтвердил, насколько
-   * отстали. Подтверждение — по mtime-стейту хостового скрипта, если он читаем.
+   * Что видит панель: сколько должно быть, сколько выложено файлу, сколько
+   * ядро РЕАЛЬНО пустило, и отстали ли мы.
+   *
+   * nodeClients читается из боевого конфига ядра (/etc/morok/xray/config.json,
+   * тот же файл, что читает morok-xray.service), а не из стейт-файла
+   * хостового скрипта: стейт пишется только в ветке «без изменений», поэтому
+   * nodeAppliedAt вечно показывал момент первой установки (06.10 22:09) и
+   * панель выглядела сломанной даже при живом ядре. Поле `container` раньше
+   * возвращало статус Marzban-контейнера («Up 2 days»), который ядром больше
+   * не владеет — убрано, чтобы не врать оператору.
    */
   async status() {
     const desired = await this.desiredClients();
     let file: { generatedAt?: string; count?: number } | null = null;
-    let node: { at?: number; clients?: number; changed?: boolean; container?: string } | null =
-      null;
+    let node: { at?: number; clients?: number; changed?: boolean } | null = null;
+    let core: { inbounds?: Array<{ settings?: { clients?: unknown[] } }> } | null = null;
     try {
       file = JSON.parse(await fs.readFile(XRAY_CLIENTS_PATH, 'utf8'));
     } catch {
       file = null;
     }
     try {
-      node = JSON.parse(await fs.readFile('/var/lib/morok/xray-sync.state', 'utf8'));
+      node = JSON.parse(await fs.readFile(XRAY_SYNC_STATE_PATH, 'utf8'));
     } catch {
       node = null;
     }
+    try {
+      core = JSON.parse(await fs.readFile(XRAY_CORE_CONFIG_PATH, 'utf8'));
+    } catch {
+      core = null;
+    }
+    const coreClients = core
+      ? (core.inbounds ?? []).reduce(
+          (n, ib) => n + (ib?.settings?.clients?.length ?? 0),
+          0,
+        )
+      : null;
+    const published = file?.count ?? null;
     const inSync =
-      !!file && (file.count ?? -1) === desired.length && (!node || node.changed === false || true);
+      published === desired.length &&
+      (coreClients === null || coreClients === desired.length);
     return {
       desired: desired.length,
-      published: file?.count ?? null,
+      published,
       publishedAt: file?.generatedAt ?? null,
       nodeAppliedAt: node?.at ? new Date(node.at * 1000).toISOString() : null,
-      nodeClients: node?.clients ?? null,
-      container: node?.container ?? null,
+      nodeClients: coreClients,
       path: XRAY_CLIENTS_PATH,
+      corePath: XRAY_CORE_CONFIG_PATH,
+      coreReadable: core !== null,
       writable: !!(file || desired.length === 0),
       inSync,
       lagSeconds: file?.generatedAt
@@ -149,3 +178,4 @@ export class XrayClientSyncService implements OnApplicationBootstrap {
     };
   }
 }
+

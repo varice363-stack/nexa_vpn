@@ -1,6 +1,6 @@
-import { mkdtempSync, readFileSync } from 'fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { dirname, join } from 'path';
 
 /**
  * TASK #030 — публикация активных ключей для ядра Xray.
@@ -29,8 +29,17 @@ function prismaWith(keys: unknown[], servers: unknown[] = [{ id: 's1', ip: '10.0
 }
 
 /** env читается на import модуля — поэтому каждый тест грузит его заново. */
-function serviceAt(path: string, keys: unknown[], servers?: unknown[]) {
+function serviceAt(
+  path: string,
+  keys: unknown[],
+  servers?: unknown[],
+  extra?: { core?: string; state?: string },
+) {
   process.env.XRAY_CLIENTS_FILE = path;
+  // Показатель ядра и стейт хостового скрипта — тоже из env; по умолчанию их
+  // нет, чтобы тест не читал /etc реального раннера.
+  process.env.XRAY_CORE_CONFIG_FILE = extra?.core ?? join(dirname(path), 'no-config.json');
+  process.env.XRAY_SYNC_STATE_FILE = extra?.state ?? join(dirname(path), 'no-state');
   jest.resetModules();
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { XrayClientSyncService } = require('./xray-client-sync.service');
@@ -114,5 +123,30 @@ describe('XrayClientSyncService.sync', () => {
     const after = await svc.status();
     expect(after).toMatchObject({ desired: 1, published: 1, inSync: true });
     expect(typeof after.lagSeconds).toBe('number');
+  });
+
+  it('status() сверяется с конфигом ядра, а не с «Up» панели Marzban', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'morok-core-'));
+    const file = join(dir, 'xray-clients.json');
+    const core = join(dir, 'config.json');
+    const writeCore = (n: number) =>
+      writeFileSync(
+        core,
+        JSON.stringify({
+          inbounds: [{ settings: { clients: Array.from({ length: n }, (_, i) => ({ id: i })) } }],
+        }),
+      );
+
+    writeCore(1);
+    const { svc } = serviceAt(file, [key()], undefined, { core });
+    await svc.sync();
+    const ok = await svc.status();
+    expect(ok).toMatchObject({ desired: 1, published: 1, nodeClients: 1, inSync: true });
+    expect(ok.coreReadable).toBe(true);
+    expect(ok.container).toBeUndefined(); // враньё про «Up 2 days» убрано
+
+    writeCore(0);
+    const lag = await svc.status();
+    expect(lag).toMatchObject({ desired: 1, published: 1, nodeClients: 0, inSync: false });
   });
 });

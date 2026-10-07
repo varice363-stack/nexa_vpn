@@ -22,10 +22,14 @@ import json
 import os
 import subprocess
 import sys
+import time
 
 KEYS = "/var/lib/morok/reality-keys.json"
 DESIRED = "/var/lib/morok/xray-clients.json"
 CONFIG = os.environ.get("XRAY_CONFIG", "/etc/morok/xray/config.json")
+# Стейт читается бэкендом (GET /provisioning/xray/status): по нему панель
+# понимает, когда узел в последний раз применял список.
+STATE = os.environ.get("XRAY_STATE", "/var/lib/morok/xray-sync.state")
 UNIT = os.environ.get("XRAY_UNIT", "morok-xray")
 
 QUIET = "--quiet" in sys.argv
@@ -103,6 +107,32 @@ def reload_core():
     return "skip (unit %s не активен)" % UNIT
 
 
+def write_state(clients_count, changed):
+    """Стейт для GET /provisioning/xray/status.
+
+    Пишется в ОБЕИХ ветках — и при «без изменений», и после применения.
+    Раньше запись стояла только в ветке «без изменений», поэтому
+    nodeAppliedAt уезжал в момент первой установки и панель вечно показывала
+    «узел отстал на N часов», хотя ядро перезапускалось каждую минуту.
+    """
+    try:
+        os.makedirs(os.path.dirname(STATE), exist_ok=True)
+        tmp = STATE + ".tmp"
+        with open(tmp, "w") as fh:
+            json.dump(
+                {
+                    "at": time.time(),
+                    "clients": clients_count,
+                    "changed": changed,
+                    "source": "build-xray-config",
+                },
+                fh,
+            )
+        os.replace(tmp, STATE)
+    except OSError:
+        pass  # статус — диагностика, а не условие работы ядра
+
+
 def main():
     cfg = build()
     want = sig_of(cfg)
@@ -113,7 +143,9 @@ def main():
         except SystemExit:
             old = None
     if old == want:
-        log(f"без изменений: {len(cfg['inbounds'][0]['settings']['clients'])} клиентов в ядре")
+        n = len(cfg["inbounds"][0]["settings"]["clients"])
+        write_state(n, False)
+        log(f"без изменений: {n} клиентов в ядре")
         return 0
 
     os.makedirs(os.path.dirname(CONFIG), exist_ok=True)
@@ -129,6 +161,7 @@ def main():
     os.replace(tmp, CONFIG)
     n = len(cfg["inbounds"][0]["settings"]["clients"])
     how = reload_core()
+    write_state(n, True)
     log(f"конфиг переписан, клиентов: {n}; применение: {how}")
     return 0
 
