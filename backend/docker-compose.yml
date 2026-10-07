@@ -9,7 +9,7 @@ services:
       # Секреты живут в backend/.env (не в гите). Файл создаётся один раз при
       # установке: см. DEPLOY.md / deploy/bootstrap.sh.
       POSTGRES_USER: ${DB_USER:-morok}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?backend/.env: DB_PASSWORD не задан}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?no-backend-env}
       POSTGRES_DB: ${DB_NAME:-morok_vpn}
     ports:
       - "127.0.0.1:5432:5432"
@@ -33,12 +33,12 @@ services:
       NODE_ENV: production
       PORT: 3000
       HOST: "0.0.0.0"
-      DATABASE_URL: "postgresql://${DB_USER:-morok}:${DB_PASSWORD:?}@postgres:5432/${DB_NAME:-morok_vpn}?schema=public"
-      JWT_SECRET: ${JWT_SECRET:?backend/.env: JWT_SECRET не задан}
+      DATABASE_URL: "postgresql://${DB_USER:-morok}:${DB_PASSWORD:?no-backend-env}@postgres:5432/${DB_NAME:-morok_vpn}?schema=public"
+      JWT_SECRET: ${JWT_SECRET:?no-backend-env}
       # Пароль администратора панели (только для prisma:seed), код владельца
       # админ-эндпоинтов и адрес, которому разрешено ходить по http.
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
-      OWNER_CODE: ${OWNER_CODE:?backend/.env: OWNER_CODE не задан}
+      OWNER_CODE: ${OWNER_CODE:?no-backend-env}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
       UPLOADS_DIR: "uploads"
       # TASK #030: куда выкладывать список ключей для ядра Xray. Файл читает
