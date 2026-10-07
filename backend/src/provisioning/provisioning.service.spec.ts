@@ -218,6 +218,30 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
     expect(result!.config.uri).toMatch(/^vless:\/\//);
   });
 
+  it('active() ищет и по отпечатку устройства — ключ без аккаунта не теряется', async () => {
+    // Ключ, активированный кодом без регистрации, имеет userId=null и
+    // привязку boundDevice=<fp>. С фильтром только по userId приложение после
+    // переустановки получало null и предлагало купить новый ключ.
+    const prisma = makePrisma({
+      device: {
+        findMany: jest.fn(async () => [
+          { name: 'fp-device-1' },
+          { name: 'fp-device-1' }, // дубликаты не должны плодить условий
+        ]),
+      },
+    });
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+
+    await service.active(user);
+
+    const where = (prisma.accessKey.findFirst as jest.Mock).mock.calls[0][0].where;
+    expect(where.status).toBe('ACTIVE');
+    expect(where.AND[0].OR).toEqual([
+      { userId: (user as any).id },
+      { boundDevice: 'fp-device-1' },
+    ]);
+  });
+
   it('revoke flips ACTIVE → REVOKED (key is not deleted)', async () => {
     const prisma = makePrisma();
     const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());

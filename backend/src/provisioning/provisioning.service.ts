@@ -32,7 +32,7 @@ export class ProvisioningService {
 
   async list(user: SafeUser) {
     const keys = await this.prisma.accessKey.findMany({
-      where: { userId: user.id },
+      where: { AND: await this.ownership(user) },
       orderBy: { createdAt: 'desc' },
     });
     const contracts = [];
@@ -75,13 +75,42 @@ export class ProvisioningService {
     return this.toContract(user, key);
   }
 
-  /** The current active key (first ACTIVE by recency) or null. */
+  /**
+   * Текущий активный ключ (первый ACTIVE по свежести) или null.
+   *
+   * Ищем НЕ только по userId: ключ, активированный кодом без аккаунта,
+   * остаётся с userId=null и привязкой по отпечатку (boundDevice). Без
+   * второго условия приложение после переустановки получало «ключа нет»,
+   * хотя он был и работал, — и предлагало купить новый.
+   */
   async active(user: SafeUser) {
     const key = await this.prisma.accessKey.findFirst({
-      where: { userId: user.id, status: 'ACTIVE' },
+      where: { status: 'ACTIVE', AND: await this.ownership(user) },
       orderBy: { createdAt: 'desc' },
     });
     return key ? this.toContract(user, key) : null;
+  }
+
+  /** Фильтр «ключ принадлежит этому аккаунту»: владелец или его устройство. */
+  private async ownership(user: SafeUser) {
+    const devices: { name: string }[] =
+      (await this.prisma.device
+        ?.findMany({ where: { userId: user.id }, select: { name: true } })
+        .catch(() => [])) ?? [];
+    // Владельческий код даёт user.id === '' — с ним { boundDevice: '' }
+    // совпал бы с ключом, у которого отпечатка нет.
+    const fingerprints = [...new Set(devices.map((d) => d.name))].filter(
+      (n) => !!n && n !== user.id,
+    );
+    return [
+      {
+        OR: [
+          { userId: user.id },
+          // Device.name == отпечаток из boundDevice (см. DevicesService)
+          ...fingerprints.map((name) => ({ boundDevice: name })),
+        ],
+      },
+    ];
   }
 
   /** Revoke: the key stops working immediately (checked on connect). */
