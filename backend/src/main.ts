@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import express from 'express';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import { join } from 'path';
@@ -28,6 +29,10 @@ async function bootstrap() {
       crossOriginEmbedderPolicy: false,
     }),
   );
+
+  // Корпус разбираем явно и ДО ограничителей: rate-limit-ключ для auth-ручек
+  // строится из ip + email, для этого req.body уже должен быть объектом.
+  app.use(express.json({ limit: '1mb' }));
 
   // ── CORS (whitelist) ───────────────────────────────────────────────────
   const allowedOrigins = process.env.CORS_ORIGINS
@@ -60,6 +65,8 @@ async function bootstrap() {
   });
 
   // ── Rate Limiting ──────────────────────────────────────────────────────
+  // Порядок важен: корпус разбирается здесь, до mounting'а ограничителей,
+  // иначе keyGenerator увидит req.body === undefined и свалится в ip-ключ.
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10), // limit each IP
@@ -69,9 +76,17 @@ async function bootstrap() {
   });
 
   // Stricter limit for auth endpoints
+  // Ключ — ip + email, а не ip: панель и приложение ходят на API с ОДНОГО
+  // адреса (контейнер/хост), поэтому на чистом ip-ключе десять неудачных
+  // попыток подобрать чужой пароль блокировали бы вход владельцу панели.
+  const authKey = (req: any) => {
+    const email = String(req.body?.email ?? '').trim().toLowerCase();
+    return `${req.ip}|${email}`;
+  };
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: parseInt(process.env.AUTH_RATE_LIMIT_MAX || '10', 10), // 10 attempts
+    keyGenerator: authKey,
     message: { message: 'Too many authentication attempts, please try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
@@ -81,6 +96,8 @@ async function bootstrap() {
   const autoRegisterLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 5, // max 5 registrations per IP per hour
+    keyGenerator: (req: any) =>
+      `${req.ip}|${String(req.body?.deviceId ?? '').slice(0, 32)}`,
     message: { message: 'Too many registration attempts. Try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
@@ -99,6 +116,11 @@ async function bootstrap() {
   const redeemLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 10, // max 10 redemption attempts per IP per hour
+    // Код короткий (MOROK-XXXX-XXXX), поэтому лимит на ip+устройство:
+    // перебор по одному устройству душит весь IP, а «сто ключей с одного
+    // телефона» всё равно упирается в 10 попыток.
+    keyGenerator: (req: any) =>
+      `${req.ip}|${String(req.body?.deviceId ?? '').slice(0, 32)}`,
     message: { message: 'Too many redemption attempts. Try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
