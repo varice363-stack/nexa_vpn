@@ -33,13 +33,12 @@ function serviceAt(
   path: string,
   keys: unknown[],
   servers?: unknown[],
-  extra?: { core?: string; state?: string },
+  extra?: { state?: string },
 ) {
   process.env.XRAY_CLIENTS_FILE = path;
   // Показатель ядра и стейт хостового скрипта — тоже из env; по умолчанию их
   // нет, чтобы тест не читал /etc реального раннера.
-  process.env.XRAY_CORE_CONFIG_FILE = extra?.core ?? join(dirname(path), 'no-config.json');
-  process.env.XRAY_SYNC_STATE_FILE = extra?.state ?? join(dirname(path), 'no-state');
+  process.env.XRAY_SYNC_STATE_FILE = extra?.state ?? join(dirname(path), 'no-state.json');
   jest.resetModules();
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { XrayClientSyncService } = require('./xray-client-sync.service');
@@ -125,27 +124,25 @@ describe('XrayClientSyncService.sync', () => {
     expect(typeof after.lagSeconds).toBe('number');
   });
 
-  it('status() сверяется с конфигом ядра, а не с «Up» панели Marzban', async () => {
+  it('status() берёт число клиентов ядра из стейта, который пишет узел', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'morok-core-'));
     const file = join(dir, 'xray-clients.json');
-    const core = join(dir, 'config.json');
-    const writeCore = (n: number) =>
+    const state = join(dir, 'xray-sync.state');
+    const writeState = (coreClients: number) =>
       writeFileSync(
-        core,
-        JSON.stringify({
-          inbounds: [{ settings: { clients: Array.from({ length: n }, (_, i) => ({ id: i })) } }],
-        }),
+        state,
+        JSON.stringify({ at: Date.now() / 1000, clients: coreClients, coreClients, changed: false }),
       );
 
-    writeCore(1);
-    const { svc } = serviceAt(file, [key()], undefined, { core });
+    writeState(1);
+    const { svc } = serviceAt(file, [key()], undefined, { state });
     await svc.sync();
     const ok = await svc.status();
     expect(ok).toMatchObject({ desired: 1, published: 1, nodeClients: 1, inSync: true });
-    expect(ok.coreReadable).toBe(true);
+    expect(ok.coreReportedByNode).toBe(true);
     expect(ok.container).toBeUndefined(); // враньё про «Up 2 days» убрано
 
-    writeCore(0);
+    writeState(0);
     const lag = await svc.status();
     expect(lag).toMatchObject({ desired: 1, published: 1, nodeClients: 0, inSync: false });
   });

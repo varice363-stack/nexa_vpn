@@ -28,10 +28,6 @@ export const XRAY_CLIENTS_PATH =
 export const XRAY_SYNC_STATE_PATH =
   process.env.XRAY_SYNC_STATE_FILE?.trim() || '/var/lib/morok/xray-sync.state';
 
-/** Реальный конфиг ядра: то, что morok-xray.service читает при старте/reload. */
-export const XRAY_CORE_CONFIG_PATH =
-  process.env.XRAY_CORE_CONFIG_FILE?.trim() || '/etc/morok/xray/config.json';
-
 export interface XrayClientEntry {
   id: string;
   email: string;
@@ -123,8 +119,8 @@ export class XrayClientSyncService implements OnApplicationBootstrap {
    * Что видит панель: сколько должно быть, сколько выложено файлу, сколько
    * ядро РЕАЛЬНО пустило, и отстали ли мы.
    *
-   * nodeClients читается из боевого конфига ядра (/etc/morok/xray/config.json,
-   * тот же файл, что читает morok-xray.service), а не из стейт-файла
+   * nodeClients докладывает сам узел (build-xray-config.py считает его по
+   * своему конфигy и пишет в стейт), а не из стейт-файла
    * хостового скрипта: стейт пишется только в ветке «без изменений», поэтому
    * nodeAppliedAt вечно показывал момент первой установки (06.10 22:09) и
    * панель выглядела сломанной даже при живом ядре. Поле `container` раньше
@@ -134,8 +130,12 @@ export class XrayClientSyncService implements OnApplicationBootstrap {
   async status() {
     const desired = await this.desiredClients();
     let file: { generatedAt?: string; count?: number } | null = null;
-    let node: { at?: number; clients?: number; changed?: boolean } | null = null;
-    let core: { inbounds?: Array<{ settings?: { clients?: unknown[] } }> } | null = null;
+    let node: {
+      at?: number;
+      clients?: number;
+      coreClients?: number | null;
+      changed?: boolean;
+    } | null = null;
     try {
       file = JSON.parse(await fs.readFile(XRAY_CLIENTS_PATH, 'utf8'));
     } catch {
@@ -146,17 +146,11 @@ export class XrayClientSyncService implements OnApplicationBootstrap {
     } catch {
       node = null;
     }
-    try {
-      core = JSON.parse(await fs.readFile(XRAY_CORE_CONFIG_PATH, 'utf8'));
-    } catch {
-      core = null;
-    }
-    const coreClients = core
-      ? (core.inbounds ?? []).reduce(
-          (n, ib) => n + (ib?.settings?.clients?.length ?? 0),
-          0,
-        )
-      : null;
+    // Конфиг ядра намеренно НЕ читается: /etc/morok/xray/config.json лежит в
+    // Reality-ключами, и бэкенд его не видит (в compose примонтирован только
+    // /var/lib/morok). Узел сам докладывает число применяемых клиентов в
+    // стейт-файл — этим и пользуемся.
+    const coreClients = node?.coreClients ?? null;
     const published = file?.count ?? null;
     const inSync =
       published === desired.length &&
@@ -168,8 +162,7 @@ export class XrayClientSyncService implements OnApplicationBootstrap {
       nodeAppliedAt: node?.at ? new Date(node.at * 1000).toISOString() : null,
       nodeClients: coreClients,
       path: XRAY_CLIENTS_PATH,
-      corePath: XRAY_CORE_CONFIG_PATH,
-      coreReadable: core !== null,
+      coreReportedByNode: coreClients !== null,
       writable: !!(file || desired.length === 0),
       inSync,
       lagSeconds: file?.generatedAt

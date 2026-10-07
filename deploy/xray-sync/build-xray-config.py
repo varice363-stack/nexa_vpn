@@ -107,6 +107,21 @@ def reload_core():
     return "skip (unit %s не активен)" % UNIT
 
 
+def core_clients():
+    """Сколько клиентов ядро держит ПРЯМО СЕЙЧАС (по своему конфиг).
+
+    Только число, без id: конфиг ядра содержит privateKey'ы Reality, и
+    показывать их бэкенду незачем — бэкенд и /etc/morok не видит (в compose
+    примонтирован только /var/lib/morok).
+    """
+    try:
+        cfg = read_json(CONFIG) or {}
+        return sum(len(ib.get("settings", {}).get("clients", []) or [])
+                   for ib in cfg.get("inbounds", []))
+    except Exception:
+        return None
+
+
 def write_state(clients_count, changed):
     """Стейт для GET /provisioning/xray/status.
 
@@ -123,6 +138,7 @@ def write_state(clients_count, changed):
                 {
                     "at": time.time(),
                     "clients": clients_count,
+                    "coreClients": core_clients(),
                     "changed": changed,
                     "source": "build-xray-config",
                 },
