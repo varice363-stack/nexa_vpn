@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -97,15 +98,34 @@ export class BannersController {
     return this.banners.trackClick(id);
   }
 
-  /** Local upload (dev). Production: replace with S3/GCS + signed URL. */
+  /**
+   * Загрузка картинки баннера. Отдаётся тем же `app.useStaticAssets`, что и
+   * весь каталог uploads, поэтому:
+   *   - размер жёстко ограничен 2 МБ (иначе один баннер съедает диск VPS);
+   *   - принимаются только растровые png/jpeg/webp. svg не принимаем
+   *     намеренно: svg — это XML, который браузер исполняет, а статика
+   *     отдаётся с того же origin, что и API (http://IP:3000/uploads/…).
+   *     Разрешить svg = подарить XSS на origin с CORS-креденталами.
+   */
   @Roles(Role.ADMIN)
   @Post(':id/upload')
   @UseInterceptors(
     FileInterceptor('file', {
+      limits: { fileSize: 2 * 1024 * 1024, files: 1 },
+      fileFilter: (_req, file, cb) => {
+        const ok = /^(image\/png|image\/jpeg|image\/webp)$/.test(file.mimetype);
+        if (!ok) {
+          cb(new BadRequestException('Banнер принимает только png, jpeg или webp'), false);
+          return;
+        }
+        cb(null, true);
+      },
       storage: diskStorage({
         destination: join(process.cwd(), process.env.UPLOADS_DIR || 'uploads'),
         filename: (_req, file, cb) => {
-          cb(null, `${randomUUID()}${extname(file.originalname)}`);
+          const ext = extname(file.originalname).toLowerCase();
+          const safe = ['.png', '.jpg', '.jpeg', '.webp'].includes(ext) ? ext : '.png';
+          cb(null, `${randomUUID()}${safe}`);
         },
       }),
     }),
@@ -114,7 +134,7 @@ export class BannersController {
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    if (!file) throw new Error('No file uploaded');
+    if (!file) throw new BadRequestException('Файл не загружен');
     const url = `/uploads/${file.filename}`;
     return this.banners.setImage(id, url);
   }
