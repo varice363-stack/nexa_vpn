@@ -1,0 +1,10 @@
+
+# ── сгенерированные файлы локализации ────────────────────────────────────
+# Они намеренно ОТСЛЕЖИВАЮТСЯ (19 импортов падают без них до первого
+# `flutter gen-l10n`). Но они зависят от версии Flutter, поэтому git-merge к
+# ним применяется без разбора: актуальную версию всегда перетирает
+# `flutter gen-l10n`. Это лечит «Your local changes to lib/l10n/... would be
+# overwritten by merge», которое возникает у каждого, у кого своя версия SDK.
+lib/l10n/app_localizations.dart            -merge=ours
+lib/l10n/app_localizations_en.dart         -merge=ours
+lib/l10n/app_localizations_ru.dart         -merge=ours
