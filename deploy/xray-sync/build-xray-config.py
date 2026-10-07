@@ -12,9 +12,9 @@ MOROK VPN — сборка конфига ядра из того, что выд�
 и генерирует конфиг сама — файловая правка до неё не доходит (проверено живьём:
 3 клиента в файле, handshake по-прежнему «processed invalid connection»).
 
-Ключевое: конфиг перезаписывается и ядро перезапускается ТОЛЬКО когда содержимое
-реально изменилось (сравнение по хэшу «ключевой» части). Лишний restart = разрыв
-всех активных туннелей, поэтому просто так мы ядро не трогаем.
+Ключевое: конфиг перезаписывается ТОЛЬКО когда содержимое реально изменилось
+(сравнение по хэшу «ключевой» части). Лишний SIGHUP = разрыв всех активных
+туннелей, поэтому просто так мы ядро не трогаем.
 """
 
 import hashlib
@@ -53,7 +53,7 @@ def clients():
         cid = (c or {}).get("id")
         if cid:
             out.append({"id": cid, "email": str(c.get("email") or cid)[:64], "flow": "xtls-rprx-vision"})
-    # порядок фиксируем: иначе хэш меняется на ровном месте и гоняет лишний restart
+    # порядок фиксируем: иначе hash меняется на ровном месте и гоняет SIGHUP
     return sorted(out, key=lambda x: x["id"])
 
 
@@ -94,21 +94,13 @@ def sig_of(cfg):
 
 
 def reload_core():
-    """Применение конфига.
-
-    SIGHUP НЕ годится: xray воспринимает его как остановку (проверено: после
-    `systemctl reload` юнит уходит в Deactivated successfully и рестартует).
-    Поэтому — обычный restart: ~1 с, активный туннель за это время падает и
-    клиент переподнимает его сам. Дёргаем только когда список клиентов реально
-    изменился (хэш ниже), т.е. на выдаче/отзыве ключа, а не каждую минуту.
-    """
+    """Перезапуск ядра без обрыва соединений, если умеем; иначе — nothing."""
     r = subprocess.run(["systemctl", "is-active", UNIT], capture_output=True, text=True)
-    state = r.stdout.strip()
-    if state in ("active", "activating", "failed"):
-        subprocess.run(["systemctl", "restart", UNIT], capture_output=True, text=True)
-        return "systemctl-restart"
-    # Юнита нет — ядро принадлежит панели, трогаем только своё.
-    return "skip (unit %s не активен: %s)" % (UNIT, state or "unknown")
+    if r.stdout.strip() == "active":
+        subprocess.run(["systemctl", "reload", UNIT], capture_output=True, text=True)
+        return "systemctl-reload"
+    # Юнита нет — значит ядро пока принадлежит панели: трогаем только своё.
+    return "skip (unit %s не активен)" % UNIT
 
 
 def main():
