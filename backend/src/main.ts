@@ -4,7 +4,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import express from 'express';
 import helmet from 'helmet';
-import { rateLimit } from 'express-rate-limit';
+import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 import { join } from 'path';
 
 /** Единый источник правды для URL-префикса API (совпадает с API_BASE_URL в приложении). */
@@ -65,6 +65,11 @@ async function bootstrap() {
   });
 
   // ── Rate Limiting ──────────────────────────────────────────────────────
+  const norm = (v: unknown) =>
+    String(v ?? '')
+      .slice(0, 32)
+      .trim()
+      .toLowerCase();
   // Порядок важен: корпус разбирается здесь, до mounting'а ограничителей,
   // иначе keyGenerator увидит req.body === undefined и свалится в ip-ключ.
   const limiter = rateLimit({
@@ -81,7 +86,10 @@ async function bootstrap() {
   // попыток подобрать чужой пароль блокировали бы вход владельцу панели.
   const authKey = (req: any) => {
     const email = String(req.body?.email ?? '').trim().toLowerCase();
-    return `${req.ip}|${email}`;
+    // ipKeyGenerator, а не req.ip: express-rate-limit ругается и, что важнее,
+    // на чистом req.ip один v6-провайдер с /56 получает общий бакет, а
+    // атака с соседнего адреса в том же префиксе проходит мимо лимита.
+    return `${ipKeyGenerator(req.ip)}|${email}`;
   };
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -97,7 +105,7 @@ async function bootstrap() {
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 5, // max 5 registrations per IP per hour
     keyGenerator: (req: any) =>
-      `${req.ip}|${String(req.body?.deviceId ?? '').slice(0, 32)}`,
+      `${ipKeyGenerator(req.ip)}|${norm(req.body?.deviceId)}`,
     message: { message: 'Too many registration attempts. Try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
@@ -120,7 +128,9 @@ async function bootstrap() {
     // перебор по одному устройству душит весь IP, а «сто ключей с одного
     // телефона» всё равно упирается в 10 попыток.
     keyGenerator: (req: any) =>
-      `${req.ip}|${String(req.body?.deviceId ?? '').slice(0, 32)}`,
+      `${ipKeyGenerator(req.ip)}|${norm(req.body?.deviceId)}|${norm(
+        req.body?.code,
+      ).toUpperCase()}`,
     message: { message: 'Too many redemption attempts. Try again later.' },
     standardHeaders: true,
     legacyHeaders: false,

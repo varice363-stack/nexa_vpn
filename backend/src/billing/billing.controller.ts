@@ -88,6 +88,13 @@ export class BillingController {
     return this.billing.myTransactions(user);
   }
 
+  /** Admin: all transactions. */
+  @Roles(Role.ADMIN)
+  @Get('transactions/all')
+  allTransactions() {
+    return this.billing.allTransactions();
+  }
+
   /** GET /billing/transactions/:id — own transaction. */
   @Get('transactions/:id')
   transaction(@CurrentUser() user: SafeUser, @Param('id', ParseUUIDPipe) id: string) {
@@ -118,13 +125,6 @@ export class BillingController {
   @Post('expire-trials')
   expireTrials() {
     return this.billing.expireOverdueTrials();
-  }
-
-  /** Admin: all transactions. */
-  @Roles(Role.ADMIN)
-  @Get('transactions/all')
-  allTransactions() {
-    return this.billing.allTransactions();
   }
 
   /** Admin: expire a subscription + its keys (test/ops utility). */

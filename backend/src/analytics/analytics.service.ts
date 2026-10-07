@@ -47,17 +47,24 @@ export class AnalyticsService {
   /// Connection and traffic columns were removed with ConnectionLog: knowing
   /// who connected where is exactly the record a VPN must not keep.
   async daily(days: number) {
+    // Динамическое число подставляется литералом, а не $1: prisma.$queryRaw
+    // при $1 ждёт ровно один переданный параметр и падает с
+    // «Your raw query had an incorrect number of parameters. Expected: 1,
+    // actual: 0» (это и был 500 на GET /analytics/daily). Значение
+    // предварительно прогнано через ValidationPipe (@IsInt/@Min(1)/@Max(90)),
+    // ещё раз отсечено здесь — литерал гарантированно целое число.
+    const span = Math.min(Math.max(Math.trunc(Number(days) || 7), 1), 90);
     const rows = await this.prisma.$queryRaw<
       Array<{
-        day: Date;
-        users: bigint;
+        day: Date | string;
+        users: bigint | number;
       }>
     >`
       SELECT
         date_trunc('day', d) AS day,
         COUNT(DISTINCT u.id)::bigint AS users
       FROM generate_series(
-        date_trunc('day', now()) - ($1::int - 1) * interval '1 day',
+        date_trunc('day', now()) - (${span} - 1) * interval '1 day',
         date_trunc('day', now()),
         interval '1 day'
       ) AS d
@@ -66,7 +73,10 @@ export class AnalyticsService {
       ORDER BY d ASC
     `;
     return rows.map((row) => ({
-      day: row.day.toISOString().slice(0, 10),
+      day:
+        row.day instanceof Date
+          ? row.day.toISOString().slice(0, 10)
+          : String(row.day).slice(0, 10),
       users: Number(row.users),
     }));
   }
