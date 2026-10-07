@@ -154,6 +154,9 @@ export interface AdminAccessKey {
   /** Код для ввода покупателем (MOROK-XXXX-XXXX). */
   code: string | null;
   deviceId: string | null;
+  /** Отпечаток устройства из приложения. У ключей без аккаунта deviceId=null,
+   *  привязка живёт здесь — иначе в панели «Устройство: —» у всех покупателей. */
+  boundDevice?: string | null;
   serverId: string | null;
   name: string;
   protocol: string;

@@ -157,6 +157,10 @@ export class ProvisioningService {
         userId: true,
         code: true,
         deviceId: true,
+        // «сырой» отпечаток из приложения: у ключей, активированных без
+        // аккаунта, deviceId (FK) пуст — без boundDevice панель не показала
+        // бы, на каком телефоне сейчас живёт код.
+        boundDevice: true,
         serverId: true,
         name: true,
         protocol: true,

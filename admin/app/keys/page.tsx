@@ -171,7 +171,9 @@ export default function AccessKeysPage() {
                 <td>{k.protocol}</td>
                 <td><Badge value={k.status} /></td>
                 <td>{k.server ? `${k.server.name} (${k.server.city})` : '—'}</td>
-                <td>{k.deviceId ? k.deviceId.slice(0, 8) : '—'}</td>
+                <td className="font-mono text-xs">
+                  {k.deviceId ? k.deviceId.slice(0, 8) : k.boundDevice ? `${k.boundDevice.slice(0, 10)}…` : '—'}
+                </td>
                 <td>{new Date(k.createdAt).toLocaleDateString()}</td>
                 <td>{k.expiresAt ? new Date(k.expiresAt).toLocaleDateString() : '∞'}</td>
                 <td>
