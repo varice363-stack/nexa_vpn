@@ -68,3 +68,6 @@ fix_and_build.ps1
 
 # tsc build info
 *.tsbuildinfo
+
+# сгенерировано `flutter gen-l10n` (см. l10n.yaml); в репозитории больше не лежит
+lib/l10n/app_localizations*.dart
