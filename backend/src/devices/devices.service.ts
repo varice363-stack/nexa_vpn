@@ -1,6 +1,4 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { spawn } from 'child_process';
-
 import { SafeUser } from '../common/decorators/current-user.decorator';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CreateDeviceDto } from './dto/create-device.dto';
@@ -17,8 +15,6 @@ import { CreateDeviceDto } from './dto/create-device.dto';
  * DEVICE LIMITS (entitlements) намеренно не применяются на этом уровне —
  * план→deviceLimit принадлежит биллингу.
  */
-const CORE_SYNC_SCRIPT = '/usr/local/bin/morok-build-xray-config';
-
 /** Как ключ «принадлежит» устройству: по FK или по незабранным в аккаунт отпечаткам. */
 function keyMatch(device: { id: string; name: string }) {
   return {
@@ -118,21 +114,20 @@ export class DevicesService {
         activatedAt: null,
       },
     });
-    this.requestCoreSync();
     return { count: keys.length };
   }
 
   /**
-   * Ядро обновляет список клиентов хостовый cron. Ждать минуту — значит
-   * «отключить устройство» на полминуты оставляло бы доступ; дёргать systemd
-   * из-под контейнера бэкенда нельзя (привилегии узла не для API).
-   * Поэтому: однократный spawn того же скрипта, если он примонтирован, и
-   * тихий skip, если нет (dev, другой сервер) — cron догонит сам.
+   * Про задержку «отключил → ядро перестало пускать».
+   *
+   * Контейнер бэкенда пишет только desired-файл (/var/lib/morok/xray-clients.json),
+   * а конфиг ядра собирает и перезапускает morok-xray узел. Изнутри контейнера
+   * ни systemctl, ни docker нет — и быть не должно (привилегии узла не для API);
+   * попытка spawn хостового скрипта выглядела успехом, но в проде файл просто
+   * отсутствовал, и доступ отзывался лишь на следующем тике крона.
+   *
+   * Ноль задержки даёт systemd-path юнит на узле (deploy/xray-sync/
+   * morok-xray-sync.path): он слушает запись desired-файла и пересобирает ядро
+   * в тот же момент. Cron раз в минуту остаётся страховкой, а не механизмом.
    */
-  private requestCoreSync(): void {
-    setTimeout(() => {
-      const child = spawn(CORE_SYNC_SCRIPT, [], { stdio: 'ignore' });
-      child.on('error', () => undefined); // нет файла/прав — не роняем запрос
-    }, 0).unref?.();
-  }
 }

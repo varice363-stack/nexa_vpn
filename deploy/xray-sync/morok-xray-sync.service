@@ -1,0 +1,9 @@
+[Unit]
+Description=MOROK VPN: публикация списка клиентов в ядро Xray
+Documentation=file:///opt/morok_app/deploy/xray-sync/README.md
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/morok-build-xray-config --quiet
+UMask=0077
+NoNewPrivileges=yes

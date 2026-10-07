@@ -1,0 +1,12 @@
+[Unit]
+Description=MOROK VPN: публиковать ядру список клиентов сразу после записи desired-файла
+
+[Path]
+PathModified=/var/lib/morok/xray-clients.json
+Unit=morok-xray-sync.service
+# Частые правки (опрос устройства, пакетная выдача кодов) не должны приводить
+# к backoff'у и потере событий.
+MaxDelaySec=2
+
+[Install]
+WantedBy=multi-user.target
