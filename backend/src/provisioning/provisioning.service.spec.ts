@@ -90,10 +90,12 @@ const subscriptions = {
   hasActivePremium: jest.fn(async () => true),
 } as never;
 
+const xrayStub = { publishedKeyIds: jest.fn(async () => new Set<string>()) } as never;
+
 describe('ProvisioningService (TASK #011 — server assignment)', () => {
   it('new AccessKey receives a serverId (deterministic assignment)', async () => {
     const prisma = makePrisma();
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     await service.create(user, { name: 'New key' });
 
@@ -108,7 +110,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
       { ...servers[1], ping: 10, id: 'a-server' },
     ];
     const prisma = makePrisma({ vpnServer: { findMany: jest.fn(async () => tied) } });
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     await service.create(user, { name: 'New key' });
 
@@ -118,7 +120,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
 
   it('repeated GET does not change the assigned server', async () => {
     const prisma = makePrisma();
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const first = await service.get(user, 'k1');
     const second = await service.get(user, 'k1');
@@ -130,7 +132,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
 
   it('ACTIVE + assigned server → valid VLESS URI from that server', async () => {
     const prisma = makePrisma();
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const contract = await service.get(user, 'k1');
 
@@ -143,7 +145,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
     const prisma = makePrisma({
       vpnServer: { findUnique: jest.fn(async () => null) },
     });
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const contract = await service.get(user, 'k1');
 
@@ -163,7 +165,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
         })),
       },
     });
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const contract = await service.get(user, 'k1');
 
@@ -176,7 +178,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
     const prisma = makePrisma({
       accessKey: { findFirst: jest.fn(async () => ({ ...activeKey, status: 'EXPIRED' })) },
     });
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const contract = await service.get(user, 'k1');
 
@@ -189,7 +191,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
     const prisma = makePrisma({
       accessKey: { findFirst: jest.fn(async () => ({ ...activeKey, status: 'REVOKED' })) },
     });
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const contract = await service.get(user, 'k1');
 
@@ -202,14 +204,14 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
     const prisma = makePrisma({
       accessKey: { findFirst: jest.fn(async () => null) },
     });
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     await expect(service.get(user, 'k-foreign')).rejects.toThrow('Key not found');
   });
 
   it('GET /provisioning/active returns config for the assigned server', async () => {
     const prisma = makePrisma();
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const result = await service.active(user);
 
@@ -230,7 +232,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
         ]),
       },
     });
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     await service.active(user);
 
@@ -244,7 +246,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
 
   it('revoke flips ACTIVE → REVOKED (key is not deleted)', async () => {
     const prisma = makePrisma();
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     await service.revoke(user, 'k1');
 
@@ -255,7 +257,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
 
   it('admin allKeys выбирает сервер со статусом и код доступа', async () => {
     const prisma = makePrisma();
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     await service.allKeys();
 
@@ -269,6 +271,25 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
     expect(call.select.code).toBe(true);
   });
 
+  it('allKeys помечает, выложен ли ключ в ядро (null — файла нет)', async () => {
+    const published = new Set([activeKey.id.slice(0, 8)]);
+    const prisma = makePrisma();
+    const xray = { publishedKeyIds: jest.fn(async () => published) } as never;
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xray);
+
+    const rows = await service.allKeys();
+    expect(rows[0].published).toBe(true);
+
+    const empty = new ProvisioningService(
+      prisma,
+      subscriptions,
+      new VlessConfigService(),
+      { publishedKeyIds: jest.fn(async () => new Set<string>()) } as never,
+    );
+    // Нет файла -> не врать «не выложен», а показать неизвестность.
+    expect((await empty.allKeys())[0].published).toBeNull();
+  });
+
   it('admin revokeAny не режет по userId владельца (баг панели: 404 вместо отзыва)', async () => {
     const prisma = makePrisma({
       accessKey: {
@@ -280,7 +301,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
         updateMany: jest.fn(async () => ({ count: 1 })),
       },
     });
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const res = await service.revokeAny('k1');
 
@@ -299,7 +320,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
         updateMany: jest.fn(async () => ({ count: 1 })),
       },
     });
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const res = await service.revokeAny('k1');
 
@@ -314,7 +335,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
         findUnique: jest.fn(async () => ({ ...servers[0], status: 'MAINTENANCE' })),
       },
     });
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const contract = await service.get(user, 'k1');
 
@@ -327,7 +348,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
     const prisma = makePrisma({
       vpnServer: { findUnique: jest.fn(async () => null) },
     });
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const contract = await service.get(user, 'k1');
 
@@ -344,7 +365,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
         })),
       },
     });
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const contract = await service.get(user, 'k1');
 
@@ -366,7 +387,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
         })),
       },
     });
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const contract = await service.get(user, 'k1');
 
@@ -387,7 +408,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
         })),
       },
     });
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const contract = await service.get(user, 'k1');
 
@@ -398,7 +419,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
 
   it('URI is never present in the public server list response', async () => {
     const prisma = makePrisma();
-    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService());
+    const service = new ProvisioningService(prisma, subscriptions, new VlessConfigService(), xrayStub);
 
     const contract = await service.get(user, 'k1');
     // The contract does not leak into any public endpoint — the public

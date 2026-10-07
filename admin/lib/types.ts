@@ -157,6 +157,8 @@ export interface AdminAccessKey {
   /** Отпечаток устройства из приложения. У ключей без аккаунта deviceId=null,
    *  привязка живёт здесь — иначе в панели «Устройство: —» у всех покупателей. */
   boundDevice?: string | null;
+  /** Выложен ли ключ в ядро (false = «не пустит», null = список ядра недоступен). */
+  published?: boolean | null;
   serverId: string | null;
   name: string;
   protocol: string;

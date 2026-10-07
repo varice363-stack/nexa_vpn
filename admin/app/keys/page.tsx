@@ -157,6 +157,7 @@ export default function AccessKeysPage() {
               <th>Статус</th>
               <th>Назначенный сервер</th>
               <th>Устройство</th>
+              <th title="Есть ли UUID ключа в конфиге ядра прямо сейчас">В ядре</th>
               <th>Создан</th>
               <th>Истекает</th>
               <th />
@@ -173,6 +174,15 @@ export default function AccessKeysPage() {
                 <td>{k.server ? `${k.server.name} (${k.server.city})` : '—'}</td>
                 <td className="font-mono text-xs">
                   {k.deviceId ? k.deviceId.slice(0, 8) : k.boundDevice ? `${k.boundDevice.slice(0, 10)}…` : '—'}
+                </td>
+                <td>
+                  {k.published === null ? (
+                    <span className="text-muted">—</span>
+                  ) : k.published ? (
+                    <span className="text-emerald-300">да</span>
+                  ) : (
+                    <span className="text-rose-300" title="ядро не пустит: список клиентов не обновлён">нет</span>
+                  )}
                 </td>
                 <td>{new Date(k.createdAt).toLocaleDateString()}</td>
                 <td>{k.expiresAt ? new Date(k.expiresAt).toLocaleDateString() : '∞'}</td>

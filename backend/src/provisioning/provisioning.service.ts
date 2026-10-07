@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 
 import { SafeUser } from '../common/decorators/current-user.decorator';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { XrayClientSyncService } from './xray-client-sync.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { CreateKeyDto } from './dto/create-key.dto';
 import { VlessConfigService } from './vless-config.service';
@@ -28,6 +29,7 @@ export class ProvisioningService {
     private readonly prisma: PrismaService,
     private readonly subscriptions: SubscriptionsService,
     private readonly vless: VlessConfigService,
+    private readonly xraySync: XrayClientSyncService,
   ) {}
 
   async list(user: SafeUser) {
@@ -150,7 +152,7 @@ export class ProvisioningService {
     // связи перечислены внутри select. `code` отдаём намеренно: без него
     // панель не может показать покупателю то, что он вводит в приложении.
     // Сюда же не попадают приватные ключи ядра и всё, что не нужно UI.
-    return this.prisma.accessKey.findMany({
+    const rows = await this.prisma.accessKey.findMany({
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -183,6 +185,13 @@ export class ProvisioningService {
         },
       },
     });
+    // published: UUID ключа реально лежит в файле, из которого узел собирает
+    // ядро. null = файла нет и судить не о чем (dev, другой сервер).
+    const published = await this.xraySync.publishedKeyIds();
+    return rows.map((k) => ({
+      ...k,
+      published: published.size === 0 ? null : published.has(k.id.slice(0, 8)),
+    }));
   }
 
   /**

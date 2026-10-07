@@ -89,6 +89,23 @@ export class XrayClientSyncService implements OnApplicationBootstrap {
   }
 
   /** Пишет желаемый список. Возвращает число клиентов или null, если писать некуда. */
+  /**
+   * Какие ключи ЯВАНО в desired-файл, т.е. ядро их уже пускает.
+   *
+   * Отдельный метод, а не поле в статусе: панели нужно пометить КАЖДЫЙ ключ
+   * («выдан в ядро» / «в очереди»), а не только агрегат — иначе поддержка не
+   * может ответить на «ключ ввалидный, не коннектит», не залезая в файлы.
+   */
+  async publishedKeyIds(): Promise<Set<string>> {
+    try {
+      const raw = JSON.parse(await fs.readFile(XRAY_CLIENTS_PATH, 'utf8'));
+      const list: { email?: string }[] = Array.isArray(raw?.clients) ? raw.clients : [];
+      return new Set(list.map((c) => String(c.email ?? '')).filter(Boolean));
+    } catch {
+      return new Set(); // файла нет (dev/другой сервер) — считаем, что не выложено
+    }
+  }
+
   async sync(): Promise<{ written: number; path: string } | null> {
     const clients = await this.desiredClients();
     const payload = {
