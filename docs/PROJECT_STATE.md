@@ -20,7 +20,7 @@
 | 9 | URL бэкенда не показывать в настройках | **чисто** | `grep` по `lib/screens/settings/*.dart` на `baseUrl`/`url` — 0 совпадений |
 | 10 | Карточка сервера скрыта при выключенном VPN | сделано ранее | в этом сеансе не перепроверялось |
 | 11 | Никакой публичной «Технической доступ»/админ-секции | **чисто** | `identity_screen.dart:55` — блок рендерится только `if (isAdmin)`; `tryUnlock` сравнивает с `kOwnerCode`, который теперь `defaultValue: ''`, а пустой ввод отсекается `cleanEntered.isNotEmpty` |
-| 12 | OWNER_CODE только через `--dart-define` | **исправлено 06.10** | было два места с вшитым кодом → `3af5aca`, `7173ea4`; `grep MOROK-WJWY` по `lib`, `backend/src`, `admin` → пусто |
+| 12 | OWNER_CODE только через `--dart-define` | **исправлено 06.10** | было два места с вшитым кодом → `3af5aca`, `7173ea4`; `grep MOROK-` по `lib`, `backend/src`, `admin` → пусто |
 | 13 | Приём денег для РФ/СНГ: крипта (USDT) + ЮMoney | **НЕ СДЕЛАНО** | `backend/src/billing/providers/` = только `mock` и `yookassa`. Crypto/USDT/TRC-20 провайдера в коде нет (уценка в 500₽ при оплате криптой не реализована) |
 | 14 | Все файлы делает агент, пушит в GitHub | соблюдается | `git ls-remote` / GitHub API, см. § 3 |
 

@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../models/promo_banner.dart';
 import '../../../providers/banner_providers.dart';
 import '../../../services/api/api_config.dart';
+import 'invite_friend_sheet.dart';
 
 /// Живой баннер на главном экране.
 ///
@@ -142,6 +143,13 @@ class _BannerCard extends ConsumerWidget {
 
   Future<void> _tap(BuildContext context, WidgetRef ref) async {
     ref.read(bannerTrackerProvider).click(banner.id);
+    // Баннер-приглашение (share:referral) открывает окно «Пригласить друга»
+    // с готовым текстом. Раньше такой баннер уводил на экран тарифов, и
+    // было непонятно, что вообще отправлять другу.
+    if (banner.isReferralShare) {
+      await showInviteFriendSheet(context);
+      return;
+    }
     if (banner.hasExternalTarget) {
       final uri = Uri.tryParse(banner.targetUrl!);
       if (uri != null) {
@@ -277,6 +285,16 @@ class PartnerBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Тап по баннеру открывает окно приглашения: раньше кнопка «Пригласить»
+    // была нарисованной и не делала ничего.
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => showInviteFriendSheet(context),
+      child: _buildCard(context),
+    );
+  }
+
+  Widget _buildCard(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(20),

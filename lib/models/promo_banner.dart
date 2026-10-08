@@ -46,6 +46,15 @@ class PromoBanner {
   /// Per-banner control: one banner can show for 30s, another for 45s.
   final int displayDuration;
 
+  /// True when the banner приглашает друга: тап открывает готовое сообщение
+  /// с кнопками «Поделиться» / Telegram / «Скопировать».
+  ///
+  /// Владелец помечает такой баннер в админке значением `share:referral`
+  /// в поле ссылки — это единственное «действие», которое приложение умеет
+  /// выполнять само, без внешней ссылки.
+  bool get isReferralShare =>
+      targetUrl != null && targetUrl!.trim() == 'share:referral';
+
   /// True when the CTA should open an external http(s) destination.
   /// Any other scheme is ignored: the payload comes from the network and
   /// must not be able to launch arbitrary intents on the device.

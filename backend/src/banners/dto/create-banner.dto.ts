@@ -4,8 +4,8 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUrl,
   Length,
+  Matches,
   Max,
   Min,
 } from 'class-validator';
@@ -32,12 +32,20 @@ export class CreateBannerDto {
   buttonText?: string;
 
   /**
-   * External URL opened when the CTA is tapped. Only http(s) is accepted —
-   * custom schemes could be abused to launch arbitrary intents on device.
-   * Use this for referral links (e.g., registration with referral code).
+   * Действие баннера. Либо внешний http(s)-адрес (открывается в браузере),
+   * либо служебное значение `share:referral` — тогда приложение показывает
+   * своё окно «Пригласить друга» (готовое сообщение + «Поделиться»).
+   *
+   * Свободные схемы по-прежнему запрещены: приложение открывает только
+   * http(s), всё остальное считает недействительным. Регулярка ниже это
+   * фиксирует и на сервере — иначе админка получала бы 400 на share:referral.
    */
   @IsOptional()
-  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+  @IsString()
+  @Matches(/^(https?:\/\/[^\s]+|share:referral)$/, {
+    message:
+      'targetUrl: нужна http(s)-ссылка либо share:referral (приглашение друга)',
+  })
   targetUrl?: string;
 
   /**

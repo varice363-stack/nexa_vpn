@@ -48,6 +48,8 @@ class _AdminCreateBannerScreenState
 
   BannerPlacement _placement = BannerPlacement.home;
   bool _isSubmitting = false;
+  /// Баннер-приглашение друга (share:referral) — вместо внешней ссылки.
+  bool _isReferral = false;
   String? _editingId;
   bool _loadingInitial = false;
 
@@ -126,6 +128,7 @@ class _AdminCreateBannerScreenState
       _targetUrlController.text = b.targetUrl ?? '';
       _displayDurationController.text = '${b.displayDuration}';
       _placement = b.placement;
+      _isReferral = b.isReferralShare;
     } else if (_editingId != null) {
       // Через post-frame: первый кадр должен отрисоваться, чтобы setState
       // внутри загрузки не выполнялся прямо в initState.
@@ -155,6 +158,7 @@ class _AdminCreateBannerScreenState
         _targetUrlController.text = b.targetUrl ?? '';
         _displayDurationController.text = '${b.displayDuration}';
         _placement = b.placement;
+        _isReferral = b.isReferralShare;
       });
     } catch (e) {
       if (mounted) _showError('Не удалось загрузить баннер: $e');
@@ -426,12 +430,43 @@ class _AdminCreateBannerScreenState
           ),
           const SizedBox(height: 16),
 
-          // Ссылка партнёра
+          // Ссылка партнёра или приглашение друга
           _buildTextField(
             controller: _targetUrlController,
             label: 'Ссылка партнёра',
             hint: 'https://partner.example.com/offer',
             required: false,
+            enabled: !_isReferral,
+          ),
+          const SizedBox(height: 8),
+          // Быстрый выбор «действия» баннера: приглашение друга работает
+          // внутри приложения — внешняя ссылка не нужна, приложение само
+          // покажет готовое сообщение и кнопки отправки.
+          GlassContainer(
+            borderRadius: BorderRadius.circular(12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.group_add_rounded,
+                    size: 18, color: AppColors.primary),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Баннер приглашает друга (кнопка «Пригласить»)',
+                    style:
+                        TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+                  ),
+                ),
+                Switch(
+                  value: _isReferral,
+                  activeThumbColor: AppColors.primary,
+                  onChanged: (v) => setState(() {
+                    _isReferral = v;
+                    _targetUrlController.text = v ? 'share:referral' : '';
+                  }),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -641,6 +676,7 @@ class _AdminCreateBannerScreenState
     int maxLines = 1,
     TextInputType? keyboardType,
     int? minLength,
+    bool enabled = true,
   }) {
     return GlassContainer(
       borderRadius: BorderRadius.circular(14),
@@ -648,6 +684,7 @@ class _AdminCreateBannerScreenState
       child: TextFormField(
         controller: controller,
         maxLines: maxLines,
+        enabled: enabled,
         keyboardType: keyboardType,
         decoration: InputDecoration(
           labelText: label,
