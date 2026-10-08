@@ -271,10 +271,11 @@
   "keyEntryErrorNotFound": "Code not found. Check for typos.",
   "keyEntryErrorRevoked": "This code has been revoked.",
   "keyEntryErrorExpired": "This code has expired.",
-  "keyEntryErrorUsed": "This code is bound to another device. To move it: Settings → Devices → unbind the old one, then enter the code here.",
+  "keyEntryErrorUsed": "This code is bound to another device. If it is yours: restore your owner code (Profile → My code → Restore access) and enter the purchase code again. If the owner code is lost, contact support.",
   "keyEntrySuccessNexa": "Access activated",
   "keyEntrySuccessMorok": "Access activated",
   "keyEntrySuccessVless": "Key imported",
+  "keyEntrySuccessButNotLinked": "The code was accepted but the key did not appear in the app. Check your connection and enter the code again, or contact support.",
   "keyEntryImportedTitle": "Imported keys",
   "keyEntryImportedEmpty": "No imported keys yet",
   "keyEntryRemove": "Remove",
@@ -441,7 +442,7 @@
   "commonError": "Error",
   "adminCreateBanner": "Create Banner",
   "adminCreateBannerSubtitle": "Add new promotional banner",
-"adminBannersSection": "Banners: list and delete",
+  "adminBannersSection": "Banners: list and delete",
   "adminBannersSectionSubtitle": "Show, hide or delete any banner, including the default one",
   "adminBannerTitle": "Title",
   "adminBannerDescription": "Description",
@@ -457,14 +458,20 @@
   "serverRetryAttempt": "Retry attempt {attempt} of {max}",
   "@serverRetryAttempt": {
     "placeholders": {
-      "attempt": { "type": "int" },
-      "max": { "type": "int" }
+      "attempt": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
     }
   },
   "serverConnectingTo": "Connecting to {server}...",
   "@serverConnectingTo": {
     "placeholders": {
-      "server": { "type": "String" }
+      "server": {
+        "type": "String"
+      }
     }
   },
   "devicesTitle": "Devices",
@@ -475,26 +482,34 @@
   "devicesSlotsAvailable": "{count} slots available",
   "@devicesSlotsAvailable": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "devicesJustNow": "Just now",
   "devicesMinutesAgo": "{minutes} min ago",
   "@devicesMinutesAgo": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "devicesHoursAgo": "{hours} hours ago",
   "@devicesHoursAgo": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "devicesDaysAgo": "{days} days ago",
   "@devicesDaysAgo": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "devicesDisconnect": "Disconnect device",
@@ -502,31 +517,52 @@
   "devicesDisconnectBody": "Device {name} will be disconnected from your account.",
   "@devicesDisconnectBody": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "devicesDisconnected": "Device {name} disconnected",
   "devicesLoadFailed": "Could not load the device list",
   "devicesNoKeys": "No keys bound",
   "devicesKeysBound": "Bound keys: {count}",
-  "@devicesKeysBound": {"placeholders": {"count": {"type": "int"}}},
+  "@devicesKeysBound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "devicesUnbind": "Unbind",
   "devicesUnbindTitle": "Unbind this device?",
   "devicesUnbindBody": "“{name}” will be marked as revoked and its access keys unbound. The code can be entered on a new phone.",
-  "@devicesUnbindBody": {"placeholders": {"name": {"type": "String"}}},
+  "@devicesUnbindBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "devicesUnbindConfirm": "Unbind",
   "devicesUnbindFailed": "Could not unbind the device: {error}",
-  "@devicesUnbindFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@devicesUnbindFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "@devicesDisconnected": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "devicesEmpty": "You haven't connected any devices yet. Connect through the app and it will appear here.",
   "devicesUpgradeTitle": "Need more devices?",
   "devicesUpgradeBody": "Upgrade to Premium to connect up to 5 devices simultaneously.",
   "devicesUpgradeButton": "Upgrade plan",
-  
   "trialTitle": "Free Trial",
   "trialSubtitle": "Try MOROK VPN for free",
   "trialBenefitTitle": "3 days free",
@@ -543,7 +579,9 @@
   "trialActivatedBody": "You have {days} days of full access without restrictions",
   "@trialActivatedBody": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "trialActiveTitle": "Trial is active",
@@ -551,13 +589,17 @@
   "trialDaysLeft": "{days} {days, plural, =1{day} other{days}}",
   "@trialDaysLeft": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "trialHoursLeft": "{hours} {hours, plural, =1{hour} other{hours}}",
   "@trialHoursLeft": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "trialRemaining": "remaining",

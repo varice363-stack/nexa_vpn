@@ -271,10 +271,11 @@
   "keyEntryErrorNotFound": "Код не найден. Проверьте, нет ли опечатки.",
   "keyEntryErrorRevoked": "Этот код отозван.",
   "keyEntryErrorExpired": "Срок действия кода истёк.",
-  "keyEntryErrorUsed": "Код привязан к другому устройству. Чтобы перенести: «Настройки → Устройства» → отвязать старое, затем ввести код здесь.",
+  "keyEntryErrorUsed": "Код привязан к другому устройству. Если это ваш код: восстановите свой код владельца (Профиль → «Мой код» → «Восстановить доступ») и введите код покупки снова. Если код владельца утерян — напишите в поддержку.",
   "keyEntrySuccessNexa": "Доступ активирован",
   "keyEntrySuccessMorok": "Доступ активирован",
   "keyEntrySuccessVless": "Ключ добавлен",
+  "keyEntrySuccessButNotLinked": "Код принят, но ключ не появился в приложении. Проверьте связь с интернетом и введите код ещё раз — или напишите в поддержку.",
   "keyEntryImportedTitle": "Добавленные ключи",
   "keyEntryImportedEmpty": "Добавленных ключей пока нет",
   "keyEntryRemove": "Удалить",
@@ -441,7 +442,7 @@
   "commonError": "Ошибка",
   "adminCreateBanner": "Создать баннер",
   "adminCreateBannerSubtitle": "Добавить новый промо-баннер",
-"adminBannersSection": "Баннеры: все и удаление",
+  "adminBannersSection": "Баннеры: все и удаление",
   "adminBannersSectionSubtitle": "Показать, скрыть или удалить любой баннер, в том числе начальный",
   "adminBannerTitle": "Заголовок",
   "adminBannerDescription": "Описание",
@@ -457,14 +458,20 @@
   "serverRetryAttempt": "Попытка {attempt} из {max}",
   "@serverRetryAttempt": {
     "placeholders": {
-      "attempt": { "type": "int" },
-      "max": { "type": "int" }
+      "attempt": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
     }
   },
   "serverConnectingTo": "Подключение к {server}...",
   "@serverConnectingTo": {
     "placeholders": {
-      "server": { "type": "String" }
+      "server": {
+        "type": "String"
+      }
     }
   },
   "devicesTitle": "Устройства",
@@ -475,26 +482,34 @@
   "devicesSlotsAvailable": "{count} слотов свободно",
   "@devicesSlotsAvailable": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "devicesJustNow": "Только что",
   "devicesMinutesAgo": "{minutes} мин. назад",
   "@devicesMinutesAgo": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "devicesHoursAgo": "{hours} ч. назад",
   "@devicesHoursAgo": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "devicesDaysAgo": "{days} дн. назад",
   "@devicesDaysAgo": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "devicesDisconnect": "Отключить устройство",
@@ -502,31 +517,52 @@
   "devicesDisconnectBody": "Устройство {name} будет отключено от аккаунта.",
   "@devicesDisconnectBody": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "devicesDisconnected": "Устройство {name} отключено",
   "devicesLoadFailed": "Не удалось загрузить список устройств",
   "devicesNoKeys": "Ключи не привязаны",
   "devicesKeysBound": "Привязано ключей: {count}",
-  "@devicesKeysBound": {"placeholders": {"count": {"type": "int"}}},
+  "@devicesKeysBound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "devicesUnbind": "Отвязать",
   "devicesUnbindTitle": "Отвязать устройство?",
   "devicesUnbindBody": "Устройство «{name}» будет отмечено как отозванное, а его ключи отвязаны. Код можно будет ввести на новом телефоне.",
-  "@devicesUnbindBody": {"placeholders": {"name": {"type": "String"}}},
+  "@devicesUnbindBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "devicesUnbindConfirm": "Отвязать",
   "devicesUnbindFailed": "Не удалось отвязать устройство: {error}",
-  "@devicesUnbindFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@devicesUnbindFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "@devicesDisconnected": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "devicesEmpty": "Вы ещё не подключали устройства. Подключитесь через приложение, и оно появится здесь.",
   "devicesUpgradeTitle": "Нужно больше устройств?",
   "devicesUpgradeBody": "Перейдите на Premium для подключения до 5 устройств одновременно.",
   "devicesUpgradeButton": "Обновить тариф",
-  
   "trialTitle": "Пробный период",
   "trialSubtitle": "Попробуйте MOROK VPN бесплатно",
   "trialBenefitTitle": "3 дня бесплатно",
@@ -543,7 +579,9 @@
   "trialActivatedBody": "У вас {days} дней полного доступа без ограничений",
   "@trialActivatedBody": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "trialActiveTitle": "Пробный период активен",
@@ -551,13 +589,17 @@
   "trialDaysLeft": "{days} {days, plural, =1{день} other{дней}}",
   "@trialDaysLeft": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "trialHoursLeft": "{hours} {hours, plural, =1{час} other{часов}}",
   "@trialHoursLeft": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "trialRemaining": "осталось",
