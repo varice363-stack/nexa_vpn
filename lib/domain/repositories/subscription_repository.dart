@@ -15,6 +15,14 @@ abstract class SubscriptionRepository {
   /// обратный отсчёт.
   Future<SubscriptionState> activateTrial();
 
+  /// POST /billing/referral/apply — ввод кода друга.
+  ///
+  /// Условие программы одно и без процентов: приглашённый получает неделю
+  /// бесплатного доступа. Если доступ уже есть — неделя добавляется к нему.
+  /// Возвращает состояние подписки с новым сроком, чтобы экран показал
+  /// правду, а не «спасибо, всё готово».
+  Future<SubscriptionState> applyReferral(String code);
+
   /// GET /plans — каталог тарифов с ценами из базы.
   Future<List<ServerPlan>> getPlans();
 }

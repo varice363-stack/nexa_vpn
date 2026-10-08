@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -45,6 +46,10 @@ class TrialScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               _NoPaymentRequiredNote(l10n: l10n),
+              const SizedBox(height: 12),
+              _HaveReferralCodeButton(
+                onEnter: () => _enterReferralCode(context, ref),
+              ),
               const SizedBox(height: 24),
               _ViewAllPlansButton(l10n: l10n),
             ],
@@ -92,6 +97,109 @@ class TrialScreen extends ConsumerWidget {
         ),
       );
     }
+  }
+
+  /// Ввод кода друга: неделя бесплатного доступа.
+  ///
+  /// Код приходит из мессенджера, поэтому переносим его через буфер обмена —
+  /// вставляем содержимое буфера кнопкой «Вставить», чтобы человек не набирал
+  /// 25 символов вручную и не ошибался.
+  Future<void> _enterReferralCode(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController();
+    final paste = await Clipboard.getData(Clipboard.kTextPlain);
+    final clipboardText = paste?.text?.trim() ?? '';
+    if (RegExp(r'MOROK-', caseSensitive: false).hasMatch(clipboardText)) {
+      controller.text = clipboardText;
+    }
+
+    if (!context.mounted) return;
+    final code = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF0B1120),
+        title: const Text('Код от друга'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Введите код, который прислал друг. Он выглядит так: '
+              'MOROK-XXXX-XXXX-XXXX-XXXX',
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              textCapitalization: TextCapitalization.characters,
+              decoration: const InputDecoration(
+                hintText: 'MOROK-XXXX-XXXX-XXXX-XXXX',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(controller.text.trim()),
+            child: const Text('Получить неделю'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (code == null || code.isEmpty) return;
+    if (!context.mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final state =
+          await ref.read(subscriptionProvider.notifier).applyReferral(code);
+      final until = state.expiresAt;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Готово: неделя доступа добавлена. '
+            '${until == null ? "" : "Действует до ${_formatDate(until)}. "}'
+            'Ключ уже добавлен — подключитесь на главном экране.',
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(_referralErrorMessage(e)),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    }
+  }
+
+  static String _formatDate(DateTime d) {
+    final local = d.toLocal();
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    return '$day.$month.${local.year}';
+  }
+
+  /// Сервер объясняет отказ словами — показываем именно их, а не «Ошибка».
+  String _referralErrorMessage(Object e) {
+    if (e is ApiException) {
+      if (e.isNetworkError) {
+        return 'Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.';
+      }
+      return e.message;
+    }
+    return 'Не получилось применить код: $e';
   }
 
   /// Объясняет, что именно случилось, вместо «Ошибка: ApiException».
@@ -307,6 +415,27 @@ class _NoPaymentRequiredNote extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Кнопка «У меня есть код от друга» — вход для приглашённого.
+///
+/// Раньше приглашённому было некуда вводить код: программа «приведи друга»
+/// существовала только на словах.
+class _HaveReferralCodeButton extends StatelessWidget {
+  const _HaveReferralCodeButton({required this.onEnter});
+
+  final VoidCallback onEnter;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: TextButton.icon(
+        onPressed: onEnter,
+        icon: const Icon(Icons.card_giftcard_rounded, size: 18),
+        label: const Text('У меня есть код от друга'),
+      ),
     );
   }
 }

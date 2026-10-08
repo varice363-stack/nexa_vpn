@@ -13,6 +13,7 @@ import {
   SubmitCryptoHashDto,
 } from './dto/checkout.dto';
 import { WebhookDto } from './dto/webhook.dto';
+import { ApplyReferralDto } from './dto/apply-referral.dto';
 
 @ApiTags('billing')
 @Controller('billing')
@@ -111,6 +112,18 @@ export class BillingController {
   @Post('trial/activate')
   activateTrial(@CurrentUser() user: SafeUser) {
     return this.billing.activateTrial(user);
+  }
+
+  /**
+   * POST /billing/referral/apply — ввод кода друга.
+   *
+   * Приглашённый получает неделю бесплатного доступа (при наличии активного
+   * доступа — неделя добавляется к нему). Пригласивший не получает ничего:
+   * в приложении обещана именно неделя другу, а не проценты с его оплаты.
+   */
+  @Post('referral/apply')
+  applyReferral(@CurrentUser() user: SafeUser, @Body() dto: ApplyReferralDto) {
+    return this.billing.applyReferral(user, dto.code);
   }
 
   /** Admin: cancel stale PENDING transactions (?hours=24). */

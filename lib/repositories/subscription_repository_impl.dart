@@ -73,6 +73,26 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }
 
   @override
+  Future<SubscriptionState> applyReferral(String code) async {
+    final data = await _api.post(
+      '/billing/referral/apply',
+      body: {'code': code},
+    );
+    if (data is! Map) {
+      throw const ApiException('Unexpected referral response',
+          code: 'BAD_RESPONSE');
+    }
+    final json = Map<String, Object?>.from(data);
+    final expiresRaw = json['expiresAt'] as String?;
+    return SubscriptionState(
+      tier: SubscriptionTier.standard,
+      planId: 'referral',
+      expiresAt: expiresRaw == null ? null : DateTime.tryParse(expiresRaw),
+      isTrialActive: true,
+    );
+  }
+
+  @override
   Future<List<ServerPlan>> getPlans() async {
     final data = await _api.get('/plans');
     if (data is! List) {

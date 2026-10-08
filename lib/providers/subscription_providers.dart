@@ -86,6 +86,47 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
         );
   }
 
+  /// Применяет код друга: неделя бесплатного доступа.
+  ///
+  /// Устроено так же, как активация пробного: сервер выдаёт настоящий ключ,
+  /// список ключей перечитывается, выданный ключ становится активным — после
+  /// ввода кода кнопка подключения сразу поднимает туннель. Ситуация «сервер
+  /// не знает устройство» (401) чинится повторной регистрацией, а не советом
+  /// «перезапустите приложение».
+  Future<SubscriptionState> applyReferral(String code) async {
+    late final SubscriptionState next;
+    try {
+      next = await ref.read(subscriptionRepositoryProvider).applyReferral(code);
+    } on ApiException catch (e) {
+      if (e.statusCode != 401) rethrow;
+      final token = await ref.read(tokenStorageProvider).read();
+      if (token != null && token.isNotEmpty) rethrow;
+      if (!await _registerDevice()) rethrow;
+      next = await ref.read(subscriptionRepositoryProvider).applyReferral(code);
+    }
+
+    await ref.read(accessKeysProvider.notifier).refresh();
+    final keys = ref.read(accessKeysProvider).value ?? const <AccessKey>[];
+    for (final key in keys) {
+      final source = ConnectionSource.fromAccessKey(key);
+      if (source != null && source.isUsable) {
+        await ref.read(activeSourceProvider.notifier).select(source);
+        break;
+      }
+    }
+
+    state = AsyncData(next);
+    await ref.read(configRepositoryProvider).saveSubscription(next);
+
+    ref.read(notificationServiceProvider).push(
+          title: 'Приглашение принято',
+          body: 'Неделя доступа добавлена. Ключ уже добавлен — нажмите '
+              'кнопку подключения на главном экране.',
+          icon: AppNotificationIcon.promo,
+        );
+    return next;
+  }
+
   /// Subscribe to a paid plan.
   ///
   /// BILLING INTEGRATION (TODO — external infrastructure):

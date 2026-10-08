@@ -21,6 +21,14 @@ export const TRIAL_DAYS = 3;
 export const TRIAL_TRAFFIC_LIMIT_MB = 2048;
 
 /**
+ * Приглашение друга: вместо процентов с оплаты приглашённый получает неделю
+ * бесплатного доступа. Две константы ниже — единственное место, где эти числа
+ * заданы; поменять условия = поменять их (и текст в приложении).
+ */
+export const REFERRAL_DAYS = 7;
+export const REFERRAL_TRAFFIC_LIMIT_MB = 10240;
+
+/**
  * Billing orchestration — subscription lifecycle + payment transactions.
  *
  * Lifecycle:
@@ -289,6 +297,162 @@ export class BillingService {
       trialDays: TRIAL_DAYS,
       trafficLimitMb: TRIAL_TRAFFIC_LIMIT_MB,
       accessKey: { id: key.id, status: key.status },
+    };
+  }
+
+  // ── Приглашение друга ──────────────────────────────────────────────────
+
+  /**
+   * Применяет код приглашения: приглашённый получает неделю бесплатного
+   * доступа, пригласивший — ничего (проценты с оплаты не начисляются).
+   *
+   * Правила, которые сервер проверяет сам (обещать «неделю» и не проверять —
+   * хуже, чем не обещать вовсе):
+   *  1. код должен принадлежать существующему устройству;
+   *  2. свой собственный код использовать нельзя;
+   *  3. одно устройство получает приглашение один раз — повторный ввод
+   *     отклоняется, а не «продлевает»;
+   *  4. если у человека уже есть действующий доступ (пробный или оплаченный),
+   *     неделя ДОБАВЛЯЕТСЯ к нему — это и значит «дополнительно»;
+   *  5. если доступа нет — заводится подписка на неделю и настоящий ACTIVE-ключ,
+   *     который сразу уходит в ядро.
+   *
+   * Отдельного «кэша» тут нет намеренно: экономика простая (пригласил —
+   * друг получил неделю), поэтому и обещать «15% с оплаты» больше нечему.
+   */
+  async applyReferral(user: SafeUser, rawCode: string) {
+    const code = rawCode.trim().toUpperCase();
+    const account = await this.prisma.user.findUnique({ where: { id: user.id } });
+    if (!account) throw new NotFoundException('Account not found');
+
+    if (account.referralAppliedAt) {
+      throw new BadRequestException('Приглашение уже использовано на этом устройстве');
+    }
+    if (account.deviceId && account.deviceId.toUpperCase() === code) {
+      throw new BadRequestException('Нельзя использовать свой собственный код');
+    }
+
+    const referrer = await this.prisma.user.findUnique({ where: { deviceId: code } });
+    if (!referrer) {
+      throw new BadRequestException('Такой код приглашения не найден');
+    }
+    if (referrer.id === account.id) {
+      throw new BadRequestException('Нельзя использовать свой собственный код');
+    }
+
+    const plan = await this.prisma.subscriptionPlan.findFirst({
+      where: { isActive: true },
+      orderBy: { price: 'asc' },
+    });
+    if (!plan) throw new BadRequestException('No plans available');
+
+    const now = new Date();
+    const extension = REFERRAL_DAYS * 86_400_000;
+
+    // Действующий доступ продлеваем, а не создаём второй: две параллельные
+    // подписки на один аккаунт — это два разных срока в разных местах.
+    const active = await this.prisma.subscription.findFirst({
+      where: {
+        userId: account.id,
+        status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL] },
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
+      orderBy: { expiresAt: 'desc' },
+    });
+
+    let subscriptionId: string;
+    let expiresAt: Date;
+    let extended: boolean;
+
+    if (active) {
+      const base = active.expiresAt ?? now;
+      expiresAt = new Date(base.getTime() + extension);
+      const updated = await this.prisma.subscription.update({
+        where: { id: active.id },
+        data: {
+          expiresAt,
+          // Пробный, продлённый приглашением, остаётся TRIAL: это честнее,
+          // чем рисовать «оплачено». Доступ при этом полноценный.
+          status: active.status,
+        },
+      });
+      subscriptionId = updated.id;
+      extended = true;
+
+      // Ключи, живущие в окне подписки, продлеваем вместе с ней: иначе
+      // подписка длиннее ключа, и человек упрётся в «ключ истёк» на 4-й день.
+      await this.prisma.accessKey.updateMany({
+        where: {
+          userId: account.id,
+          status: 'ACTIVE',
+          OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+        },
+        data: { expiresAt },
+      });
+    } else {
+      expiresAt = new Date(now.getTime() + extension);
+      const created = await this.prisma.subscription.create({
+        data: {
+          userId: account.id,
+          planId: plan.id,
+          status: SubscriptionStatus.TRIAL,
+          startedAt: now,
+          expiresAt,
+        },
+      });
+      subscriptionId = created.id;
+      extended = false;
+    }
+
+    // Ключ недели: если активного ключа нет — заводим.
+    let keyId: string;
+    const existingKey = await this.prisma.accessKey.findFirst({
+      where: {
+        userId: account.id,
+        status: 'ACTIVE',
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (existingKey) {
+      keyId = existingKey.id;
+    } else {
+      const key = await this.prisma.accessKey.create({
+        data: {
+          userId: account.id,
+          name: 'Приглашение друга',
+          protocol: 'VLESS',
+          uuid: randomUUID(),
+          status: 'ACTIVE',
+          expiresAt,
+          trafficLimitMb: REFERRAL_TRAFFIC_LIMIT_MB,
+        },
+      });
+      keyId = key.id;
+    }
+
+    await this.prisma.user.update({
+      where: { id: account.id },
+      data: { referredBy: code, referralAppliedAt: now },
+    });
+
+    // Ключ уходит узлу сразу: человек ввёл код и должен подключаться, а не
+    // ждать следующего цикла синхронизации.
+    try {
+      await this.xraySync.sync();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('[xray-sync] referral publish failed:', (err as Error).message);
+    }
+
+    return {
+      status: 'TRIAL',
+      subscriptionId,
+      expiresAt,
+      referralDays: REFERRAL_DAYS,
+      trafficLimitMb: REFERRAL_TRAFFIC_LIMIT_MB,
+      extended,
+      accessKey: { id: keyId, status: 'ACTIVE' },
     };
   }
 
