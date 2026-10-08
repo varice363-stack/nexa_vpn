@@ -341,7 +341,8 @@ class _TrialCountdownCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final progress = (hoursLeft / (7 * 24)).clamp(0.0, 1.0);
+    // Пробный — 3 суток, а не 7: шкала должна показывать правду.
+    final progress = (hoursLeft / (3 * 24)).clamp(0.0, 1.0);
 
     return GlassContainer(
       padding: const EdgeInsets.all(24),
