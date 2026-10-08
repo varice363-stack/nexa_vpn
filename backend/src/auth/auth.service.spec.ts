@@ -173,3 +173,82 @@ describe('AuthService.changePassword', () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 });
+
+/**
+ * Авторегистрация устройства (регрессия 08.10.2026).
+ *
+ * Проверяем две вещи, которые ломали пробный период:
+ *  1) код устройства реального формата (25 символов) регистрируется —
+ *     иначе телефон остаётся гостем и получить пробный не может;
+ *  2) на устройстве, где пробный уже использован, НОВЫЙ аккаунт (после
+ *     удаления и повторной установки приложения) получает пометку
+ *     trialUsedAt — второй бесплатный доступ не выдаётся.
+ */
+describe('AuthService.autoRegister (пробный на устройство)', () => {
+  const CODE = 'MOROK-AAAA-BBBB-CCCC-DDDD'; // 25 символов — как в приложении
+
+  function makeAutoPrisma(existing: Array<Record<string, unknown>> = []) {
+    const created: Array<Record<string, unknown>> = [];
+    const updates: Array<Record<string, unknown>> = [];
+    const prisma = {
+      user: {
+        findUnique: async ({ where }: { where: { deviceId?: string } }) =>
+          existing.find((u) => u.deviceId === where.deviceId) ?? null,
+        findFirst: async () => ({ trialUsedAt: new Date('2026-10-01') }),
+        count: async () => 5,
+        create: async ({ data }: { data: Record<string, unknown> }) => {
+          const row = { id: 'u-new', createdAt: new Date(), ...data };
+          created.push(row);
+          return row;
+        },
+        update: async ({ data }: { data: Record<string, unknown> }) => {
+          updates.push(data);
+          return { id: 'u-new', ...data };
+        },
+      },
+      device: {
+        findFirst: async () => null,
+        create: async () => ({}),
+        update: async () => ({}),
+      },
+    } as unknown as PrismaService;
+    return { prisma, created, updates };
+  }
+
+  it('код из 25 символов регистрируется и получает токен', async () => {
+    const { prisma, created } = makeAutoPrisma();
+    const service = new AuthService(prisma, jwt);
+
+    const result = await service.autoRegister({
+      deviceId: CODE,
+      platform: 'android',
+      fingerprint: 'f'.repeat(64),
+    });
+
+    expect(result.accessToken).toBe('token-123');
+    expect(created[0].deviceId).toBe(CODE);
+    expect(created[0].deviceFingerprint).toBe('f'.repeat(64));
+  });
+
+  it('переустановка: признак устройства уже использовал пробный → пометка ставится сразу', async () => {
+    const { prisma, created } = makeAutoPrisma();
+    const service = new AuthService(prisma, jwt);
+
+    await service.autoRegister({
+      deviceId: 'MOROK-BBBB-CCCC-DDDD-EEEE',
+      fingerprint: 'f'.repeat(64),
+    });
+
+    expect(created[0].trialUsedAt).toBeInstanceOf(Date);
+  });
+
+  it('старая сборка без признака устройства: регистрация проходит, лишних пометок нет', async () => {
+    const { prisma, created } = makeAutoPrisma();
+    const service = new AuthService(prisma, jwt);
+
+    await service.autoRegister({ deviceId: 'probetrial00000000000001' });
+
+    expect(created[0].trialUsedAt).toBeUndefined();
+    expect(created[0].deviceFingerprint).toBeNull();
+  });
+});

@@ -4,8 +4,9 @@ import '../domain/repositories/key_storage.dart';
 import '../services/identity/device_identity.dart';
 import 'app_providers.dart';
 
-/// Ключ в защищённом хранилище устройства (Android Keystore).
-const _kIdentityKey = 'morok_identity_code';
+/// Ключ в защищённом хранилище устройства (Android Keystore) — берём общий,
+/// чтобы идентификатор был один на всё приложение.
+const _kIdentityKey = kIdentityKey;
 
 /// Идентификатор владельца — заменяет собой регистрацию.
 ///

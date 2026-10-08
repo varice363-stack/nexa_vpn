@@ -119,9 +119,28 @@ export class AuthService {
    * the admin account.
    */
   async autoRegister(dto: AutoRegisterDto) {
+    const fingerprint = dto.fingerprint?.toLowerCase() ?? null;
     let user = await this.prisma.user.findUnique({
       where: { deviceId: dto.deviceId },
     });
+
+    // Пробный период выдаётся один раз НА УСТРОЙСТВО, а не на установку.
+    // Код устройства живёт в защищённом хранилище Android и стирается вместе
+    // с приложением — поэтому «удалил и поставил заново» давало новый аккаунт
+    // и новый пробный. Признак устройства (хеш) переустановку переживает:
+    // если с ним уже получали пробный, новый аккаунт его не получит.
+    let trialAlreadyUsedOnThisDevice: Date | null = null;
+    if (fingerprint) {
+      const previous = await this.prisma.user.findFirst({
+        where: {
+          deviceFingerprint: fingerprint,
+          trialUsedAt: { not: null },
+        },
+        select: { trialUsedAt: true },
+        orderBy: { trialUsedAt: 'desc' },
+      });
+      trialAlreadyUsedOnThisDevice = previous?.trialUsedAt ?? null;
+    }
 
     if (!user) {
       // Generate a unique email so the unique constraint never fires.
@@ -138,6 +157,11 @@ export class AuthService {
             email,
             country: dto.country,
             role: isFirstUser ? 'ADMIN' : 'USER',
+            deviceFingerprint: fingerprint,
+            // Помечаем пробный использованным сразу при регистрации: тогда
+            // POST /billing/trial/activate честно ответит «уже использован»,
+            // а не выдаст второй бесплатный доступ.
+            trialUsedAt: trialAlreadyUsedOnThisDevice ?? undefined,
           },
         });
       } catch (e) {
@@ -148,6 +172,13 @@ export class AuthService {
         });
         if (!user) throw e; // Genuine error — propagate.
       }
+    } else if (fingerprint && user.deviceFingerprint !== fingerprint) {
+      // Тот же код устройства, но приложение переустановили/обновили —
+      // признак мог не записаться раньше. Дописываем, не трогая аккаунт.
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: { deviceFingerprint: fingerprint },
+      });
     }
 
     // Create or touch the device row so we know this device is alive.

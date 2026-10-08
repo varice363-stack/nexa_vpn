@@ -21,6 +21,9 @@ abstract class AuthRepository {
     String? country,
     String? platform,
     String? modelName,
+    /// Обезличенный признак устройства (хеш). Переживает переустановку —
+    /// по нему сервер не выдаёт второй пробный период. Необязателен.
+    String? fingerprint,
   });
 
   /// GET /auth/me — current user. Throws [ApiException] on failure.

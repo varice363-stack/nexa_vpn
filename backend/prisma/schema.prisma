@@ -92,6 +92,11 @@ model User {
   lastLogin    DateTime?
   trialUsedAt  DateTime?
 
+  /// Обезличенный признак устройства (SHA-256 от ANDROID_ID телефона).
+  /// Переживает удаление приложения — по нему сервер не даёт второй пробный
+  /// период после переустановки. Хранится необратимый хеш, не сам номер.
+  deviceFingerprint String?
+
   subscriptions      Subscription[]
   notifications      Notification[]
   devices            Device[]
@@ -100,6 +105,7 @@ model User {
 
   @@index([role])
   @@index([status])
+  @@index([deviceFingerprint])
 }
 
 // ── VPN Server ───────────────────────────────────────────────────────────

@@ -6,9 +6,13 @@ import '../models/auth_user.dart';
 import '../services/api/api_exception.dart';
 import '../services/api/token_storage.dart';
 import '../services/identity/device_identity.dart';
+import '../services/identity/device_fingerprint.dart';
+import '../providers/app_providers.dart';
 
-/// Ключ в защищённом хранилище устройства (Android Keystore).
-const _kIdentityKey = 'morok_identity_code';
+/// Ключ в защищённом хранилище устройства (Android Keystore) — тот же, что
+/// у провайдера идентичности: иначе регистрация и восстановление кода
+/// говорили бы о разных записях.
+const _kIdentityKey = kIdentityKey;
 
 /// Result of the application bootstrap sequence.
 class BootstrapResult {
@@ -119,7 +123,15 @@ class AppBootstrapService {
 
       _logger.info('Auto-registering device: $deviceId', source: 'bootstrap');
 
-      final result = await _authRepository.autoRegister(deviceId: deviceId);
+      // Признак устройства переживает переустановку приложения: сервер по нему
+      // не выдаёт второй пробный период. Если платформа его не даёт — просто
+      // регистрируемся без него.
+      final fingerprint = await DeviceFingerprint.get();
+
+      final result = await _authRepository.autoRegister(
+        deviceId: deviceId,
+        fingerprint: fingerprint,
+      );
       await _tokenStorage.write(result.accessToken);
 
       _logger.info(

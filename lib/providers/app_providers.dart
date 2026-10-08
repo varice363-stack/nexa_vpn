@@ -31,6 +31,7 @@ import '../repositories/server_repository_impl.dart';
 import '../repositories/subscription_repository_impl.dart';
 import '../services/api/api_client.dart';
 import '../services/api/token_storage.dart';
+import '../services/identity/device_fingerprint.dart';
 import '../services/notification_service.dart';
 import '../services/security/ssl_pinning_service.dart';
 import '../services/security/security_service.dart';
@@ -71,6 +72,15 @@ final sslPinningServiceProvider = Provider<SslPinningService>(
 /// Ключ стабильного id устройства в SharedPreferences (см. deviceIdProvider).
 const kDeviceIdKey = 'morok_device_id';
 
+/// Ключ кода владельца в защищённом хранилище (Android Keystore).
+///
+/// Общий на всё приложение: и регистрация на сервере (bootstrap), и
+/// перевыпуск токена, и восстановление доступа обязаны говорить об ОДНОМ
+/// идентификаторе. Раньше их было два — в регистрацию уходил код из Keystore,
+/// а перевыпуск токена спрашивал случайный id из обычных настроек, которого
+/// сервер не знал вовсе.
+const kIdentityKey = 'morok_identity_code';
+
 /// HTTP client for the Morok VPN backend.
 final apiClientProvider = Provider<ApiClient>((ref) {
   final client = ApiClient(
@@ -84,18 +94,25 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   // поэтому прежний путь «сессия истекла → выйдите и войдите снова» был тупиком:
   // админ-экраны на 8-й день жизни токена просто переставали что-либо писать.
   client.refreshToken = () async {
-    final deviceId =
-        ref.read(sharedPreferencesProvider).getString(kDeviceIdKey);
+    // ВАЖНО: берём ТОТ ЖЕ код владельца, которым устройство регистрировалось
+    // (защищённое хранилище), а не случайный id из обычных настроек. Раньше
+    // это были два разных идентификатора: сервер знал один, а перевыпуск
+    // токена спрашивал другой — то есть перевыпуск не мог сработать ни разу.
+    final deviceId = await ref.read(keyStorageProvider).read(kIdentityKey);
     if (deviceId == null || deviceId.isEmpty) return false;
     try {
       // Напрямую, без AuthRepository: он сам построен поверх apiClientProvider,
       // и из колбэка получил бы цикл провайдеров.
+      final fingerprint = await DeviceFingerprint.get();
       final res = await http
           .post(
             Uri.parse('${ApiConfig.resolvedBaseUrl}/auth/auto-register'),
             headers: const {'Content-Type': 'application/json'},
-            body: jsonEncode(
-                {'deviceId': deviceId, 'platform': 'android-refresh'}),
+            body: jsonEncode({
+              'deviceId': deviceId,
+              'platform': 'android-refresh',
+              if (fingerprint != null) 'fingerprint': fingerprint,
+            }),
           )
           .timeout(const Duration(seconds: 15));
       if (res.statusCode >= 400) return false;

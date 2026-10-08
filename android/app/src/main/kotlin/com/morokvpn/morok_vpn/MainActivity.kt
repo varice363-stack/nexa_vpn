@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.VpnService
 import android.os.Build
 import android.provider.Settings
+import java.security.MessageDigest
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -67,6 +68,36 @@ class MainActivity : FlutterActivity() {
                             }
                         } catch (e: Exception) {
                             result.success(false)
+                        }
+                    }
+
+                    // Обезличенный признак устройства для защиты пробного
+                    // периода от переустановки: сам идентификатор Android
+                    // (ANDROID_ID) наружу не уходит — приложение считает от
+                    // него SHA-256 с солью и отдаёт только хеш. Признак
+                    // переживает удаление приложения (в отличие от ключей
+                    // Keystore, которые стираются вместе с ним), а сброс
+                    // телефона к заводским настройкам его меняет — это
+                    // честная граница: новое «железо» считается новым.
+                    "deviceFingerprint" -> {
+                        try {
+                            val androidId = Settings.Secure.getString(
+                                contentResolver,
+                                Settings.Secure.ANDROID_ID,
+                            )
+                            if (androidId.isNullOrEmpty()) {
+                                result.success(null)
+                            } else {
+                                val digest = MessageDigest.getInstance("SHA-256")
+                                val hash = digest.digest(
+                                    "morok:v1:$androidId".toByteArray(Charsets.UTF_8),
+                                )
+                                result.success(hash.joinToString("") { "%02x".format(it) })
+                            }
+                        } catch (e: Exception) {
+                            // Нет доступа к настройкам — не мешаем работе
+                            // приложения: регистрация пройдёт без признака.
+                            result.success(null)
                         }
                     }
 

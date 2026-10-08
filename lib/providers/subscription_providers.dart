@@ -5,9 +5,11 @@ import '../models/app_notification.dart';
 import '../models/connection_source.dart';
 import '../models/premium_plan.dart';
 import '../services/api/api_exception.dart';
+import '../services/identity/device_fingerprint.dart';
 import 'access_providers.dart';
 import 'app_providers.dart';
 import 'connection_source_providers.dart';
+import 'identity_providers.dart';
 
 /// Current subscription state.
 ///
@@ -47,7 +49,21 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
   /// Ошибка сервера НЕ превращается в «успех»: если связи нет или пробный
   /// уже использован, пользователь видит сообщение, а не зелёную галочку.
   Future<void> activateTrial() async {
-    final next = await ref.read(subscriptionRepositoryProvider).activateTrial();
+    late final SubscriptionState next;
+    try {
+      next = await ref.read(subscriptionRepositoryProvider).activateTrial();
+    } on ApiException catch (e) {
+      // 401 = сервер не знает это устройство. Живой случай: первый запуск был
+      // без сети, регистрация не прошла, аккаунта на сервере нет — и кнопка
+      // отвечала «перезапустите приложение», хотя перезапуск ничего не менял.
+      // Регистрируемся заново (токен уже стёрт клиентом при 401) и повторяем
+      // ровно один раз.
+      if (e.statusCode != 401) rethrow;
+      final token = await ref.read(tokenStorageProvider).read();
+      if (token != null && token.isNotEmpty) rethrow;
+      if (!await _registerDevice()) rethrow;
+      next = await ref.read(subscriptionRepositoryProvider).activateTrial();
+    }
 
     await ref.read(accessKeysProvider.notifier).refresh();
     final keys = ref.read(accessKeysProvider).value ?? const <AccessKey>[];
@@ -132,5 +148,31 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     const free = SubscriptionState(tier: SubscriptionTier.free);
     state = const AsyncData(free);
     await ref.read(configRepositoryProvider).saveSubscription(free);
+  }
+
+  /// Регистрирует устройство на сервере и сохраняет токен.
+  ///
+  /// Нужен как страховка: любой запрос, требующий токен (пробный период,
+  /// ключи, статистика), без регистрации получает 401. Возвращает false,
+  /// если связи нет — тогда вызывающий код показывает ошибку как раньше.
+  Future<bool> _registerDevice() async {
+    try {
+      final deviceId = await ref.read(identityProvider.future);
+      final fingerprint = await DeviceFingerprint.get();
+      final result = await ref.read(authRepositoryProvider).autoRegister(
+            deviceId: deviceId,
+            fingerprint: fingerprint,
+          );
+      await ref.read(tokenStorageProvider).write(result.accessToken);
+      ref.read(loggerProvider).info(
+            'Устройство зарегистрировано повторно (код $deviceId)',
+            source: 'auth',
+          );
+      return true;
+    } catch (e) {
+      ref.read(loggerProvider).warn('Повторная регистрация не удалась: $e',
+          source: 'auth');
+      return false;
+    }
   }
 }

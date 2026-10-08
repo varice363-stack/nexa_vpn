@@ -40,6 +40,7 @@ class AuthRepositoryImpl implements AuthRepository {
     String? country,
     String? platform,
     String? modelName,
+    String? fingerprint,
   }) async {
     final data = await _api.post(
       '/auth/auto-register',
@@ -48,6 +49,8 @@ class AuthRepositoryImpl implements AuthRepository {
         if (country != null && country.isNotEmpty) 'country': country,
         if (platform != null && platform.isNotEmpty) 'platform': platform,
         if (modelName != null && modelName.isNotEmpty) 'modelName': modelName,
+        if (fingerprint != null && fingerprint.isNotEmpty)
+          'fingerprint': fingerprint,
       },
     );
     return AuthResult.fromJson(_asMap(data));
