@@ -1,4 +1,4 @@
-# Backend startup script for Windows PowerShell
+﻿# Backend startup script for Windows PowerShell
 # Запуск: .\start-backend.ps1
 
 Write-Host "🚀 Запуск Morok VPN Backend..." -ForegroundColor Cyan
