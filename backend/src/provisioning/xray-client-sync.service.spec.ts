@@ -169,6 +169,11 @@ describe('XrayClientSyncService.enforceTrafficLimits', () => {
         update: jest.fn(async ({ where, data }: any) => ({ id: where.id, ...data })),
       },
     };
+    // Через require, как и остальные тесты этого файла: модуль читает пути из
+    // переменных окружения при загрузке, и статический импорт ломал бы изоляцию.
+    jest.resetModules();
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { XrayClientSyncService } = require('./xray-client-sync.service');
     const svc = new XrayClientSyncService(
       prisma as never,
       { usageByKeyPrefix: async () => usage } as never,
