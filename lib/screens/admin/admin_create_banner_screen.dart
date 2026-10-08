@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import '../../widgets/common/admin_back_guard.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -128,7 +127,11 @@ class _AdminCreateBannerScreenState
       _displayDurationController.text = '${b.displayDuration}';
       _placement = b.placement;
     } else if (_editingId != null) {
-      _loadInitialFromServer();
+      // Через post-frame: первый кадр должен отрисоваться, чтобы setState
+      // внутри загрузки не выполнялся прямо в initState.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadInitialFromServer();
+      });
     }
   }
 
@@ -346,131 +349,129 @@ class _AdminCreateBannerScreenState
 
   @override
   Widget build(BuildContext context) {
-    return AdminBackGuard(
-      child: AppPage(
-      title: _loadingInitial
-          ? 'Загружаем баннер…'
-          : (_isEditing ? 'Изменить баннер' : 'Создать баннер'),
-      subtitle: _isEditing
-          ? 'Правка без удаления: статистика показов сохраняется'
-          : 'Рекламный баннер для партнёрской программы',
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 8),
-            // Подсказка
-            GlassContainer(
-              borderRadius: BorderRadius.circular(14),
-              padding: const EdgeInsets.all(12),
-              color: AppColors.primary.withValues(alpha: 0.05),
-              borderColor: AppColors.primary.withValues(alpha: 0.2),
-              child: const Row(
-                children: [
-                  Icon(Icons.info_outline, size: 18, color: AppColors.primary),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Если сервер недоступен, баннер сохранится локально.',
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                    ),
+    return AppPage(
+    title: _loadingInitial
+        ? 'Загружаем баннер…'
+        : (_isEditing ? 'Изменить баннер' : 'Создать баннер'),
+    subtitle: _isEditing
+        ? 'Правка без удаления: статистика показов сохраняется'
+        : 'Рекламный баннер для партнёрской программы',
+    child: Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 8),
+          // Подсказка
+          GlassContainer(
+            borderRadius: BorderRadius.circular(14),
+            padding: const EdgeInsets.all(12),
+            color: AppColors.primary.withValues(alpha: 0.05),
+            borderColor: AppColors.primary.withValues(alpha: 0.2),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline, size: 18, color: AppColors.primary),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Если сервер недоступен, баннер сохранится локально.',
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+          ),
+          const SizedBox(height: 16),
 
-            // Название
-            _buildTextField(
-              controller: _titleController,
-              label: 'Название баннера',
-              hint: 'Летняя акция 2026',
-              required: true,
-              minLength: 2,
+          // Название
+          _buildTextField(
+            controller: _titleController,
+            label: 'Название баннера',
+            hint: 'Летняя акция 2026',
+            required: true,
+            minLength: 2,
+          ),
+          const SizedBox(height: 16),
+
+          // Описание
+          _buildTextField(
+            controller: _descriptionController,
+            label: 'Описание',
+            hint: 'Скидка 50% на все премиум тарифы!',
+            maxLines: 3,
+            required: true,
+            minLength: 2,
+          ),
+          const SizedBox(height: 16),
+
+          // Загрузка изображения
+          _buildImagePicker(),
+          const SizedBox(height: 16),
+
+          // URL картинки (опционально)
+          _buildTextField(
+            controller: _imageUrlController,
+            label: 'URL картинки (если не загружаете файл)',
+            hint: 'https://example.com/banner.jpg',
+            required: false,
+          ),
+          const SizedBox(height: 16),
+
+          // Текст кнопки
+          _buildTextField(
+            controller: _buttonTextController,
+            label: 'Текст кнопки',
+            hint: 'Подробнее',
+            required: false,
+          ),
+          const SizedBox(height: 16),
+
+          // Ссылка партнёра
+          _buildTextField(
+            controller: _targetUrlController,
+            label: 'Ссылка партнёра',
+            hint: 'https://partner.example.com/offer',
+            required: false,
+          ),
+          const SizedBox(height: 16),
+
+          // Время показа
+          _buildTextField(
+            controller: _displayDurationController,
+            label: 'Время показа (секунды)',
+            hint: '30',
+            keyboardType: TextInputType.number,
+            required: false,
+          ),
+          const SizedBox(height: 20),
+
+          // Расположение
+          _buildPlacementSelector(),
+          const SizedBox(height: 24),
+
+          // Кнопка создать
+          GlassButton(
+            label: _isSubmitting
+                ? (_isEditing ? 'Сохранение...' : 'Создание...')
+                : (_isEditing ? 'Сохранить изменения' : 'Создать баннер'),
+            onTap: _isSubmitting ? () {} : _submit,
+          ),
+          const SizedBox(height: 16),
+
+          // Предпросмотр
+          OutlinedButton.icon(
+            onPressed: () => _showPreview(context),
+            icon: const Icon(Icons.preview_rounded),
+            label: const Text('Предпросмотр'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              side: const BorderSide(color: AppColors.primary),
             ),
-            const SizedBox(height: 16),
-
-            // Описание
-            _buildTextField(
-              controller: _descriptionController,
-              label: 'Описание',
-              hint: 'Скидка 50% на все премиум тарифы!',
-              maxLines: 3,
-              required: true,
-              minLength: 2,
-            ),
-            const SizedBox(height: 16),
-
-            // Загрузка изображения
-            _buildImagePicker(),
-            const SizedBox(height: 16),
-
-            // URL картинки (опционально)
-            _buildTextField(
-              controller: _imageUrlController,
-              label: 'URL картинки (если не загружаете файл)',
-              hint: 'https://example.com/banner.jpg',
-              required: false,
-            ),
-            const SizedBox(height: 16),
-
-            // Текст кнопки
-            _buildTextField(
-              controller: _buttonTextController,
-              label: 'Текст кнопки',
-              hint: 'Подробнее',
-              required: false,
-            ),
-            const SizedBox(height: 16),
-
-            // Ссылка партнёра
-            _buildTextField(
-              controller: _targetUrlController,
-              label: 'Ссылка партнёра',
-              hint: 'https://partner.example.com/offer',
-              required: false,
-            ),
-            const SizedBox(height: 16),
-
-            // Время показа
-            _buildTextField(
-              controller: _displayDurationController,
-              label: 'Время показа (секунды)',
-              hint: '30',
-              keyboardType: TextInputType.number,
-              required: false,
-            ),
-            const SizedBox(height: 20),
-
-            // Расположение
-            _buildPlacementSelector(),
-            const SizedBox(height: 24),
-
-            // Кнопка создать
-            GlassButton(
-              label: _isSubmitting
-                  ? (_isEditing ? 'Сохранение...' : 'Создание...')
-                  : (_isEditing ? 'Сохранить изменения' : 'Создать баннер'),
-              onTap: _isSubmitting ? () {} : _submit,
-            ),
-            const SizedBox(height: 16),
-
-            // Предпросмотр
-            OutlinedButton.icon(
-              onPressed: () => _showPreview(context),
-              icon: const Icon(Icons.preview_rounded),
-              label: const Text('Предпросмотр'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                side: const BorderSide(color: AppColors.primary),
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
+          ),
+          const SizedBox(height: 24),
+        ],
       ),
-      ),
+    ),
     );
   }
 

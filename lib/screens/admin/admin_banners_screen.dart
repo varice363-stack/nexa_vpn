@@ -7,7 +7,6 @@ import '../../providers/app_providers.dart';
 import '../../providers/banner_providers.dart';
 import '../../services/api/api_exception.dart';
 import '../../theme/app_colors.dart';
-import '../../widgets/common/admin_back_guard.dart';
 import '../../widgets/common/app_page.dart';
 import '../../widgets/common/glass_button.dart';
 import '../../widgets/common/glass_container.dart';
@@ -124,80 +123,77 @@ class _AdminBannersScreenState extends ConsumerState<AdminBannersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AdminBackGuard(
-      onEscape: () => context.go('/admin/dashboard'),
-      child: AppPage(
-        title: 'Баннеры',
-        subtitle: 'Все баннеры: показать, скрыть, удалить',
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: GlassButton(
-                    label: 'Создать баннер',
-                    icon: Icons.add_rounded,
-                    onTap: () => context.push('/admin/create-banner'),
-                  ),
+    return AppPage(
+      title: 'Баннеры',
+      subtitle: 'Все баннеры: показать, скрыть, удалить',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: GlassButton(
+                  label: 'Создать баннер',
+                  icon: Icons.add_rounded,
+                  onTap: () => context.push('/admin/create-banner'),
                 ),
-                const SizedBox(width: 10),
-                IconButton(
-                  onPressed: _loading ? null : _load,
-                  icon: const Icon(Icons.refresh_rounded),
-                  color: AppColors.textSecondary,
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            if (_loading)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 28),
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (_error != null)
-              GlassContainer(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Не удалось загрузить список: $_error',
-                        style: const TextStyle(color: AppColors.danger),
-                      ),
+              ),
+              const SizedBox(width: 10),
+              IconButton(
+                onPressed: _loading ? null : _load,
+                icon: const Icon(Icons.refresh_rounded),
+                color: AppColors.textSecondary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (_loading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 28),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_error != null)
+            GlassContainer(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Не удалось загрузить список: $_error',
+                      style: const TextStyle(color: AppColors.danger),
                     ),
-                    TextButton(
-                      onPressed: _load,
-                      child: const Text('Повторить'),
-                    ),
-                  ],
-                ),
-              )
-            else if (_banners.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 28),
-                child: Text(
-                  'Баннеров нет.',
-                  style: TextStyle(color: AppColors.textSecondary),
-                ),
-              )
-            else
-              for (final b in _banners) ...[
-                _BannerCard(
-                  banner: b,
-                  busy: _busyId == b.id,
-                  // id едет и в ссылке: если extra потеряется (перезапуск
-                  // процесса), экран всё равно откроет правку, а не создание.
-                  onEdit: () => context.push(
-                    '/admin/create-banner?id=${b.id}',
-                    extra: b,
                   ),
-                  onToggle: () => _toggle(b),
-                  onDelete: () => _delete(b),
+                  TextButton(
+                    onPressed: _load,
+                    child: const Text('Повторить'),
+                  ),
+                ],
+              ),
+            )
+          else if (_banners.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 28),
+              child: Text(
+                'Баннеров нет.',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            )
+          else
+            for (final b in _banners) ...[
+              _BannerCard(
+                banner: b,
+                busy: _busyId == b.id,
+                // id едет и в ссылке: если extra потеряется (перезапуск
+                // процесса), экран всё равно откроет правку, а не создание.
+                onEdit: () => context.push(
+                  '/admin/create-banner?id=${b.id}',
+                  extra: b,
                 ),
-                const SizedBox(height: 10),
-              ],
-          ],
-        ),
+                onToggle: () => _toggle(b),
+                onDelete: () => _delete(b),
+              ),
+              const SizedBox(height: 10),
+            ],
+        ],
       ),
     );
   }

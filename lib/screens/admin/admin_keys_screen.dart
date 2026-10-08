@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../widgets/common/admin_back_guard.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -109,57 +108,53 @@ class _AdminKeysScreenState extends ConsumerState<AdminKeysScreen> {
     // а не только в меню: попасть сюда по прямой ссылке нельзя.
     // Признак владельца — совпадение кода устройства с OWNER_CODE сборки.
     if (!ref.watch(adminUnlockedProvider)) {
-      return AdminBackGuard(
-        child: AppPage(
-        title: l10n.adminOwnerSection,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 40),
-          child: Text(
-            l10n.adminOwnerOnly,
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
+      return AppPage(
+      title: l10n.adminOwnerSection,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 40),
+        child: Text(
+          l10n.adminOwnerOnly,
+          style: const TextStyle(color: AppColors.textSecondary),
         ),
       ),
-      );
+    );
     }
 
-    return AdminBackGuard(
-      child: AppPage(
-      title: l10n.adminTitle,
-      subtitle: l10n.adminSubtitle,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _issueCard(context, l10n),
-          if (_justIssued != null) ...[
-            const SizedBox(height: 12),
-            _issuedCard(_justIssued!, context, l10n),
-          ],
-          const SizedBox(height: 22),
-          Row(
-            children: [
-              Text(
-                l10n.adminAllKeys,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const Spacer(),
-              IconButton(
-                onPressed: _refresh,
-                icon: const Icon(Icons.refresh_rounded, size: 20),
-                color: AppColors.textSecondary,
-                tooltip: l10n.adminRefresh,
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          _keysList(context, l10n),
+    return AppPage(
+    title: l10n.adminTitle,
+    subtitle: l10n.adminSubtitle,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _issueCard(context, l10n),
+        if (_justIssued != null) ...[
+          const SizedBox(height: 12),
+          _issuedCard(_justIssued!, context, l10n),
         ],
-      ),
-      ),
+        const SizedBox(height: 22),
+        Row(
+          children: [
+            Text(
+              l10n.adminAllKeys,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            IconButton(
+              onPressed: _refresh,
+              icon: const Icon(Icons.refresh_rounded, size: 20),
+              color: AppColors.textSecondary,
+              tooltip: l10n.adminRefresh,
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        _keysList(context, l10n),
+      ],
+    ),
     );
   }
 
