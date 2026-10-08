@@ -36,13 +36,15 @@ describe('AdminService.dashboard (форма ответа для панели)',
     const d = await service.dashboard();
 
     expect(Object.keys(d).sort()).toEqual(
-      ['connections', 'servers', 'trafficMb', 'users'].sort(),
+      ['connections', 'servers', 'trafficMb', 'trafficTracked', 'users'].sort(),
     );
     expect(d.users).toEqual({ total: 10, newToday: 2, activePremium: 4 });
     expect(d.servers).toEqual({ active: 1, disabled: 1 });
     expect(d.connections).toEqual({ online: 3 });
-    // Трафик в базе не собирается — отдаём честный ноль, панель подписывает «учёт не ведётся».
+    // Трафик в базе не собирается — отдаём честный ноль + флаг, по которому
+    // панель пишет «учёт не ведётся» вместо «за всё время».
     expect(d.trafficMb).toBe(0);
+    expect(d.trafficTracked).toBe(false);
   });
 
   it('«онлайн» считает только неотозванные устройства, виденные за 15 минут', async () => {

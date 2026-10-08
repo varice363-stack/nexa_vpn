@@ -49,6 +49,7 @@ export default function DashboardPage() {
   // Дефолты на случай неполного ответа: лучше прочерк, чем падение страницы.
   const online = data.connections?.online ?? 0;
   const trafficMb = data.trafficMb ?? null;
+  const trafficTracked = data.trafficTracked ?? false;
   const serversActive = data.servers?.active ?? 0;
   const serversDisabled = data.servers?.disabled ?? 0;
 
@@ -65,8 +66,12 @@ export default function DashboardPage() {
         />
         <StatCard
           label="Трафик"
-          value={trafficMb === null ? '—' : `${(trafficMb / 1024).toFixed(1)} ГБ`}
-          hint={trafficMb === null ? 'учёт не ведётся' : 'за всё время'}
+          value={
+            trafficTracked && trafficMb !== null
+              ? `${(trafficMb / 1024).toFixed(1)} ГБ`
+              : '—'
+          }
+          hint={trafficTracked ? 'за всё время' : 'учёт не ведётся'}
           accent="yellow"
         />
         <StatCard label="Premium пользователей" value={data.users.activePremium} accent="purple" />

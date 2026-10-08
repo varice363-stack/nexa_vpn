@@ -49,9 +49,11 @@ export class AdminService {
         activePremium,
       },
       connections: { online },
-      // Трафик ядра в базе не собирается (нет сборщика статистики xray),
-      // поэтому честный ноль, а в панели карточка подписана «учёт не ведётся».
+      // Трафик ядра в базе не собирается (нет сборщика статистики xray).
+      // trafficMb остаётся нулём, но флаг говорит панели правду: показывать
+      // прочерк и «учёт не ведётся», а не выдуманное «за всё время».
       trafficMb: 0,
+      trafficTracked: false,
       servers: { active: activeServers, disabled: disabledServers },
     };
   }

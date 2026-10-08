@@ -84,6 +84,8 @@ export interface DashboardData {
   /// («Application error» после входа в панель случался именно из-за этого).
   connections?: { online?: number };
   trafficMb?: number;
+  /// Собирается ли трафик вообще. false → панель показывает «—», а не 0 ГБ.
+  trafficTracked?: boolean;
   servers?: { active: number; disabled: number };
 }
 
