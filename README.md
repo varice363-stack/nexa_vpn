@@ -48,14 +48,39 @@ cd backend
 - База данных `morok_vpn` создана
 - Пользователь `morok` с паролем `morok`
 
-### Сборка APK (Windows PowerShell):
+### Сборка APK (терминал Android Studio, PowerShell):
 
 ```powershell
-# Debug версия (с админским доступом)
-.\build-apk.ps1
+# Релиз для раздачи людям (без админ-доступа в приложении)
+.\build.ps1
 
-# Release версия (без админского доступа)
-.\build-apk.ps1 -Release
+# Релиз со своим админ-доступом в приложении (только для себя!)
+.\build.ps1 -WithOwner -OwnerCode "MOROK-XXXX-XXXX-XXXX-XXXX"
+
+# Отладка на эмуляторе (API 10.0.2.2)
+.\build.ps1 -Debug
+```
+
+Скрипт сам делает `git pull`, `flutter clean`, `pub get`, сборку и печатает, какой
+файл ставить на телефон.
+
+**Про «три APK».** Релиз собирается с `--split-per-abi`, поэтому в
+`build\app\outputs\flutter-apk\` лежат три файла — по одному на архитектуру
+процессора (внутри каждого только своя копия движка Flutter, поэтому каждый
+весит примерно втрое меньше универсального):
+
+| Файл | Кому |
+|---|---|
+| `app-arm64-v8a-release.apk` | все обычные телефоны (2016+). **Этот отдавать людям** |
+| `app-armeabi-v7a-release.apk` | старые 32-битные устройства |
+| `app-x86_64-release.apk` | эмуляторы Android Studio и ChromeOS. Людям не нужен |
+
+Если нужен **один файл** на все устройства сразу (проще раздавать, но качается
+дольше — содержит все три архитектуры):
+
+```powershell
+flutter build apk --release --dart-define=API_BASE_URL=http://78.17.156.139:3000/app-api
+# → build\app\outputs\flutter-apk\app-release.apk
 ```
 
 **Подробные инструкции:** [RUN_BACKEND.md](RUN_BACKEND.md)
@@ -135,7 +160,7 @@ cd backend
 
 ### Для разработчиков
 - [Архитектура](docs/ARCHITECTURE.md) — описание структуры проекта
-- [Сборка APK](BUILD_APK.md) — инструкция по сборке
+- Сборка APK — см. раздел «Сборка APK» выше (`build.ps1`)
 - [Backend API](backend/README.md) — документация API
 - [База данных](backend/prisma/schema.prisma) — схема БД
 
