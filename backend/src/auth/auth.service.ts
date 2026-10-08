@@ -66,6 +66,39 @@ export class AuthService {
     return this.issueTokens(user);
   }
 
+  /**
+   * Смена пароля текущего пользователя (в панели — пароль владельца).
+   *
+   * Зачем в API, а не «руками в базе»: пароль админа ставился только сидом из
+   * ADMIN_PASSWORD, и сменить его без доступа к серверу было нельзя. Теперь
+   * владелец сам меняет его в разделе «Доступ к панели».
+   */
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ changed: true }> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('Account not found');
+    if (!user.passwordHash) {
+      // Аккаунт без пароля (redeem по коду) — пароля нет, и менять нечего.
+      throw new ForbiddenException('Account has no password');
+    }
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) throw new UnauthorizedException('Текущий пароль неверен');
+    if (currentPassword === newPassword) {
+      throw new ConflictException('Новый пароль совпадает с текущим');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+    });
+    return { changed: true };
+  }
+
   async me(user: SafeUser): Promise<SafeUser> {
     const fresh = await this.prisma.user.findUnique({
       where: { id: user.id },

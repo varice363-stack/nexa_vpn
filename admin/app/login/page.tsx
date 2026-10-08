@@ -1,7 +1,7 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { FormEvent, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { api, setToken } from '@/lib/api';
 
@@ -11,6 +11,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Пришли сюда сами (истёк токен) — объясняем причину, а не молчим.
+  // window.location вместо useSearchParams: тот требует Suspense-обёртки и
+  // валит статическую генерацию страницы входа при сборке.
+  useEffect(() => {
+    if (window.location.search.includes('expired=1')) {
+      setError('Сессия панели истекла. Войдите заново.');
+    }
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();

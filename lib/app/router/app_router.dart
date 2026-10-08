@@ -9,6 +9,7 @@ import '../../screens/about/about_screen.dart';
 import '../../screens/faq/faq_screen.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/access/key_entry_screen.dart';
+import '../../models/promo_banner.dart';
 import '../../screens/admin/admin_banners_screen.dart';
 import '../../screens/admin/admin_create_banner_screen.dart';
 import '../../screens/admin/admin_dashboard_screen.dart';
@@ -107,7 +108,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/admin/create-banner',
-        builder: (context, state) => const AdminCreateBannerScreen(),
+        builder: (context, state) => AdminCreateBannerScreen(
+          initial: state.extra is PromoBanner ? state.extra as PromoBanner : null,
+        ),
       ),
       GoRoute(
         path: '/admin/keys',

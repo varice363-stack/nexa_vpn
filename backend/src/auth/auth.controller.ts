@@ -1,6 +1,13 @@
 import { timingSafeEqual } from 'crypto';
 
-import { Body, Controller, Get, Post, UnauthorizedException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser, SafeUser } from '../common/decorators/current-user.decorator';
@@ -8,6 +15,7 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AutoRegisterDto } from './dto/auto-register.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -35,6 +43,19 @@ export class AuthController {
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.auth.login(dto);
+  }
+
+  /** Смена своего пароля (JWT обязателен, текущий пароль подтверждает личность). */
+  @Patch('password')
+  changePassword(
+    @Body() dto: ChangePasswordDto,
+    @CurrentUser() user: SafeUser,
+  ) {
+    return this.auth.changePassword(
+      user.id,
+      dto.currentPassword,
+      dto.newPassword,
+    );
   }
 
   @Get('me')

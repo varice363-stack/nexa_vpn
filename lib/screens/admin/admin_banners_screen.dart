@@ -180,6 +180,10 @@ class _AdminBannersScreenState extends ConsumerState<AdminBannersScreen> {
                 _BannerCard(
                   banner: b,
                   busy: _busyId == b.id,
+                  onEdit: () => context.push(
+                    '/admin/create-banner',
+                    extra: b,
+                  ),
                   onToggle: () => _toggle(b),
                   onDelete: () => _delete(b),
                 ),
@@ -196,12 +200,14 @@ class _BannerCard extends StatelessWidget {
   const _BannerCard({
     required this.banner,
     required this.busy,
+    required this.onEdit,
     required this.onToggle,
     required this.onDelete,
   });
 
   final PromoBanner banner;
   final bool busy;
+  final VoidCallback onEdit;
   final VoidCallback onToggle;
   final VoidCallback onDelete;
 
@@ -259,8 +265,19 @@ class _BannerCard extends StatelessWidget {
             style: const TextStyle(fontSize: 11.5, color: AppColors.textTertiary),
           ),
           const SizedBox(height: 10),
+          // Правка — первая кнопка: чаще всего баннер надо поправить, а не
+          // снести. Раньше правки не было вовсе, приходилось удалять и
+          // создавать заново (и терять статистику показов).
           Row(
             children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: busy ? null : onEdit,
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: const Text('Изменить'),
+                ),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: busy ? null : onToggle,

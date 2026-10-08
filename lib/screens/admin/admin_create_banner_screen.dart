@@ -16,8 +16,15 @@ import '../../widgets/common/glass_button.dart';
 import '../../widgets/common/glass_container.dart';
 
 /// Экран создания баннера с нормальной загрузкой изображений.
+///
+/// Если передан [initial] — это РЕДАКТИРОВАНИЕ: поля заранее заполнены, а
+/// сохранение уходит в PATCH /banners/:id. До этого правка была невозможна:
+/// оставалось удалить баннер и создать заново, теряя статистику показов.
 class AdminCreateBannerScreen extends ConsumerStatefulWidget {
-  const AdminCreateBannerScreen({super.key});
+  const AdminCreateBannerScreen({super.key, this.initial});
+
+  /// Баннер, который редактируем; null = создаём новый.
+  final PromoBanner? initial;
 
   @override
   ConsumerState<AdminCreateBannerScreen> createState() =>
@@ -36,6 +43,8 @@ class _AdminCreateBannerScreenState
 
   BannerPlacement _placement = BannerPlacement.home;
   bool _isSubmitting = false;
+
+  bool get _isEditing => widget.initial != null;
   File? _selectedImage;
   String? _imagePreviewPath;
   final ImagePicker _picker = ImagePicker();
@@ -98,6 +107,21 @@ class _AdminCreateBannerScreenState
   }
 
   @override
+  void initState() {
+    super.initState();
+    final b = widget.initial;
+    if (b != null) {
+      _titleController.text = b.title;
+      _descriptionController.text = b.description;
+      _imageUrlController.text = b.imageUrl ?? '';
+      _buttonTextController.text = b.buttonText ?? '';
+      _targetUrlController.text = b.targetUrl ?? '';
+      _displayDurationController.text = '${b.displayDuration}';
+      _placement = b.placement;
+    }
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
@@ -133,21 +157,33 @@ class _AdminCreateBannerScreenState
         : null;
 
     try {
-      // Сначала создаём баннер
-      final banner = await ref.read(bannerRepositoryProvider).createBanner(
-            title: title,
-            description: description,
-            imageUrl: imageUrl,
-            buttonText: buttonText,
-            targetUrl: targetUrl,
-            placement: _placement,
-            displayDuration: displayDuration,
-          );
+      final repo = ref.read(bannerRepositoryProvider);
+      // Создаём ИЛИ обновляем (редактирование) — картинка грузится после обоих.
+      final banner = _isEditing
+          ? await repo.updateBanner(
+              bannerId: widget.initial!.id,
+              title: title,
+              description: description,
+              imageUrl: imageUrl,
+              buttonText: buttonText,
+              targetUrl: targetUrl,
+              placement: _placement,
+              displayDuration: displayDuration,
+            )
+          : await repo.createBanner(
+              title: title,
+              description: description,
+              imageUrl: imageUrl,
+              buttonText: buttonText,
+              targetUrl: targetUrl,
+              placement: _placement,
+              displayDuration: displayDuration,
+            );
 
-      // Потом загружаем картинку если выбрана
+      // Потом загружаем картинку если выбрана (заменяет прежнюю на сервере)
       if (_selectedImage != null) {
         try {
-          await ref.read(bannerRepositoryProvider).uploadBannerImage(
+          await repo.uploadBannerImage(
                 bannerId: banner.id,
                 imageFile: _selectedImage!,
               );
@@ -155,7 +191,11 @@ class _AdminCreateBannerScreenState
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('⚠️ Баннер создан, но изображение не загрузилось: $e'),
+                content: Text(
+                  _isEditing
+                      ? '⚠️ Изменения сохранены, но картинка не загрузилась: $e'
+                      : '⚠️ Баннер создан, но изображение не загрузилось: $e',
+                ),
                 backgroundColor: AppColors.primary,
                 duration: const Duration(seconds: 4),
               ),
@@ -167,19 +207,29 @@ class _AdminCreateBannerScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('✅ Баннер «${banner.title}» создан!'),
+          content: Text(
+            _isEditing
+                ? '✅ Баннер «${banner.title}» сохранён!'
+                : '✅ Баннер «${banner.title}» создан!',
+          ),
           backgroundColor: AppColors.success,
         ),
       );
       Navigator.of(context).pop();
     } on ApiException catch (e) {
-      if (e.isNetworkError || e.statusCode == null) {
+      // При редактировании в офлайне НЕ подсовываем локальную копию: это был бы
+      // дубликат баннера, которого нет на сервере.
+      if (!_isEditing && (e.isNetworkError || e.statusCode == null)) {
         await _saveLocally(title, description, imageUrl, buttonText, targetUrl, displayDuration);
       } else {
         _showError(_buildErrorMessage(e));
       }
     } catch (e) {
-      await _saveLocally(title, description, imageUrl, buttonText, targetUrl, displayDuration);
+      if (_isEditing) {
+        _showError('Не удалось сохранить: $e');
+      } else {
+        await _saveLocally(title, description, imageUrl, buttonText, targetUrl, displayDuration);
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -254,8 +304,10 @@ class _AdminCreateBannerScreenState
   Widget build(BuildContext context) {
     return AdminBackGuard(
       child: AppPage(
-      title: 'Создать баннер',
-      subtitle: 'Рекламный баннер для партнёрской программы',
+      title: _isEditing ? 'Изменить баннер' : 'Создать баннер',
+      subtitle: _isEditing
+          ? 'Правка без удаления: статистика показов сохраняется'
+          : 'Рекламный баннер для партнёрской программы',
       child: Form(
         key: _formKey,
         child: Column(
@@ -351,7 +403,9 @@ class _AdminCreateBannerScreenState
 
             // Кнопка создать
             GlassButton(
-              label: _isSubmitting ? 'Создание...' : 'Создать баннер',
+              label: _isSubmitting
+                  ? (_isEditing ? 'Сохранение...' : 'Создание...')
+                  : (_isEditing ? 'Сохранить изменения' : 'Создать баннер'),
               onTap: _isSubmitting ? () {} : _submit,
             ),
             const SizedBox(height: 16),

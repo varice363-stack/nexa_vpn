@@ -7,6 +7,7 @@ import { clearToken } from '@/lib/api';
 
 const NAV = [
   { href: '/dashboard', label: 'Панель управления', icon: '◈' },
+  { href: '/access', label: 'Доступ к панели', icon: '🔒' },
   { href: '/users', label: 'Пользователи', icon: '👥' },
   { href: '/servers', label: 'Серверы', icon: '🖥' },
   { href: '/banners', label: 'Баннеры', icon: '🪧' },

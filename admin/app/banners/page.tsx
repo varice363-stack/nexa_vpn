@@ -34,6 +34,8 @@ export default function BannersPage() {
   const [stats, setStats] = useState<BannerStats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  // null = создаём новый, иначе — правим существующий (PATCH /banners/:id).
+  const [editing, setEditing] = useState<Banner | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
 
   const load = useCallback(async () => {
@@ -99,7 +101,36 @@ export default function BannersPage() {
     load();
   }
 
-  async function createBanner(e: FormEvent) {
+  function openCreate() {
+    setEditing(null);
+    setForm(EMPTY_FORM);
+    setModalOpen(true);
+  }
+
+  /** Открывает ту же форму с уже заполненными полями — правка вместо
+   *  «удалить и создать заново» (при удалении терялась статистика показов). */
+  function openEdit(b: Banner) {
+    setEditing(b);
+    setForm({
+      title: b.title,
+      description: b.description,
+      buttonText: b.buttonText ?? '',
+      targetUrl: b.targetUrl ?? '',
+      referralCode: b.referralCode ?? '',
+      placement: b.placement,
+      displayDuration: String(b.displayDuration ?? 30),
+      sortOrder: String(b.sortOrder ?? 0),
+    });
+    setModalOpen(true);
+  }
+
+  function closeModal() {
+    setModalOpen(false);
+    setEditing(null);
+    setForm(EMPTY_FORM);
+  }
+
+  async function submitBanner(e: FormEvent) {
     e.preventDefault();
     try {
       // Only send optional fields when filled — the API validates
@@ -115,12 +146,33 @@ export default function BannersPage() {
       if (form.targetUrl.trim()) payload.targetUrl = form.targetUrl.trim();
       if (form.referralCode.trim()) payload.referralCode = form.referralCode.trim();
 
+      if (editing) {
+        // В правке пустое поле означает «стереть»: шлём null (сервер принимает
+        // null для необязательных полей). Иначе очистить ошибочную ссылку было
+        // бы нельзя — «если что-то ввёл не так», это и нужно.
+        if (!form.buttonText.trim()) payload.buttonText = null;
+        if (!form.targetUrl.trim()) payload.targetUrl = null;
+        if (!form.referralCode.trim()) payload.referralCode = null;
+        await api(`/banners/${editing.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+        });
+        closeModal();
+        load();
+        return;
+      }
+
       await api('/banners', { method: 'POST', body: JSON.stringify(payload) });
-      setModalOpen(false);
-      setForm(EMPTY_FORM);
+      closeModal();
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось создать баннер');
+      setError(
+        err instanceof Error
+          ? err.message
+          : editing
+            ? 'Не удалось сохранить изменения'
+            : 'Не удалось создать баннер',
+      );
     }
   }
 
@@ -129,7 +181,7 @@ export default function BannersPage() {
       <PageHeader
         title="Баннеры"
         subtitle="Промо-слоты на главном экране и Premium"
-        action={<button onClick={() => setModalOpen(true)} className="btn-primary">+ Создать баннер</button>}
+        action={<button onClick={openCreate} className="btn-primary">+ Создать баннер</button>}
       />
 
       {error ? <div className="text-sm text-rose-400 mb-3">{error}</div> : null}
@@ -227,6 +279,12 @@ export default function BannersPage() {
               {b.active ? 'Отключить' : 'Включить'}
             </button>
             <button
+              onClick={() => openEdit(b)}
+              className="px-2.5 py-1 rounded-md text-xs font-medium border border-accent/40 text-accent"
+            >
+              Изменить
+            </button>
+            <button
               onClick={() => remove(b)}
               className="px-2.5 py-1 rounded-md text-xs font-medium border border-rose-400/40 text-rose-300"
             >
@@ -240,8 +298,11 @@ export default function BannersPage() {
       </div>
 
       {modalOpen ? (
-        <Modal title="Создать баннер" onClose={() => setModalOpen(false)}>
-          <form onSubmit={createBanner} className="space-y-3">
+        <Modal
+          title={editing ? `Изменить: ${editing.title}` : 'Создать баннер'}
+          onClose={closeModal}
+        >
+          <form onSubmit={submitBanner} className="space-y-3">
             <input required placeholder="Заголовок" value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })} className="input-base w-full" />
             <textarea required placeholder="Описание" rows={3} value={form.description}
@@ -292,16 +353,15 @@ export default function BannersPage() {
                   <option key={p.value} value={p.value}>{p.label}</option>
                 ))}
               </select>
-              <input
-                type="number"
-                min={0}
-                placeholder="Порядок сортировки"
-                value={form.sortOrder}
-                onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
-                className="input-base w-full"
-              />
             </div>
-            <button type="submit" className="btn-primary w-full">Создать баннер</button>
+            <button type="submit" className="btn-primary w-full">
+              {editing ? 'Сохранить изменения' : 'Создать баннер'}
+            </button>
+            {editing ? (
+              <p className="text-xs text-faint">
+                Показы и клики сохраняются: это правка той же записи, а не новая.
+              </p>
+            ) : null}
           </form>
         </Modal>
       ) : null}

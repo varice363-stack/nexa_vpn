@@ -113,6 +113,36 @@ class BannerRepositoryImpl implements BannerRepository {
       _api.post('/banners/$bannerId/deactivate');
 
   @override
+  Future<PromoBanner> updateBanner({
+    required String bannerId,
+    String? title,
+    String? description,
+    String? imageUrl,
+    String? buttonText,
+    String? targetUrl,
+    BannerPlacement? placement,
+    int? displayDuration,
+  }) async {
+    // В PATCH кладём только то, что реально меняем: иначе пустой строкой
+    // можно случайно стереть поле (бэкенд валидирует каждое присланное).
+    final body = <String, Object?>{
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (buttonText != null) 'buttonText': buttonText,
+      if (targetUrl != null) 'targetUrl': targetUrl,
+      if (placement != null) 'placement': placement.wireValue,
+      if (displayDuration != null) 'displayDuration': displayDuration,
+      if (imageUrl != null) 'imageUrl': imageUrl,
+    };
+    final data = await _api.patch('/banners/$bannerId', body: body);
+    if (data is! Map) {
+      throw const ApiException('Unexpected banner response',
+          code: 'BAD_RESPONSE');
+    }
+    return PromoBanner.fromJson(Map<String, Object?>.from(data));
+  }
+
+  @override
   Future<void> deleteBanner(String bannerId) =>
       _api.delete('/banners/$bannerId');
 

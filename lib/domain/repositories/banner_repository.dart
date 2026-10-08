@@ -34,6 +34,20 @@ abstract class BannerRepository {
   /// POST /banners/:id/deactivate — deactivate a banner (admin only).
   Future<void> deactivateBanner(String bannerId);
 
+  /// PATCH /banners/:id — изменить существующий баннер (admin only).
+  /// Передаются только изменяемые поля; картинка меняется через
+  /// [uploadBannerImage]. Статистика показов при этом сохраняется.
+  Future<PromoBanner> updateBanner({
+    required String bannerId,
+    String? title,
+    String? description,
+    String? imageUrl,
+    String? buttonText,
+    String? targetUrl,
+    BannerPlacement? placement,
+    int? displayDuration,
+  });
+
   /// DELETE /banners/:id — удалить баннер навсегда (admin only).
   Future<void> deleteBanner(String bannerId);
 

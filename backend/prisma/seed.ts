@@ -32,15 +32,22 @@ async function main() {
     data: { isActive: false },
   });
 
-  // Админ панели (Next.js /login) — email + пароль. Пароль берётся из
-  // ADMIN_PASSWORD: сменить пароль = поменять значение в docker-compose.yml
-  // и выполнить `docker compose exec backend npm run prisma:seed`.
-  // Дефолт admin1234 оставлен только для локальной разработки.
+  // Админ панели (Next.js /login) — email + пароль.
+  //
+  // Пароль больше НЕ перезаписывается при каждом сиде: владелец меняет его
+  // сам в панели (PATCH /auth/password), и повторный `prisma:seed` молча
+  // возвращал бы старый — «сменил пароль, а он опять прежний». Сид задаёт
+  // пароль только при создании админа; принудительный сброс — через
+  // ADMIN_PASSWORD_FORCE=true (аварийный путь, если пароль забыт).
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin1234';
-  const adminHash = await bcrypt.hash(adminPassword, 10);
+  const adminHash = await bcrypt.hash(adminPassword, 12);
+  const forcePassword = process.env.ADMIN_PASSWORD_FORCE === 'true';
   await prisma.user.upsert({
     where: { email: 'admin@morokvpn.app' },
-    update: { passwordHash: adminHash, role: Role.ADMIN },
+    update: {
+      role: Role.ADMIN,
+      ...(forcePassword ? { passwordHash: adminHash } : {}),
+    },
     create: {
       email: 'admin@morokvpn.app',
       passwordHash: adminHash,

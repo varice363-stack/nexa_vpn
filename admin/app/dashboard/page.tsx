@@ -24,7 +24,10 @@ export default function DashboardPage() {
       .then(setData)
       .catch((e) => {
         console.error('Dashboard error:', e);
-        setError(`Не удалось загрузить панель управления: ${e.message}. Проверьте что backend запущен и вы администратор.`);
+        setError(
+          `Не удалось загрузить панель управления: ${e.message}. ` +
+            `Если это повторяется — выйдите и войдите заново (выход внизу меню).`,
+        );
       });
     api<VpnServer[]>('/servers/all')
       .then(setServers)
@@ -37,7 +40,7 @@ export default function DashboardPage() {
   if (error) {
     return (
       <div className="glass-card text-rose-300">
-        Не удалось загрузить панель управления: {error}. Убедитесь что backend запущен.
+        Не удалось загрузить панель управления: {error}
       </div>
     );
   }

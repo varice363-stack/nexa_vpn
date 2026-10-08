@@ -48,6 +48,20 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
 
   const res = await fetch(`${API_URL}${path}`, { ...options, headers });
 
+  // Истёкший/чужой токен = «выйдите и войдите заново», а не «включите бэкенд».
+  // Раньше 401 от любого запроса оставлял панель на экране с текстом
+  // «Проверьте что backend запущен» — владелец шёл перезапускать контейнеры,
+  // хотя бэкенд работал, а проблема была в старом токене в localStorage.
+  // Здесь токен стирается и происходит возврат на /login с пояснением.
+  if (res.status === 401 && typeof window !== 'undefined') {
+    clearToken();
+    const onLogin = window.location.pathname.startsWith('/login');
+    if (!onLogin) {
+      window.location.href = '/login?expired=1';
+    }
+    throw new ApiError('Сессия истекла. Войдите заново.', 401);
+  }
+
   if (!res.ok) {
     let message = `HTTP ${res.status}`;
     try {
