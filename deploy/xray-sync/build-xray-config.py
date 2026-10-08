@@ -84,22 +84,22 @@ def build():
         },
         "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"]},
     }
-    # Локальный API для статистики (127.0.0.1:10085). Нужен, чтобы знать
-    # реальный трафик каждого ключа: без него «лимит трафика» в панели был бы
-    # цифрой, которая ничего не ограничивает. Слушает только петлю — снаружи
-    # недоступен, авторизации у него нет и не требуется.
-    api_inbound = {
-        "listen": "127.0.0.1",
-        "port": int(k.get("apiPort") or 10085),
-        "protocol": "dokodemo-door",
-        "tag": "api",
-        "settings": {"address": "127.0.0.1"},
-    }
+    # Локальный API для статистики. Нужен, чтобы знать реальный трафик каждого
+    # ключа: без него «лимит трафика» в панели был бы цифрой, которая ничего не
+    # ограничивает. Слушает только петлю — снаружи недоступен.
+    #
+    # ВАЖНО: именно `api.listen`, а НЕ отдельный dokodemo-door инбаунд с
+    # tag: api. В Xray 25.x прежняя схема молча не работает: подключения к
+    # такому инбаунду уходят в DIRECT и gRPC не отвечает
+    # («failed to dial 127.0.0.1:10085»). Проверено на копии ядра 25.9.11:
+    # с api.listen запрос к StatsService возвращает данные, с dokodemo-инбаундом
+    # (без api.listen) — не отвечает вообще.
+    api_listen = f"127.0.0.1:{int(k.get('apiPort') or 10085)}"
     return {
         "log": {"loglevel": "warning"},  # access-лог не ведём: см. docs/RISK_ASSESSMENT_RF.md
-        "api": {"tag": "api", "services": ["StatsService"]},
+        "api": {"tag": "api", "listen": api_listen, "services": ["StatsService"]},
         "stats": {},
-        "inbounds": [inbound, api_inbound],
+        "inbounds": [inbound],
         "outbounds": [{"protocol": "freedom", "tag": "DIRECT"}, {"protocol": "blackhole", "tag": "BLOCK"}],
         "policy": {
             "levels": {
