@@ -35,4 +35,14 @@ export class IssueCodeDto {
   @IsString()
   @Length(2, 20)
   protocol?: string;
+
+  /**
+   * Необязательный лимит трафика в мегабайтах. Считается по реальной
+   * статистике ядра: при превышении ключ становится EXPIRED и синхронизация
+   * убирает его из ядра. Пусто/0 = без лимита.
+   */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  trafficLimitMb?: number;
 }

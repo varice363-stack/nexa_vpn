@@ -1,0 +1,11 @@
+[Unit]
+Description=MOROK VPN: раз в минуту собирать трафик ключей из ядра
+
+[Timer]
+OnBootSec=90
+OnUnitActiveSec=60
+AccuracySec=5
+Unit=morok-xray-stats.service
+
+[Install]
+WantedBy=timers.target

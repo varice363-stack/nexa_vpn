@@ -3,15 +3,19 @@
 import { useEffect, useState } from 'react';
 
 import Badge from '@/components/Badge';
+import KeysManager from '@/components/KeysManager';
 import PageHeader from '@/components/PageHeader';
 import StatCard from '@/components/StatCard';
 import { api, getToken } from '@/lib/api';
-import { DashboardData, VpnServer } from '@/lib/types';
+import { AccessKeyRow, DashboardData, VpnServer } from '@/lib/types';
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [servers, setServers] = useState<VpnServer[]>([]);
   const [error, setError] = useState<string | null>(null);
+  // Сводка по ключам для карточек: показываем то, чем владелец реально
+  // управляет, а не абстрактные числа.
+  const [keys, setKeys] = useState<AccessKeyRow[]>([]);
 
   useEffect(() => {
     const token = getToken();
@@ -29,6 +33,9 @@ export default function DashboardPage() {
             `Если это повторяется — выйдите и войдите заново (выход внизу меню).`,
         );
       });
+    api<AccessKeyRow[]>('/provisioning/all')
+      .then(setKeys)
+      .catch(() => setKeys([]));
     api<VpnServer[]>('/servers/all')
       .then(setServers)
       .catch((e) => {
@@ -76,6 +83,39 @@ export default function DashboardPage() {
         />
         <StatCard label="Premium пользователей" value={data.users.activePremium} accent="purple" />
       </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard
+          label="Активных ключей"
+          value={keys.filter((k) => k.status === 'ACTIVE').length}
+          hint={`всего ${keys.length}`}
+          accent="green"
+        />
+        <StatCard
+          label="Скоро истекают"
+          value={keys.filter((k) => k.status === 'ACTIVE' && k.daysLeft !== null && k.daysLeft <= 7).length}
+          hint="в течение 7 дней"
+          accent="yellow"
+        />
+        <StatCard
+          label="Отозванных"
+          value={keys.filter((k) => k.status === 'REVOKED').length}
+          hint="можно вернуть продлением"
+          accent="purple"
+        />
+        <StatCard
+          label="С лимитом трафика"
+          value={keys.filter((k) => k.trafficLimitMb).length}
+          hint="остальные — без ограничения"
+          accent="blue"
+        />
+      </div>
+
+      {/* Ключи прямо здесь: выдать, продлить, изменить, удалить — без переходов */}
+      <h2 className="font-semibold text-sm text-faint uppercase tracking-wider mb-3">
+        Ключи: выдать и управлять
+      </h2>
+      <KeysManager compact />
 
       <h2 className="font-semibold text-sm text-faint uppercase tracking-wider mb-3">
         Статус серверов ({serversActive} активных · {serversDisabled} отключено)

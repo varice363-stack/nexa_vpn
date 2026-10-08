@@ -43,7 +43,13 @@ function serviceAt(
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { XrayClientSyncService } = require('./xray-client-sync.service');
   const prisma = prismaWith(keys, servers);
-  return { svc: new XrayClientSyncService(prisma as never), prisma };
+  return {
+    svc: new XrayClientSyncService(
+      prisma as never,
+      { usageByKeyPrefix: async () => null } as never,
+    ),
+    prisma,
+  };
 }
 
 describe('XrayClientSyncService.desiredClients', () => {
@@ -147,3 +153,69 @@ describe('XrayClientSyncService.sync', () => {
     expect(lag).toMatchObject({ desired: 1, published: 1, nodeClients: 0, inSync: false });
   });
 });
+
+/**
+ * Лимит трафика — не цифра в панели, а реальное отключение.
+ *
+ * Ключ, выбравший лимит, переводится в EXPIRED; на следующем шаге та же
+ * синхронизация считает «кому можно» и убирает его из ядра. Эти тесты
+ * проверяют именно переход статуса, а не только арифметику.
+ */
+describe('XrayClientSyncService.enforceTrafficLimits', () => {
+  function make(usage: Map<string, number> | null, keys: any[]) {
+    const prisma = {
+      accessKey: {
+        findMany: jest.fn(async () => keys),
+        update: jest.fn(async ({ where, data }: any) => ({ id: where.id, ...data })),
+      },
+    };
+    const svc = new XrayClientSyncService(
+      prisma as never,
+      { usageByKeyPrefix: async () => usage } as never,
+    );
+    return { svc, prisma };
+  }
+
+  it('превышенный лимит → ключ становится EXPIRED', async () => {
+    const key = { id: 'abcdef1234567890', name: 'Иван', trafficLimitMb: 100 };
+    const { svc, prisma } = make(new Map([['abcdef12', 200 * 1024 * 1024]]), [key]);
+
+    const res = await svc.enforceTrafficLimits();
+
+    expect(res.expired).toEqual([key.id]);
+    expect(prisma.accessKey.update).toHaveBeenCalledWith({
+      where: { id: key.id },
+      data: { status: 'EXPIRED' },
+    });
+  });
+
+  it('трафик ниже лимита → статус не трогаем', async () => {
+    const key = { id: 'abcdef1234567890', name: 'Иван', trafficLimitMb: 100 };
+    const { svc, prisma } = make(new Map([['abcdef12', 50 * 1024 * 1024]]), [key]);
+
+    const res = await svc.enforceTrafficLimits();
+
+    expect(res.expired).toEqual([]);
+    expect(prisma.accessKey.update).not.toHaveBeenCalled();
+  });
+
+  it('нет сборщика статистики → ничего не выключаем (и не врём цифрами)', async () => {
+    const key = { id: 'abcdef1234567890', name: 'Иван', trafficLimitMb: 1 };
+    const { svc, prisma } = make(null, [key]);
+
+    const res = await svc.enforceTrafficLimits();
+
+    expect(res.expired).toEqual([]);
+    expect(prisma.accessKey.update).not.toHaveBeenCalled();
+  });
+
+  it('лимит снят (null в БД) → в выборку не попадает и не отключается', async () => {
+    const { svc, prisma } = make(new Map([['abcdef12', 10 ** 12]]), []);
+    await svc.enforceTrafficLimits();
+    // Фильтр по trafficLimitMb not null живёт в запросе: проверяем его наличие.
+    const where = (prisma.accessKey.findMany as jest.Mock).mock.calls[0][0].where;
+    expect(where.trafficLimitMb).toEqual({ not: null });
+    expect(where.status).toBe('ACTIVE');
+  });
+});
+

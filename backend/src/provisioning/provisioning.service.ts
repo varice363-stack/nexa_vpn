@@ -7,6 +7,7 @@ import { XrayClientSyncService } from './xray-client-sync.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { CreateKeyDto } from './dto/create-key.dto';
 import { VlessConfigService } from './vless-config.service';
+import { XrayStatsService } from './xray-stats.service';
 import { toXrayIngressConfig } from './xray-ingress.config';
 
 /**
@@ -30,6 +31,7 @@ export class ProvisioningService {
     private readonly subscriptions: SubscriptionsService,
     private readonly vless: VlessConfigService,
     private readonly xraySync: XrayClientSyncService,
+    private readonly stats: XrayStatsService,
   ) {}
 
   async list(user: SafeUser) {
@@ -146,7 +148,82 @@ export class ProvisioningService {
     return { revoked: true, id };
   }
 
-  /** Admin: all keys with user emails + assigned server (admin panel). */
+  /**
+   * Admin: изменить ключ — имя, срок, лимит трафика, статус.
+   *
+   * Живой случай, ради которого это появилось: «клиент оплатил ещё месяц» и
+   * «выдать тот же ключ, но с лимитом 50 ГБ». Раньше поменять срок можно было
+   * только в базе, а лимит трафика вообще не существовал.
+   *
+   * Продление снимает метку EXPIRED/REVOKED: иначе «продлить» не возвращало бы
+   * доступ, и человек снова упирался бы в отказ ядра.
+   */
+  async updateAny(
+    id: string,
+    dto: {
+      name?: string;
+      expiresAt?: string | null;
+      trafficLimitMb?: number | null;
+      status?: string;
+    },
+  ) {
+    const key = await this.prisma.accessKey.findUnique({ where: { id } });
+    if (!key) throw new NotFoundException('Key not found');
+
+    const data: {
+      name?: string;
+      expiresAt?: Date | null;
+      trafficLimitMb?: number | null;
+      status?: string;
+    } = {};
+
+    if (dto.name !== undefined) data.name = dto.name.trim() || key.name;
+    if (dto.trafficLimitMb !== undefined) {
+      data.trafficLimitMb =
+        dto.trafficLimitMb === null || dto.trafficLimitMb <= 0
+          ? null
+          : Math.round(dto.trafficLimitMb);
+    }
+    if (dto.expiresAt !== undefined) {
+      data.expiresAt = dto.expiresAt === null ? null : new Date(dto.expiresAt);
+      if (data.expiresAt && Number.isNaN(data.expiresAt.getTime())) {
+        throw new BadRequestException('expiresAt: ожидается дата или null');
+      }
+    }
+    if (dto.status !== undefined) {
+      const allowed = ['ACTIVE', 'REVOKED', 'EXPIRED'];
+      if (!allowed.includes(dto.status)) {
+        throw new BadRequestException('status: ACTIVE | REVOKED | EXPIRED');
+      }
+      data.status = dto.status;
+    }
+
+    // Правка срока/лимита возвращает ключ в строй, если он был отключён.
+    const touchStatus = dto.expiresAt !== undefined || dto.trafficLimitMb !== undefined;
+    if (touchStatus && dto.status === undefined && key.status !== 'ACTIVE') {
+      const stillExpired =
+        data.expiresAt instanceof Date && data.expiresAt.getTime() <= Date.now();
+      data.status = stillExpired ? 'EXPIRED' : 'ACTIVE';
+    }
+
+    return this.prisma.accessKey.update({ where: { id }, data });
+  }
+
+  /**
+   * Admin: удалить ключ навсегда.
+   *
+   * Отличие от отзыва: отозванный ключ (строка с кодом и историей) остаётся,
+   * а тут запись исчезает — «удаляю черновик/ошибочный код». Синхронизация
+   * ядра вызывается контроллером, как и у отзыва.
+   */
+  async deleteAny(id: string) {
+    const key = await this.prisma.accessKey.findUnique({ where: { id } });
+    if (!key) throw new NotFoundException('Key not found');
+    await this.prisma.accessKey.delete({ where: { id } });
+    return { deleted: true, id };
+  }
+
+  /** Admin: all keys with user emails + assigned server (admin panel). */  /** Admin: all keys with user emails + assigned server (admin panel). */
   async allKeys() {
     // Либо select, либо include — Prisma не разрешает смешивать, поэтому
     // связи перечислены внутри select. `code` отдаём намеренно: без него
@@ -172,6 +249,7 @@ export class ProvisioningService {
         expiresAt: true,
         lastUsedAt: true,
         activatedAt: true,
+        trafficLimitMb: true,
         user: { select: { id: true, email: true } },
         server: {
           select: {
@@ -188,10 +266,25 @@ export class ProvisioningService {
     // published: UUID ключа реально лежит в файле, из которого узел собирает
     // ядро. null = файла нет и судить не о чем (dev, другой сервер).
     const published = await this.xraySync.publishedKeyIds();
-    return rows.map((k) => ({
-      ...k,
-      published: published.size === 0 ? null : published.has(k.id.slice(0, 8)),
-    }));
+    // Трафик: реальные байты из ядра (файл сборщика). stats === null означает
+    // «учёт не собирается» — панель обязана показать прочерк, а не 0 МБ.
+    const stats = await this.stats.usageByKeyPrefix();
+    return rows.map((k) => {
+      const usedBytes = stats ? stats.get(k.id.slice(0, 8)) ?? 0 : null;
+      return {
+        ...k,
+        published: published.size === 0 ? null : published.has(k.id.slice(0, 8)),
+        trafficUsedMb: usedBytes === null ? null : Math.round(usedBytes / 1048576),
+        // Сколько дней осталось — считаем на сервере, чтобы панель и приложение
+        // не расходились в арифметике и часовых поясах.
+        daysLeft: k.expiresAt
+          ? Math.max(
+              0,
+              Math.ceil((k.expiresAt.getTime() - Date.now()) / 86_400_000),
+            )
+          : null,
+      };
+    });
   }
 
   /**

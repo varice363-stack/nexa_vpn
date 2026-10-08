@@ -73,6 +73,7 @@ export class AccessActivationService {
     name?: string;
     durationDays?: number;
     protocol?: string;
+    trafficLimitMb?: number;
   }) {
     const code = await this.uniqueCode();
     const expiresAt =
@@ -88,6 +89,10 @@ export class AccessActivationService {
         protocol: params.protocol ?? 'VLESS',
         uuid: randomUUID(),
         expiresAt,
+        trafficLimitMb:
+          params.trafficLimitMb && params.trafficLimitMb > 0
+            ? Math.round(params.trafficLimitMb)
+            : null,
       },
     });
     // Конфигурация отдаётся сразу: без неё выдача в панели выглядела как

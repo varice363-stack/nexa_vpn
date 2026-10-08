@@ -84,16 +84,55 @@ def build():
         },
         "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"]},
     }
+    # Локальный API для статистики (127.0.0.1:10085). Нужен, чтобы знать
+    # реальный трафик каждого ключа: без него «лимит трафика» в панели был бы
+    # цифрой, которая ничего не ограничивает. Слушает только петлю — снаружи
+    # недоступен, авторизации у него нет и не требуется.
+    api_inbound = {
+        "listen": "127.0.0.1",
+        "port": int(k.get("apiPort") or 10085),
+        "protocol": "dokodemo-door",
+        "tag": "api",
+        "settings": {"address": "127.0.0.1"},
+    }
     return {
         "log": {"loglevel": "warning"},  # access-лог не ведём: см. docs/RISK_ASSESSMENT_RF.md
-        "inbounds": [inbound],
+        "api": {"tag": "api", "services": ["StatsService"]},
+        "stats": {},
+        "inbounds": [inbound, api_inbound],
         "outbounds": [{"protocol": "freedom", "tag": "DIRECT"}, {"protocol": "blackhole", "tag": "BLOCK"}],
-        "policy": {"levels": {"0": {"handshake": 4, "connIdle": 300, "idleTimeout": 60}}},
+        "policy": {
+            "levels": {
+                "0": {
+                    "handshake": 4,
+                    "connIdle": 300,
+                    "idleTimeout": 60,
+                    # Без этих двух флагов Xray не считает трафик по клиентам.
+                    "statsUserUplink": True,
+                    "statsUserDownlink": True,
+                }
+            }
+        },
     }
 
 
 def sig_of(cfg):
-    core = json.dumps(cfg["inbounds"][0], sort_keys=True).encode()
+    """Отпечаток «содержательного» конфига.
+
+    Раньше хэшировался только VLESS-инбаунд: добавление api/stats/policy не
+    меняло отпечаток, и на живом узле изменение просто не применилось бы
+    («без изменений»). Теперь в отпечаток входит всё, что мы генерируем, —
+    и по-прежнему ничего лишнего: при неизменном конфиге ядро не трогаем.
+    """
+    core = json.dumps(
+        {
+            "vless": cfg["inbounds"][0],
+            "api": cfg.get("api"),
+            "stats": cfg.get("stats"),
+            "policy": cfg.get("policy"),
+        },
+        sort_keys=True,
+    ).encode()
     return hashlib.sha256(core).hexdigest()
 
 
@@ -117,7 +156,8 @@ def core_clients():
     try:
         cfg = read_json(CONFIG) or {}
         return sum(len(ib.get("settings", {}).get("clients", []) or [])
-                   for ib in cfg.get("inbounds", []))
+                   for ib in cfg.get("inbounds", [])
+                   if ib.get("protocol") in ("vless", "vmess", "trojan", "shadowsocks"))
     except Exception:
         return None
 

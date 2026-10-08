@@ -1,9 +1,19 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 
 import { CurrentUser, SafeUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
+import { AdminUpdateKeyDto } from './dto/admin-update-key.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { AccessActivationService } from './access-activation.service';
 import { ProvisioningService } from './provisioning.service';
@@ -118,6 +128,32 @@ export class ProvisioningController {
   @Delete('admin-revoke/:id')
   async adminRevoke(@Param('id', ParseUUIDPipe) id: string) {
     const res = await this.provisioning.revokeAny(id);
+    await this.xraySync.sync().catch(() => null);
+    return res;
+  }
+
+  /**
+   * Admin: изменить ключ (имя, срок, лимит трафика, статус).
+   * Объявлен до пользовательского ':id' — Nest матчит маршруты по порядку.
+   */
+  @Roles(Role.ADMIN)
+  @Patch('admin-key/:id')
+  async adminUpdate(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AdminUpdateKeyDto,
+  ) {
+    const res = await this.provisioning.updateAny(id, dto);
+    // Снятие/постановка EXPIRED меняет состав ядра — публикуем сразу, не ждём
+    // тридцатисекундного тика.
+    await this.xraySync.sync().catch(() => null);
+    return res;
+  }
+
+  /** Admin: удалить ключ навсегда (в отличие от отзыва). */
+  @Roles(Role.ADMIN)
+  @Delete('admin-key/:id')
+  async adminDelete(@Param('id', ParseUUIDPipe) id: string) {
+    const res = await this.provisioning.deleteAny(id);
     await this.xraySync.sync().catch(() => null);
     return res;
   }

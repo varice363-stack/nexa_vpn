@@ -309,6 +309,14 @@ model AccessKey {
   createdAt  DateTime  @default(now())
   expiresAt  DateTime?
   lastUsedAt DateTime?
+  /// Лимит трафика в мегабайтах (null = без лимита).
+  ///
+  /// Считается по реальной статистике ядра: хостовый сборщик раз в минуту
+  /// складывает байты из `xray api statsquery` в /var/lib/morok/xray-stats.json,
+  /// бэкенд читает файл и при превышении лимита сам переводит ключ в EXPIRED
+  /// (тогда синхронизация убирает его из ядра). Без этого поля «лимит» был бы
+  /// красивой цифрой, которая ничего не ограничивает.
+  trafficLimitMb Int?
 
   @@index([userId, status])
   @@index([serverId])

@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 
 import { PrismaService } from '../common/prisma/prisma.service';
+import { XrayStatsService } from './xray-stats.service';
 import { promises as fs } from 'fs';
 
 /**
@@ -37,7 +38,10 @@ export interface XrayClientEntry {
 export class XrayClientSyncService implements OnApplicationBootstrap {
   private readonly logger = new Logger(XrayClientSyncService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly stats: XrayStatsService,
+  ) {}
 
   /**
    * Периодический publish: выдача ключа — не единственный момент, когда состав
@@ -96,6 +100,42 @@ export class XrayClientSyncService implements OnApplicationBootstrap {
    * («выдан в ядро» / «в очереди»), а не только агрегат — иначе поддержка не
    * может ответить на «ключ ввалидный, не коннектит», не залезая в файлы.
    */
+  /**
+   * Лимит трафика — по-настоящему, а не цифрой в панели.
+   *
+   * Ключ с превышенным лимитом переводится в EXPIRED, и та же синхронизация
+   * убирает его из ядра: человек теряет доступ, пока владелец не продлит
+   * лимит или срок в панели. Данные берём из файла, который пишет хостовый
+   * сборщик (xray api statsquery); файла нет — ничего не делаем и не врём
+   * цифрами.
+   */
+  async enforceTrafficLimits(): Promise<{ expired: string[] }> {
+    const usage = await this.stats.usageByKeyPrefix();
+    if (!usage) return { expired: [] };
+
+    const keys = await this.prisma.accessKey.findMany({
+      where: { status: 'ACTIVE', trafficLimitMb: { not: null } },
+      select: { id: true, name: true, trafficLimitMb: true },
+    });
+
+    const expired: string[] = [];
+    for (const k of keys) {
+      const usedBytes = usage.get(k.id.slice(0, 8)) ?? 0;
+      const limitBytes = (k.trafficLimitMb ?? 0) * 1024 * 1024;
+      if (limitBytes > 0 && usedBytes >= limitBytes) {
+        await this.prisma.accessKey.update({
+          where: { id: k.id },
+          data: { status: 'EXPIRED' },
+        });
+        expired.push(k.id);
+        this.logger.log(
+          `ключ ${k.name} исчерпал лимит трафика: ${Math.round(usedBytes / 1048576)} МБ из ${k.trafficLimitMb} МБ`,
+        );
+      }
+    }
+    return { expired };
+  }
+
   async publishedKeyIds(): Promise<Set<string>> {
     try {
       const raw = JSON.parse(await fs.readFile(XRAY_CLIENTS_PATH, 'utf8'));
@@ -107,6 +147,12 @@ export class XrayClientSyncService implements OnApplicationBootstrap {
   }
 
   async sync(): Promise<{ written: number; path: string } | null> {
+    // Сначала — лимиты трафика: если ключ выбрал свой лимит, он должен стать
+    // EXPIRED ДО того, как мы посчитаем список «кому можно».
+    await this.enforceTrafficLimits().catch((err) =>
+      this.logger.warn(`проверка лимитов трафика: ${(err as Error).message}`),
+    );
+
     const clients = await this.desiredClients();
     const payload = {
       generatedAt: new Date().toISOString(),

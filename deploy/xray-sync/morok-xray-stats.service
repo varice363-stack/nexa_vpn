@@ -1,0 +1,9 @@
+[Unit]
+Description=MOROK VPN: сбор трафика ключей из ядра Xray
+Documentation=file:///opt/morok_app/deploy/xray-sync/README.md
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/morok-collect-xray-stats --quiet
+UMask=0077
+NoNewPrivileges=yes

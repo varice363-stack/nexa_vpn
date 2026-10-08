@@ -218,3 +218,41 @@ export interface CryptoTransaction {
   user?: { id: string; email: string; deviceId: string | null } | null;
   plan?: { id: string; name: string; code: string; price: number; durationDays: number } | null;
 }
+
+/** Строка ключа из GET /provisioning/all (панель). */
+export interface AccessKeyRow {
+  id: string;
+  userId: string | null;
+  code: string | null;
+  boundDevice: string | null;
+  deviceId: string | null;
+  serverId: string | null;
+  name: string;
+  protocol: string;
+  uuid: string;
+  status: 'ACTIVE' | 'REVOKED' | 'EXPIRED' | string;
+  createdAt: string;
+  expiresAt: string | null;
+  lastUsedAt: string | null;
+  activatedAt: string | null;
+  /// Лимит трафика в МБ (null = без лимита).
+  trafficLimitMb: number | null;
+  /// Израсходовано МБ по данным ядра; null = учёт не собирается.
+  trafficUsedMb: number | null;
+  /// Сколько дней осталось (считает сервер).
+  daysLeft: number | null;
+  /// Выложен ли ключ в ядро: false = ещё не пустит, null = файла ядра нет.
+  published: boolean | null;
+  user: { id: string; email: string } | null;
+  server: { id: string; name: string } | null;
+}
+
+/** Ответ POST /provisioning/issue. */
+export interface IssuedKey {
+  id: string;
+  name: string;
+  code: string | null;
+  expiresAt: string | null;
+  trafficLimitMb: number | null;
+  config?: { uri?: string; qrPayload?: string } | null;
+}
