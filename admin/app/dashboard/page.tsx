@@ -46,18 +46,34 @@ export default function DashboardPage() {
   }
   if (!data) return <div className="text-muted">Загрузка…</div>;
 
+  // Дефолты на случай неполного ответа: лучше прочерк, чем падение страницы.
+  const online = data.connections?.online ?? 0;
+  const trafficMb = data.trafficMb ?? null;
+  const serversActive = data.servers?.active ?? 0;
+  const serversDisabled = data.servers?.disabled ?? 0;
+
   return (
     <div>
       <PageHeader title="Панель управления" subtitle="Обзор сервиса" />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard label="Пользователей" value={data.users.total} hint={`+${data.users.newToday} сегодня`} accent="blue" />
-        <StatCard label="Подключений онлайн" value={data.connections.online} accent="green" />
-        <StatCard label="Трафик" value={`${(data.trafficMb / 1024).toFixed(1)} ГБ`} hint="за всё время" accent="yellow" />
+        <StatCard
+          label="Устройств онлайн"
+          value={online}
+          hint="открывали приложение за 15 мин"
+          accent="green"
+        />
+        <StatCard
+          label="Трафик"
+          value={trafficMb === null ? '—' : `${(trafficMb / 1024).toFixed(1)} ГБ`}
+          hint={trafficMb === null ? 'учёт не ведётся' : 'за всё время'}
+          accent="yellow"
+        />
         <StatCard label="Premium пользователей" value={data.users.activePremium} accent="purple" />
       </div>
 
       <h2 className="font-semibold text-sm text-faint uppercase tracking-wider mb-3">
-        Статус серверов ({data.servers.active} активных · {data.servers.disabled} отключено)
+        Статус серверов ({serversActive} активных · {serversDisabled} отключено)
       </h2>
       <div className="glass p-4">
         <table className="table-base">

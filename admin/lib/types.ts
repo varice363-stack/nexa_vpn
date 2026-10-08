@@ -79,9 +79,12 @@ export interface BannerStats {
 
 export interface DashboardData {
   users: { total: number; newToday: number; activePremium: number };
-  connections: { online: number };
-  trafficMb: number;
-  servers: { active: number; disabled: number };
+  /// Все поля ниже — необязательные намеренно: если бэкенд по какой-то причине
+  /// не прислал поле, страница обязана показать прочерк, а не упасть целиком
+  /// («Application error» после входа в панель случался именно из-за этого).
+  connections?: { online?: number };
+  trafficMb?: number;
+  servers?: { active: number; disabled: number };
 }
 
 export interface OverviewData {
