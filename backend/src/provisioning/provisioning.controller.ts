@@ -88,6 +88,17 @@ export class ProvisioningController {
     return this.provisioning.active(user);
   }
 
+  /**
+   * Admin: готовая конфигурация любого ключа (vless:// + QR + код). Объявлено
+   * ДО пользовательского ':id': Nest матчит маршруты по порядку, иначе
+   * «admin-config» уехал бы в ParseUUIDPipe.
+   */
+  @Roles(Role.ADMIN)
+  @Get('admin-config/:id')
+  adminConfig(@Param('id', ParseUUIDPipe) id: string) {
+    return this.activation.adminContract(id);
+  }
+
   @Get(':id')
   get(@CurrentUser() user: SafeUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.provisioning.get(user, id);

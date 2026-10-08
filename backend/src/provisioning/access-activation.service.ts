@@ -89,17 +89,25 @@ export class AccessActivationService {
         uuid: randomUUID(),
         expiresAt,
       },
-      select: {
-        id: true,
-        code: true,
-        name: true,
-        status: true,
-        createdAt: true,
-        expiresAt: true,
-        activatedAt: true,
-      },
     });
-    return key;
+    // Конфигурация отдаётся сразу: без неё выдача в панели выглядела как
+    // «код создан», а vless:// приходилось искать руками. URI нужен и тому,
+    // кто отправляет ключ другу, и тому, кто хочет проверить узел сам.
+    const contract = await this.provisioning.toContract(null, key);
+    return { ...key, config: contract.config };
+  }
+
+  /**
+   * Конфигурация ЛЮБОГО ключа по id — для панели.
+   *
+   * Обычный GET /provisioning/:id режет по userId («только свой ключ»), поэтому
+   * выдать готовый ключ из админки было нечем. Маршрут закрыт @Roles(ADMIN).
+   */
+  async adminContract(keyId: string) {
+    const key = await this.prisma.accessKey.findUnique({ where: { id: keyId } });
+    if (!key) throw new NotFoundException('Key not found');
+    const contract = await this.provisioning.toContract(null, key);
+    return { ...contract, code: key.code };
   }
 
   /**

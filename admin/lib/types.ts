@@ -159,6 +159,12 @@ export interface AdminAccessKey {
   boundDevice?: string | null;
   /** Выложен ли ключ в ядро (false = «не пустит», null = список ядра недоступен). */
   published?: boolean | null;
+  /**
+   * Конфигурация ключа: без неё выдача в панели выглядела как «код создан», а
+   * vless:// приходилось искать в приложении покупателя. Заполняется на выдаче
+   * и по запросу GET /provisioning/admin-config/:id.
+   */
+  config?: { uri: string | null; unavailableReason?: string | null } | null;
   serverId: string | null;
   name: string;
   protocol: string;

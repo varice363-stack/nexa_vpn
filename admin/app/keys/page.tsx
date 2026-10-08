@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { Fragment, FormEvent, useCallback, useEffect, useState } from 'react';
 
 import Badge from '@/components/Badge';
 import PageHeader from '@/components/PageHeader';
@@ -25,7 +25,14 @@ export default function AccessKeysPage() {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [days, setDays] = useState('30');
-  const [issued, setIssued] = useState<{ code: string; name: string } | null>(null);
+  const [issued, setIssued] = useState<{
+    code: string;
+    name: string;
+    uri: string | null;
+  } | null>(null);
+  // ключ id -> текст, скопированный/показанный прямо в таблице
+  const [uriOf, setUriOf] = useState<Record<string, string>>({});
+  const [copied, setCopied] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setError(null);
@@ -46,19 +53,65 @@ export default function AccessKeysPage() {
       // durationDays, а не days: лишние поля ValidationPipe(whitelist) молча
       // вырезает, и «days: 30» превращался в бессрочный ключ без ошибки.
       const durationDays = Math.max(0, Math.trunc(Number(days) || 0));
-      const res = await api<{ code: string; name: string }>('/provisioning/issue', {
+      const res = await api<{
+        code: string;
+        name: string;
+        config?: { uri: string | null } | null;
+      }>('/provisioning/issue', {
         method: 'POST',
         body: JSON.stringify({
           name: name.trim() || 'Morok Access',
           durationDays,
         }),
       });
-      setIssued(res);
+      setIssued({ code: res.code, name: res.name, uri: res.config?.uri ?? null });
       setName('');
       setShowForm(false);
       load();
     } catch (e2) {
       setError(e2 instanceof Error ? e2.message : 'Не выдалось создать ключ');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  /**
+   * Готовый ключ: код + vless://. Один клик — и есть что отправить человеку,
+   * которому не нужно приложение (или который ставит его сейчас).
+   */
+  async function copyKey(k: AdminAccessKey) {
+    setBusy(k.id);
+    setError(null);
+    try {
+      let uri = uriOf[k.id];
+      if (!uri) {
+        const token = getToken();
+        const res = await fetch(`${apiBase()}/provisioning/admin-config/${k.id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(
+            body?.message
+              ? (Array.isArray(body.message) ? body.message.join('; ') : body.message)
+              : `HTTP ${res.status}`,
+          );
+        }
+        const cfg = (await res.json()) as { config?: { uri: string | null } };
+        uri = cfg.config?.uri ?? '';
+        if (!uri) throw new Error('Конфигурация недоступна: проверьте сервер в разделе «Серверы»');
+        setUriOf((prev) => ({ ...prev, [k.id]: uri }));
+      }
+      try {
+        await navigator.clipboard.writeText(uri);
+        setCopied(k.id);
+        setTimeout(() => setCopied((c) => (c === k.id ? null : c)), 2500);
+      } catch {
+        // HTTP-страница без HTTPS часто режет clipboard API — показываем текст
+        setUriOf((prev) => ({ ...prev, [k.id]: uri }));
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не удалось получить конфигурацию');
     } finally {
       setBusy(null);
     }
@@ -110,8 +163,18 @@ export default function AccessKeysPage() {
       {issued ? (
         <div className="glass-card mb-3 flex items-center justify-between gap-3">
           <div>
-            <div className="text-xs text-muted">Ключ «{issued.name}» создан. Передайте код покупателю:</div>
+            <div className="text-xs text-muted">
+              Ключ «{issued.name}» создан. Код — для ввода в приложении, строка ниже — готовый конфиг:
+            </div>
             <div className="font-mono text-lg text-teal-300">{issued.code}</div>
+            {issued.uri ? (
+              <div className="mt-1 font-mono text-[11px] text-muted break-all">{issued.uri}</div>
+            ) : (
+              <div className="mt-1 text-[11px] text-amber-300">
+                Конфигурация не собралась: ключ появится в ядре, но URI выдастся
+                только после того, как ключ привязан к активному серверу.
+              </div>
+            )}
           </div>
           <button type="button" className="btn-ghost" onClick={() => setIssued(null)}>
             Скрыть
@@ -158,6 +221,7 @@ export default function AccessKeysPage() {
               <th>Назначенный сервер</th>
               <th>Устройство</th>
               <th title="Есть ли UUID ключа в конфиге ядра прямо сейчас">В ядре</th>
+              <th>Ключ подключения</th>
               <th>Создан</th>
               <th>Истекает</th>
               <th />
@@ -165,7 +229,8 @@ export default function AccessKeysPage() {
           </thead>
           <tbody>
             {keys.map((k) => (
-              <tr key={k.id}>
+              <Fragment key={k.id}>
+              <tr>
                 <td className="text-text font-medium">{k.user?.email ?? k.userId ?? '—'}</td>
                 <td>{k.name}</td>
                 <td className="font-mono text-xs">{k.code ?? '—'}</td>
@@ -184,6 +249,21 @@ export default function AccessKeysPage() {
                     <span className="text-rose-300" title="ядро не пустит: список клиентов не обновлён">нет</span>
                   )}
                 </td>
+                <td>
+                  <button
+                    type="button"
+                    className="btn-ghost text-xs"
+                    disabled={busy === k.id || k.status !== 'ACTIVE'}
+                    title={
+                      k.status === 'ACTIVE'
+                        ? 'Скопировать vless:// — эту строку можно отдать человеку вместе с кодом'
+                        : 'Конфигурация есть только у активного ключа'
+                    }
+                    onClick={() => copyKey(k)}
+                  >
+                    {copied === k.id ? 'Скопировано' : busy === k.id ? 'Читаем…' : uriOf[k.id] ? 'Показан' : 'Скопировать'}
+                  </button>
+                </td>
                 <td>{new Date(k.createdAt).toLocaleDateString()}</td>
                 <td>{k.expiresAt ? new Date(k.expiresAt).toLocaleDateString() : '∞'}</td>
                 <td>
@@ -199,6 +279,14 @@ export default function AccessKeysPage() {
                   ) : null}
                 </td>
               </tr>
+              {uriOf[k.id] ? (
+                <tr>
+                  <td colSpan={12} className="font-mono text-[11px] break-all">
+                    {uriOf[k.id]}
+                  </td>
+                </tr>
+              ) : null}
+              </Fragment>
             ))}
           </tbody>
         </table>

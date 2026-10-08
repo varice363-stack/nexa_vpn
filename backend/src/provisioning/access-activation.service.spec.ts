@@ -175,6 +175,45 @@ describe('AccessActivationService', () => {
     });
   });
 
+  describe('config для панели', () => {
+    it('issue отдаёт собранную конфигурацию вместе с кодом', async () => {
+      const prisma = makePrisma();
+      const svc = new AccessActivationService(prisma, provisioning, xraySync);
+
+      const res = await svc.issue({ name: 'Подарок', durationDays: 30 });
+
+      expect(res.code).toMatch(/^MOROK-/);
+      // то, ради чего всё: человек получает vless:// сразу, а не «код создан,
+      // а конфиг ищи в приложении покупателя»
+      expect(res.config).toMatchObject({ uri: 'vless://stub' });
+    });
+
+    it('adminContract не режет по владельцу и отдаёт код', async () => {
+      const prisma = makePrisma([
+        {
+          id: 'k9',
+          code: 'MOROK-CCCC-DDDD',
+          userId: 'other',
+          status: 'ACTIVE',
+          boundDevice: null,
+          activatedAt: null,
+          expiresAt: null,
+        },
+      ]);
+      const svc = new AccessActivationService(prisma, provisioning, xraySync);
+
+      const res = await svc.adminContract('k9');
+
+      expect(res.code).toBe('MOROK-CCCC-DDDD');
+      expect(res.config.uri).toBe('vless://stub');
+    });
+
+    it('несуществующий ключ — 404, а не пустой конфиг', async () => {
+      const svc = new AccessActivationService(makePrisma(), provisioning, xraySync);
+      await expect(svc.adminContract('нет-такого')).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe('claim', () => {
     const base = {
       id: 'k1',
