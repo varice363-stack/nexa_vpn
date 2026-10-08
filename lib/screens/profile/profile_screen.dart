@@ -31,6 +31,11 @@ class ProfileScreen extends ConsumerWidget {
             onTap: () => context.push('/identity'),
           ),
           const SizedBox(height: 20),
+          // Какая сборка стоит на телефоне. Появилось после того, как
+          // выяснилось: «я собрал, а ничего не изменилось» невозможно
+          // отличить от «стоит старая сборка». Теперь номер видно.
+          const _BuildInfoCard(),
+          const SizedBox(height: 20),
           SectionHeader(title: l10n.profileAccount),
           GlassListTile(
             icon: Icons.settings_rounded,
@@ -153,6 +158,42 @@ class _IdentityCodeCard extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Строка с версией приложения и номером сборки (коммитом).
+///
+/// Номер сборки подставляет `build-apk.bat` во время сборки. Если здесь
+/// старый номер — значит на телефоне старый код, и искать причину в сервере
+/// бессмысленно.
+class _BuildInfoCard extends StatelessWidget {
+  const _BuildInfoCard();
+
+  @override
+  Widget build(BuildContext context) {
+    const commit = String.fromEnvironment('BUILD_COMMIT');
+    const stamp = String.fromEnvironment('BUILD_TIME');
+    final label = <String>[
+      if (stamp.isNotEmpty) stamp,
+      if (commit.isNotEmpty) 'сборка $commit' else 'сборка без номера',
+    ].join(' · ');
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.info_outline_rounded,
+            size: 14, color: AppColors.textTertiary),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            'Версия приложения: $label',
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textTertiary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

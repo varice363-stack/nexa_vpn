@@ -34,6 +34,12 @@ if errorlevel 1 (
 )
 git log --oneline -1
 
+REM Build stamp = current git commit; the app shows it in Profile.
+REM So "I rebuilt and nothing changed" can never again be confused
+REM with "the phone still runs an old build".
+for /f %%i in ('git rev-parse --short HEAD') do set COMMIT=%%i
+if "%COMMIT%"=="" set COMMIT=none
+
 echo.
 echo [2/4] flutter clean + pub get
 call flutter clean >nul
@@ -42,6 +48,7 @@ call flutter pub get
 echo.
 echo [3/4] Building release APK (this takes a few minutes)...
 set ARGS=--release --split-per-abi --dart-define=API_BASE_URL=http://78.17.156.139:3000/app-api
+set ARGS=%ARGS% --dart-define=BUILD_COMMIT=%COMMIT%
 if not "%OWNER%"=="" set ARGS=%ARGS% --dart-define=OWNER_CODE=%OWNER%
 call flutter build apk %ARGS%
 if errorlevel 1 (
