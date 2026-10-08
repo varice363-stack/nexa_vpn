@@ -26,6 +26,10 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
+  // На странице входа меню не нужно: оно показывало пункты до авторизации и
+  // кнопку «Выйти», которая на экране входа бессмысленна.
+  if (pathname === '/login') return null;
+
   return (
     <aside className="w-60 shrink-0 h-screen sticky top-0 flex flex-col border-r border-white/10 bg-surface/60 backdrop-blur">
       <div className="px-5 py-5 flex items-center gap-3 border-b border-white/10">
