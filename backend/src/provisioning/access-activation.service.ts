@@ -46,8 +46,42 @@ export class AccessActivationService {
    */
   async redeemToContract(rawCode: string, deviceId?: string) {
     const key = await this.redeem(rawCode, deviceId);
+
+    // Страховка на стороне сервера: если ключ активирован с устройства,
+    // которое уже зарегистрировано (deviceId = код владельца), привязываем
+    // ключ к аккаунту сразу.
+    //
+    // Без этого купленный ключ оставался «ничьим»: список «мои ключи» в
+    // приложении строится по аккаунту и коду устройства, и человек, оплативший
+    // доступ, видел «код активирован» и пустой список — подключаться нечем.
+    // Теперь привязка не зависит от того, успел ли клиент вызвать /claim.
+    let ownerId = key.userId;
+    if (!ownerId && deviceId) {
+      // Обращаемся к таблице устройств осторожно: в тестах и на урезанных
+      // схемах её может не быть, и падать из-за этого выдача ключа не должна.
+      let device: { userId: string } | null = null;
+      try {
+        device =
+          (await this.prisma.device?.findFirst({
+            where: { name: deviceId },
+            select: { userId: true },
+          })) ?? null;
+      } catch {
+        device = null;
+      }
+      if (device?.userId) {
+        const claimed = await this.prisma.accessKey.update({
+          where: { id: key.id },
+          data: { userId: device.userId },
+        });
+        ownerId = claimed.userId;
+      }
+    }
+
+    // toContract принимает владельца отдельным аргументом — ключ передаём
+    // как есть, иначе тип расходится с фактической формой записи.
     const contract = await this.provisioning.toContract(
-      key.userId ? { id: key.userId } : null,
+      ownerId ? { id: ownerId } : null,
       key,
     );
     return { ...contract, code: key.code };

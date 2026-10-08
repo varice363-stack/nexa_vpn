@@ -9,7 +9,6 @@ import '../../models/key_input.dart';
 import '../../providers/access_providers.dart';
 import '../../providers/admin_providers.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/device_providers.dart';
 import '../../providers/manual_key_providers.dart';
 import '../../services/api/api_exception.dart';
 import '../../theme/app_colors.dart';
@@ -141,13 +140,49 @@ class _KeyEntryScreenState extends ConsumerState<KeyEntryScreen> {
           SnackBar(content: Text(l10n.keyEntrySuccessVless)),
         );
       } else {
-        final deviceId = await ref.read(deviceIdProvider.future);
+        // ВАЖНО: предъявляем СВОЙ КОД ВЛАДЕЛЬЦА (MOROK-…), а не случайный
+        // идентификатор установки.
+        //
+        // Покупка ломалась вот на чём: код активировался, сервер отдавал
+        // рабочий адрес, но ключ привязывался к случайному id установки,
+        // которого нет ни в аккаунте, ни в списке устройств. Список «мои
+        // ключи» строится по аккаунту и по коду устройства — значит купленный
+        // ключ в приложении не появлялся никогда: человек платил, вводил код,
+        // видел «успех» и оставался без подключения.
+        //
+        // Код владельца — тот же, по которому человек восстанавливает доступ
+        // на новом телефоне. Поэтому повторный ввод покупки после переустановки
+        // снова находит свой ключ, а не упирается в «код уже использован».
+        final deviceId = await ref.read(identityStoreProvider).resolve();
         await ref
             .read(accessRepositoryProvider)
             .redeemCode(input.value, deviceId: deviceId);
+
+        // Привязываем ключ к аккаунту: тогда он виден в списке, а не только
+        // «где-то на сервере». Если связи нет — ключ всё равно виден по коду
+        // устройства, поэтому ошибку здесь не показываем, но и не прячем:
+        // пишем в журнал.
+        try {
+          await ref.read(accessRepositoryProvider).claimCode(input.value);
+        } catch (e) {
+          ref.read(loggerProvider).warn(
+                'Ключ не удалось привязать к аккаунту (виден по коду устройства): $e',
+                source: 'access',
+              );
+        }
+
         await ref.read(accessKeysProvider.notifier).refresh();
+
+        // Проверяем, что ключ реально доступен приложению: «успех» без ключа —
+        // это та самая ошибка, из-за которой покупка выглядела нерабочей.
+        final keys = ref.read(accessKeysProvider).value ?? const [];
+        final usable = keys.where((k) => k.isActive).toList();
         if (!mounted) return;
         _controller.clear();
+        if (usable.isEmpty) {
+          setState(() => _error = l10n.keyEntrySuccessButNotLinked);
+          return;
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.keyEntrySuccessMorok)),
         );
