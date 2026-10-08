@@ -32,6 +32,7 @@ import '../repositories/subscription_repository_impl.dart';
 import '../services/api/api_client.dart';
 import '../services/api/token_storage.dart';
 import '../services/identity/device_fingerprint.dart';
+import '../services/identity/identity_store.dart';
 import '../services/notification_service.dart';
 import '../services/security/ssl_pinning_service.dart';
 import '../services/security/security_service.dart';
@@ -72,6 +73,17 @@ final sslPinningServiceProvider = Provider<SslPinningService>(
 /// Ключ стабильного id устройства в SharedPreferences (см. deviceIdProvider).
 const kDeviceIdKey = 'morok_device_id';
 
+/// Хранилище кода владельца с самовосстановлением: защищённое хранилище +
+/// копия в обычных настройках. Единственный источник кода для регистрации,
+/// перевыпуска токена и экрана восстановления.
+final identityStoreProvider = Provider<IdentityStore>(
+  (ref) => IdentityStore(
+    storage: ref.watch(keyStorageProvider),
+    prefs: ref.watch(sharedPreferencesProvider),
+    logger: ref.watch(loggerProvider),
+  ),
+);
+
 /// Ключ кода владельца в защищённом хранилище (Android Keystore).
 ///
 /// Общий на всё приложение: и регистрация на сервере (bootstrap), и
@@ -98,8 +110,7 @@ final apiClientProvider = Provider<ApiClient>((ref) {
     // (защищённое хранилище), а не случайный id из обычных настроек. Раньше
     // это были два разных идентификатора: сервер знал один, а перевыпуск
     // токена спрашивал другой — то есть перевыпуск не мог сработать ни разу.
-    final deviceId = await ref.read(keyStorageProvider).read(kIdentityKey);
-    if (deviceId == null || deviceId.isEmpty) return false;
+    final deviceId = await ref.read(identityStoreProvider).resolve();
     try {
       // Напрямую, без AuthRepository: он сам построен поверх apiClientProvider,
       // и из колбэка получил бы цикл провайдеров.

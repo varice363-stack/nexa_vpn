@@ -117,6 +117,45 @@ async function bootstrap() {
   });
 
   // CRITICAL: Strict rate limiting for webhook to prevent DoS and fake payments
+  // ── Журнал запросов (диагностика) ───────────────────────────────────────
+  //
+  // У NestJS нет access-лога, и это уже стоило времени: «телефон ничего не
+  // отправил» было неотличимо от «сервер отказал». Теперь каждый запрос
+  // печатается одной строкой в stdout (docker logs morok_backend).
+  //
+  // Секреты не пишем: тело запроса не логируется вообще, для регистрации
+  // печатается только обрезанный код устройства (первые 6 знаков) и признак
+  // наличия отпечатка. Этого достаточно, чтобы понять формат и результат.
+  const maskCode = (v: unknown): string => {
+    const s = typeof v === 'string' ? v : '';
+    if (!s) return 'нет';
+    return `${s.slice(0, 6)}…(${s.length})`;
+  };
+
+  app.use((req: any, res: any, next: any) => {
+    const startedAt = Date.now();
+    res.on('finish', () => {
+      const ms = Date.now() - startedAt;
+      const ua = String(req.headers['user-agent'] ?? 'нет').slice(0, 40);
+      let extra = '';
+      if (req.originalUrl?.includes('/auth/auto-register')) {
+        extra = ` deviceId=${maskCode(req.body?.deviceId)} fingerprint=${
+          req.body?.fingerprint ? 'да' : 'нет'
+        }`;
+      }
+      const line = `[запрос] ${req.method} ${req.originalUrl} → ${res.statusCode} (${ms} мс) ip=${req.ip}${extra} ua=${ua}`;
+      if (res.statusCode >= 400) {
+        // Причины отказа важнее всего: они объясняют, что именно не так.
+        // eslint-disable-next-line no-console
+        console.warn(line);
+      } else {
+        // eslint-disable-next-line no-console
+        console.log(line);
+      }
+    });
+    next();
+  });
+
   const webhookLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 50, // max 50 webhooks per 15 minutes

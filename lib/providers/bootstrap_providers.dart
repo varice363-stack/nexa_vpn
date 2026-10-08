@@ -9,7 +9,7 @@ final appBootstrapServiceProvider = Provider<AppBootstrapService>(
     tokenStorage: ref.watch(tokenStorageProvider),
     configRepository: ref.watch(configRepositoryProvider),
     authRepository: ref.watch(authRepositoryProvider),
-    keyStorage: ref.watch(keyStorageProvider),
+    identity: ref.watch(identityStoreProvider),
     logger: ref.watch(loggerProvider),
   ),
 );

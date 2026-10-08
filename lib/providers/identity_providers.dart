@@ -1,39 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../domain/repositories/key_storage.dart';
 import '../services/identity/device_identity.dart';
+import '../services/identity/identity_store.dart';
 import 'app_providers.dart';
-
-/// Ключ в защищённом хранилище устройства (Android Keystore) — берём общий,
-/// чтобы идентификатор был один на всё приложение.
-const _kIdentityKey = kIdentityKey;
 
 /// Идентификатор владельца — заменяет собой регистрацию.
 ///
 /// Логика простая: при первом запуске код создаётся на телефоне и
 /// сохраняется. Дальше он просто читается. Наружу не уходит: сервер о нём
 /// узнаёт, только если человек сам предъявит код.
+///
+/// Хранение — через [IdentityStore]: защищённое хранилище плюс копия в
+/// обычных настройках. Если Keystore недоступен (частая беда после
+/// переустановки сборки с другой подписью), приложение НЕ остаётся без кода.
 final identityProvider =
     AsyncNotifierProvider<IdentityNotifier, String>(IdentityNotifier.new);
 
 class IdentityNotifier extends AsyncNotifier<String> {
-  KeyStorage get _storage => ref.read(keyStorageProvider);
+  IdentityStore get _store => ref.read(identityStoreProvider);
 
   @override
   Future<String> build() async {
-    final existing = await _storage.read(_kIdentityKey);
-    if (existing != null && DeviceIdentity.isValid(existing)) {
-      return DeviceIdentity.normalise(existing);
-    }
-
-    // Первый запуск (или в хранилище лежал мусор) — заводим новый код.
-    final fresh = DeviceIdentity.generate();
-    await _storage.write(_kIdentityKey, fresh);
+    final code = await _store.resolve();
     ref.read(loggerProvider).info(
-          'Device identity created',
+          'Код владельца готов (${DeviceIdentity.isValid(code) ? "формат верный" : "ФОРМАТ НЕВЕРНЫЙ"})',
           source: 'identity',
         );
-    return fresh;
+    return code;
   }
 
   /// Восстановление доступа на другом устройстве: человек вводит код,
@@ -45,10 +38,10 @@ class IdentityNotifier extends AsyncNotifier<String> {
     final normalised = DeviceIdentity.normalise(input);
     if (normalised.isEmpty) return false;
 
-    await _storage.write(_kIdentityKey, normalised);
+    await _store.save(normalised);
     state = AsyncData(normalised);
     ref.read(loggerProvider).info(
-          'Device identity restored from user input',
+          'Код владельца восстановлен из ввода',
           source: 'identity',
         );
     return true;
@@ -59,12 +52,7 @@ class IdentityNotifier extends AsyncNotifier<String> {
   /// Нужен, когда телефон передают другому человеку. Прежний код после
   /// этого на устройстве не восстановить — предупредить об этом обязан UI.
   Future<void> reset() async {
-    final fresh = DeviceIdentity.generate();
-    await _storage.write(_kIdentityKey, fresh);
+    final fresh = await _store.reset();
     state = AsyncData(fresh);
-    ref.read(loggerProvider).warn(
-          'Device identity reset — previous code is gone',
-          source: 'identity',
-        );
   }
 }
