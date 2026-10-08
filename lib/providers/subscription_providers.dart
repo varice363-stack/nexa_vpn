@@ -1,9 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/access_key.dart';
 import '../models/app_notification.dart';
+import '../models/connection_source.dart';
 import '../models/premium_plan.dart';
 import '../services/api/api_exception.dart';
+import 'access_providers.dart';
 import 'app_providers.dart';
+import 'connection_source_providers.dart';
 
 /// Current subscription state.
 ///
@@ -29,29 +33,39 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     }
   }
 
-  /// Activate trial period (7 days free).
+  /// Активирует пробный период **на сервере**.
   ///
-  /// Gives full access to Standard tier features for 7 days.
-  /// No payment method required — maximizes conversion.
+  /// Раньше метод лишь записывал «пробный активен» в память телефона: ни
+  /// ключа, ни подписки на сервере не появлялось, поэтому после нажатия
+  /// кнопки ничего не происходило — подключиться было нечем. Теперь:
+  ///
+  ///  1. `POST /billing/trial/activate` создаёт TRIAL-подписку и настоящий
+  ///     ACTIVE-ключ (3 дня, лимит 2 ГБ) и сразу выкладывает его ядру;
+  ///  2. список ключей перечитывается, а выданный ключ становится активным
+  ///     источником — то есть кнопка подключения сразу поднимает туннель.
+  ///
+  /// Ошибка сервера НЕ превращается в «успех»: если связи нет или пробный
+  /// уже использован, пользователь видит сообщение, а не зелёную галочку.
   Future<void> activateTrial() async {
-    final trialPlan = PremiumPlan.available.firstWhere(
-      (plan) => plan.isTrial,
-      orElse: () => throw Exception('Trial plan not found'),
-    );
+    final next = await ref.read(subscriptionRepositoryProvider).activateTrial();
 
-    final next = SubscriptionState(
-      tier: SubscriptionTier.standard,
-      planId: trialPlan.id,
-      expiresAt: DateTime.now().add(Duration(days: trialPlan.trialDays)),
-      isTrialActive: true,
-    );
+    await ref.read(accessKeysProvider.notifier).refresh();
+    final keys = ref.read(accessKeysProvider).value ?? const <AccessKey>[];
+    for (final key in keys) {
+      final source = ConnectionSource.fromAccessKey(key);
+      if (source != null && source.isUsable) {
+        await ref.read(activeSourceProvider.notifier).select(source);
+        break;
+      }
+    }
 
     state = AsyncData(next);
     await ref.read(configRepositoryProvider).saveSubscription(next);
 
     ref.read(notificationServiceProvider).push(
           title: 'Пробный период активирован',
-          body: 'У вас ${trialPlan.trialDays} дней полного доступа без ограничений',
+          body: '3 дня полного доступа, лимит 2 ГБ. Ключ уже добавлен — '
+              'нажмите кнопку подключения на главном экране.',
           icon: AppNotificationIcon.promo,
         );
   }

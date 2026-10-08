@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/premium_plan.dart';
 import '../../providers/subscription_providers.dart';
+import '../../services/api/api_exception.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/app_page.dart';
 import '../../widgets/common/glass_button.dart';
@@ -61,31 +62,58 @@ class TrialScreen extends ConsumerWidget {
     );
   }
 
-  void _activateTrial(BuildContext context, WidgetRef ref) async {
+  Future<void> _activateTrial(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     try {
+      // Пробный период выдаёт СЕРВЕР: подписку TRIAL и настоящий ACTIVE-ключ
+      // на 3 дня с лимитом 2 ГБ, который сразу уходит в ядро. После этого
+      // экран сам переключается в состояние «активен», а ключ становится
+      // активным источником — остаётся нажать кнопку подключения.
       await ref.read(subscriptionProvider.notifier).activateTrial();
-      if (context.mounted) {
-        final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.trialActivated),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Пробный период активирован: 3 дня, лимит 2 ГБ. '
+            'Ключ добавлен — подключитесь на главном экране.',
           ),
-        );
-      }
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+        ),
+      );
     } catch (e) {
-      if (context.mounted) {
-        final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${l10n.commonError}: $e'),
-            backgroundColor: AppColors.danger,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(_trialErrorMessage(e, l10n)),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+        ),
+      );
     }
+  }
+
+  /// Объясняет, что именно случилось, вместо «Ошибка: ApiException».
+  String _trialErrorMessage(Object e, AppLocalizations l10n) {
+    if (e is ApiException) {
+      if (e.isNetworkError) {
+        return 'Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.';
+      }
+      final raw = e.message.toUpperCase();
+      if (raw.contains('ALREADY BEEN USED') || raw.contains('TRIAL_ALREADY')) {
+        return 'Пробный период на этом устройстве уже использован. '
+            'Выберите тариф — доступ включим сразу после оплаты.';
+      }
+      if (raw.contains('ACTIVE SUBSCRIPTION ALREADY EXISTS')) {
+        return 'У вас уже есть действующий доступ — пробный не нужен.';
+      }
+      if (e.statusCode == 401) {
+        return 'Сервер не узнал устройство. Перезапустите приложение и повторите.';
+      }
+      return 'Не получилось активировать пробный период: ${e.message}';
+    }
+    return '${l10n.commonError}: $e';
   }
 }
 
@@ -109,7 +137,16 @@ class _TrialActiveScreen extends StatelessWidget {
         children: [
           const SizedBox(height: 16),
           _TrialCountdownCard(daysLeft: daysLeft, hoursLeft: hoursLeft),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
+          // Пробный активирован — ведём туда, где включается туннель.
+          GlassButton(
+            label: 'Подключиться',
+            icon: Icons.power_settings_new_rounded,
+            gradient: AppColors.primaryGradient,
+            foreground: Colors.white,
+            onTap: () => context.go('/'),
+          ),
+          const SizedBox(height: 20),
           _TrialFeaturesCard(l10n: l10n),
           const SizedBox(height: 24),
           _UpgradeToPaidCard(l10n: l10n),
@@ -204,11 +241,15 @@ class _TrialOfferCard extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           // Features list
-          ...[
-            l10n.trialFeatureUnlimited,
-            l10n.trialFeatureAllServers,
-            l10n.trialFeature3Devices,
-            l10n.trialFeatureFullProtection,
+          // Честно: у пробного есть срок и лимит трафика, и лимит реально
+          // работает (его считает сборщик статистики узла). «Безлимит» на
+          // пробном был бы обещанием, которое сервер не выполняет.
+          ...const [
+            '3 дня полного доступа',
+            'Лимит трафика 2 ГБ',
+            'Все серверы',
+            'VLESS + Reality (обход блокировок)',
+            'Без привязки карты',
           ].map((feature) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Row(
@@ -279,7 +320,9 @@ class _ViewAllPlansButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: TextButton(
-        onPressed: () => context.go('/premium'),
+        // Раньше здесь было context.go('/premium') — переход на этот же
+        // экран, то есть кнопка не делала ничего. Тарифы живут на /plans.
+        onPressed: () => context.push('/plans'),
         child: Text(l10n.trialViewAllPlans),
       ),
     );
@@ -444,9 +487,8 @@ class _UpgradeToPaidCard extends StatelessWidget {
           const SizedBox(height: 16),
           GlassButton(
             label: l10n.trialUpgradeButton,
-            // Кнопка вела в никуда: TODO вместо навигации. Тарифы живут на
-            // /premium — это единственный экран с планами в приложении.
-            onTap: () => context.go('/premium'),
+            // Ведёт на экран тарифов с ценами с сервера, а не на сам себя.
+            onTap: () => context.push('/plans'),
           ),
         ],
       ),

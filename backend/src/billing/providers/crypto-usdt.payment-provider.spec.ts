@@ -154,7 +154,12 @@ function cryptoService() {
   process.env.CRYPTO_DISCOUNT_RUB = String(cfg.discountRub);
   process.env.CRYPTO_INVOICE_TTL_MIN = String(cfg.invoiceTtlMinutes);
   process.env.CRYPTO_NETWORK = cfg.defaultNetwork;
-  const service = new BillingService(prisma as unknown as PrismaService);
+  // Второй аргумент — синхронизатор ядра: в этих тестах он не нужен,
+  // но конструктор требует его после выдачи пробного ключа.
+  const service = new BillingService(
+    prisma as unknown as PrismaService,
+    { sync: async () => null } as unknown as never,
+  );
   return { service, store, prisma };
 }
 

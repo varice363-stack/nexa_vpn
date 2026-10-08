@@ -25,6 +25,7 @@ import '../../screens/splash/splash_screen.dart';
 import '../../screens/support/support_screen.dart';
 import '../../screens/security/socks5_shield_screen.dart';
 import '../../screens/settings/devices_screen.dart';
+import '../../screens/premium/plans_screen.dart';
 import '../../screens/premium/trial_screen.dart';
 import '../../widgets/navigation/bottom_nav.dart';
 
@@ -110,6 +111,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/admin/create-banner',
         builder: (context, state) => AdminCreateBannerScreen(
           initial: state.extra is PromoBanner ? state.extra as PromoBanner : null,
+          initialId: state.uri.queryParameters['id'],
         ),
       ),
       GoRoute(
@@ -147,6 +149,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/premium',
         builder: (context, state) => const TrialScreen(),
+      ),
+      GoRoute(
+        path: '/plans',
+        builder: (context, state) => const PlansScreen(),
       ),
       GoRoute(
         path: '/devices',

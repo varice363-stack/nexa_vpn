@@ -132,11 +132,15 @@ function makePrisma(overrides: Record<string, unknown> = {}) {
   } as unknown as PrismaService;
 }
 
+/** Ядро узла в тестах не поднимается: важен только факт вызова sync(). */
+const xrayStub = { sync: jest.fn().mockResolvedValue({ changed: true }) };
+beforeEach(() => xrayStub.sync.mockClear());
+
 describe('BillingService', () => {
   describe('checkout (scenarios 1 & 6 — price from backend)', () => {
     it('creates a PENDING transaction with the plan price from the backend', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       const result = await service.checkout(user, 'p1');
 
@@ -152,7 +156,7 @@ describe('BillingService', () => {
 
     it('rejects an unknown or inactive plan', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
       await expect(service.checkout(user, 'nope')).rejects.toThrow('Plan not available');
     });
   });
@@ -160,7 +164,7 @@ describe('BillingService', () => {
   describe('webhook PAID (scenario 2)', () => {
     it('marks transaction PAID, creates an ACTIVE subscription and issues a key', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       const result = await service.handleWebhook('mock', {
         event: 'payment.paid',
@@ -192,7 +196,7 @@ describe('BillingService', () => {
           findFirst: jest.fn(async () => existingSub),
         },
       });
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
       const tx = {
         ...transaction,
         status: PaymentStatus.PENDING,
@@ -226,7 +230,7 @@ describe('BillingService', () => {
       const prisma = makePrisma();
       (prisma.paymentTransaction.findUnique as jest.Mock).mockResolvedValue(paidTx);
 
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
       const result = await service.handleWebhook('mock', {
         event: 'payment.paid',
         providerPaymentId: 'pay_1',
@@ -247,7 +251,7 @@ describe('BillingService', () => {
   describe('webhook FAILED (scenario 4)', () => {
     it('marks the transaction FAILED and creates no subscription', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       const result = await service.handleWebhook('mock', {
         event: 'payment.failed',
@@ -262,10 +266,43 @@ describe('BillingService', () => {
     });
   });
 
+  describe('пробный период (жалоба «нажимаю — ничего не начинается»)', () => {
+    it('выдаёт настоящий ключ: ACTIVE, 3 дня, лимит 2 ГБ и сразу в ядро', async () => {
+      const prisma = makePrisma();
+      const service = new BillingService(prisma, xrayStub as never);
+
+      const result = await service.activateTrial(user);
+
+      expect(result.status).toBe('TRIAL');
+      const created = (prisma.accessKey.create as jest.Mock).mock.calls[0][0];
+      // Ключ, а не «локальная галочка»: без ACTIVE-ключа VPN не поднимется.
+      expect(created.data.status).toBe('ACTIVE');
+      expect(created.data.name).toBe('Пробный период');
+      // Лимит настоящий — его считает сборщик статистики узла.
+      expect(created.data.trafficLimitMb).toBe(2048);
+      // Срок — 3 дня от активации.
+      const days = (created.data.expiresAt as Date).getTime() - Date.now();
+      expect(Math.round(days / 86400000)).toBe(3);
+      // Ключ ушёл в ядро в том же запросе, а не через 30 секунд.
+      expect((xrayStub.sync as jest.Mock).mock.calls.length).toBe(1);
+    });
+
+    it('второй раз не выдаёт — «уже использован», а не молчаливая пустота', async () => {
+      const prisma = makePrisma({
+        user: { findUnique: jest.fn(async () => ({ id: 'u1', trialUsedAt: new Date() })) },
+      });
+      const service = new BillingService(prisma, xrayStub as never);
+
+      await expect(service.activateTrial(user)).rejects.toThrow(/already been used/i);
+      expect((prisma.accessKey.create as jest.Mock).mock.calls.length).toBe(0);
+      expect((xrayStub.sync as jest.Mock).mock.calls.length).toBe(0);
+    });
+  });
+
   describe('expiry (scenario 5)', () => {
     it('marks the subscription EXPIRED and flips ACTIVE keys to EXPIRED', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       const result = await service.expireSubscription('u1', 'sub1');
 
@@ -281,7 +318,7 @@ describe('BillingService', () => {
       // contract dependency: BillingService does not issue keys on FAILED,
       // and provisioning relies on SubscriptionsService.hasActivePremium.
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
       await service.handleWebhook('mock', {
         event: 'payment.failed',
         providerPaymentId: 'pay_1',
@@ -305,7 +342,7 @@ describe('BillingService', () => {
           findFirst: jest.fn(async () => existingTx),
         },
       });
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       const result = await service.checkout(user, 'p1', 'key-123');
 
@@ -316,7 +353,7 @@ describe('BillingService', () => {
 
     it('creates a NEW transaction for a different key', async () => {
       const prisma = makePrisma(); // findFirst → null
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       const result = await service.checkout(user, 'p1', 'key-456');
 
@@ -330,7 +367,7 @@ describe('BillingService', () => {
   describe('webhook security & idempotency (TASK #009-B)', () => {
     it('rejects a webhook with an invalid signature', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       await expect(
         service.handleWebhook('mock', {
@@ -346,7 +383,7 @@ describe('BillingService', () => {
       const paidTx = { ...transaction, status: PaymentStatus.PAID, plan };
       const prisma = makePrisma();
       (prisma.paymentTransaction.findUnique as jest.Mock).mockResolvedValue(paidTx);
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       const result = await service.handleWebhook('mock', {
         event: 'payment.paid',
@@ -364,7 +401,7 @@ describe('BillingService', () => {
       const failedTx = { ...transaction, status: PaymentStatus.FAILED, plan };
       const prisma = makePrisma();
       (prisma.paymentTransaction.findUnique as jest.Mock).mockResolvedValue(failedTx);
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       await expect(
         service.handleWebhook('mock', {
@@ -380,7 +417,7 @@ describe('BillingService', () => {
       const pendingTx = { ...transaction, status: PaymentStatus.PENDING, plan };
       const prisma = makePrisma();
       (prisma.paymentTransaction.findUnique as jest.Mock).mockResolvedValue(pendingTx);
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       await expect(
         service.handleWebhook('mock', {
@@ -394,7 +431,7 @@ describe('BillingService', () => {
 
     it('records webhook status fields on a paid event', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       await service.handleWebhook('mock', {
         event: 'payment.paid',
@@ -415,7 +452,7 @@ describe('BillingService', () => {
   describe('trial (TASK #009-C)', () => {
     it('activates a 3-day TRIAL, issues a scoped key, marks trialUsedAt', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       const result = await service.activateTrial(user);
 
@@ -441,7 +478,7 @@ describe('BillingService', () => {
           })),
         },
       });
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
       await expect(service.activateTrial(user)).rejects.toThrow('already been used');
     });
 
@@ -451,13 +488,13 @@ describe('BillingService', () => {
           findFirst: jest.fn(async () => ({ id: 'sub1', status: SubscriptionStatus.ACTIVE })),
         },
       });
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
       await expect(service.activateTrial(user)).rejects.toThrow('already exists');
     });
 
     it('trialStatus reports availability for a fresh account', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
       const status = await service.trialStatus(user);
       expect(status.available).toBe(true);
       expect(status.used).toBe(false);
@@ -467,7 +504,7 @@ describe('BillingService', () => {
   describe('cleanup (TASK #009-C)', () => {
     it('cancels stale PENDING transactions and leaves fresh ones', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       const result = await service.cleanupPending(24);
 
@@ -481,7 +518,7 @@ describe('BillingService', () => {
 
     it('expires overdue trials and their keys', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       const result = await service.expireOverdueTrials();
 
@@ -497,7 +534,7 @@ describe('BillingService', () => {
   describe('webhook replay protection (TASK #009-C)', () => {
     it('rejects a webhook with an outdated timestamp', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
       const stale = Date.now() - 60 * 60 * 1000; // 1 hour old (tolerance 5 min)
 
       await expect(
@@ -513,7 +550,7 @@ describe('BillingService', () => {
 
     it('accepts a webhook with a fresh timestamp', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       const result = await service.handleWebhook('mock', {
         event: 'payment.paid',
@@ -528,7 +565,7 @@ describe('BillingService', () => {
 
     it('records every webhook event in the audit log', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       await service.handleWebhook('mock', {
         event: 'payment.paid',
@@ -547,7 +584,7 @@ describe('BillingService', () => {
   describe('provider factory (TASK #009-C)', () => {
     it('mock provider is used by default and works', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
       const result = await service.checkout(user, 'p1');
       expect(result.status).toBe('PENDING');
     });
@@ -556,7 +593,7 @@ describe('BillingService', () => {
       process.env.PAYMENT_PROVIDER = 'real';
       try {
         const prisma = makePrisma();
-        const service = new BillingService(prisma);
+        const service = new BillingService(prisma, xrayStub as never);
         await expect(service.checkout(user, 'p1')).rejects.toThrow('not configured');
       } finally {
         delete process.env.PAYMENT_PROVIDER;
@@ -567,7 +604,7 @@ describe('BillingService', () => {
   describe('real payment verification (TASK #015)', () => {
     it('rejects a webhook whose amount differs from the plan price', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       await expect(
         service.handleWebhook('mock', {
@@ -583,7 +620,7 @@ describe('BillingService', () => {
 
     it('accepts a webhook whose amount matches the plan price', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       const result = await service.handleWebhook('mock', {
         event: 'payment.paid',
@@ -599,7 +636,7 @@ describe('BillingService', () => {
 
     it('forged client success is impossible — webhook requires a real transaction', async () => {
       const prisma = makePrisma();
-      const service = new BillingService(prisma);
+      const service = new BillingService(prisma, xrayStub as never);
 
       // A client cannot call the webhook with an unknown payment id.
       await expect(

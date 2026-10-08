@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -30,10 +32,48 @@ class _HomeBannerStripState extends ConsumerState<HomeBannerStrip> {
   final PageController _controller = PageController();
   int _index = 0;
 
+  /// Автопрокрутка карусели.
+  ///
+  /// Без неё «карусель» из одного-двух баннеров выглядела сломанной: ничего не
+  /// двигалось само, а свайп по почти статичной картинке никто не пробует.
+  /// Интервал берётся у каждого баннера свой (`displayDuration`, задаётся в
+  /// админке), поэтому «30 секунд» и «45 секунд» работают как обещано.
+  Timer? _auto;
+  String? _scheduleKey;
+
   @override
   void dispose() {
+    _auto?.cancel();
     _controller.dispose();
     super.dispose();
+  }
+
+  /// Перезапускает автопрокрутку, только если состав баннеров или текущая
+  /// страница изменились: build вызывается часто, а таймер сбрасывать нельзя,
+  /// иначе он не сработает никогда.
+  void _maybeScheduleAuto(List<PromoBanner> banners) {
+    final key = '${banners.map((b) => '${b.id}:${b.displayDuration}').join(',')}|$_index';
+    if (key == _scheduleKey) return;
+    _scheduleKey = key;
+
+    _auto?.cancel();
+    if (banners.length < 2) return;
+
+    final raw = banners[_index].displayDuration;
+    final seconds = raw <= 0 ? 30 : raw.clamp(3, 600);
+    _auto = Timer(Duration(seconds: seconds), () {
+      if (!mounted) return;
+      final next = (_index + 1) % banners.length;
+      if (_controller.hasClients) {
+        _controller.animateToPage(
+          next,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      } else {
+        setState(() => _index = next);
+      }
+    });
   }
 
   void _trackImpression(String id) {
@@ -54,6 +94,7 @@ class _HomeBannerStripState extends ConsumerState<HomeBannerStrip> {
       _index = banners.length - 1;
     }
     _trackImpression(banners[_index].id);
+    _maybeScheduleAuto(banners);
     return Column(
       children: [
         SizedBox(
@@ -108,8 +149,10 @@ class _BannerCard extends ConsumerWidget {
       }
       return;
     }
-    // Без внешнего адреса — как раньше: показываем Premium.
-    context.go('/premium');
+    // Без внешнего адреса — показываем Premium. Именно push: с `context.go`
+    // маршрут /premium оставался в стеке один, и жест «назад» на нём закрывал
+    // приложение вместо возврата на главный экран.
+    context.push('/premium');
   }
 
   @override

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../models/promo_banner.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/banner_providers.dart';
 import '../../services/api/api_exception.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/admin_back_guard.dart';
@@ -65,6 +66,9 @@ class _AdminBannersScreenState extends ConsumerState<AdminBannersScreen> {
         await repo.activateBanner(b.id);
       }
       await _load();
+      // Главный экран показывает баннеры из кэша — без обновления «Скрыть»
+      // не убирало баннер с главной до перезапуска приложения.
+      await ref.read(bannerProvider.notifier).refresh();
     } on ApiException catch (e) {
       _showError(e.message);
     } catch (e) {
@@ -101,6 +105,7 @@ class _AdminBannersScreenState extends ConsumerState<AdminBannersScreen> {
     try {
       await ref.read(bannerRepositoryProvider).deleteBanner(b.id);
       await _load();
+      await ref.read(bannerProvider.notifier).refresh();
     } on ApiException catch (e) {
       _showError(e.message);
     } catch (e) {
@@ -180,8 +185,10 @@ class _AdminBannersScreenState extends ConsumerState<AdminBannersScreen> {
                 _BannerCard(
                   banner: b,
                   busy: _busyId == b.id,
+                  // id едет и в ссылке: если extra потеряется (перезапуск
+                  // процесса), экран всё равно откроет правку, а не создание.
                   onEdit: () => context.push(
-                    '/admin/create-banner',
+                    '/admin/create-banner?id=${b.id}',
                     extra: b,
                   ),
                   onToggle: () => _toggle(b),

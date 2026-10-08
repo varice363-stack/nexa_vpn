@@ -14,6 +14,11 @@ import {
   CryptoUsdtProvider,
 } from './providers/crypto-usdt.payment-provider';
 import { PaymentProviderFactory } from './providers/payment-provider.factory';
+import { XrayClientSyncService } from '../provisioning/xray-client-sync.service';
+
+/** Пробный период: 3 дня и 2 ГБ — один на устройство (аккаунт устройства). */
+export const TRIAL_DAYS = 3;
+export const TRIAL_TRAFFIC_LIMIT_MB = 2048;
 
 /**
  * Billing orchestration — subscription lifecycle + payment transactions.
@@ -40,7 +45,13 @@ export class BillingService {
    */
   private readonly crypto: CryptoUsdtProvider;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    // Ключ пробного периода должен попасть в ядро в том же запросе, а не
+    // через интервал синхронизации: человек жмёт «Пробный период» и должен
+    // подключаться сразу.
+    private readonly xraySync: XrayClientSyncService,
+  ) {
     this.config = loadBillingConfig();
 
     // USDT живёт всегда (это второй СПОСОБ оплаты, а не замена основного):
@@ -230,7 +241,7 @@ export class BillingService {
     });
     if (!plan) throw new BadRequestException('No plans available');
 
-    const expiresAt = new Date(Date.now() + 3 * 86400000);
+    const expiresAt = new Date(Date.now() + TRIAL_DAYS * 86400000);
     const subscription = await this.prisma.subscription.create({
       data: {
         userId: user.id,
@@ -246,21 +257,37 @@ export class BillingService {
     });
 
     // Trial entitlement: an ACTIVE access key scoped to the trial window.
+    //
+    // Лимит трафика здесь не «для красоты»: сборщик статистики узла считает
+    // реальные байты, а enforceTrafficLimits() переводит ключ в EXPIRED при
+    // превышении. То есть 2 ГБ действительно ограничивают бесплатный доступ.
     const key = await this.prisma.accessKey.create({
       data: {
         userId: user.id,
-        name: 'Trial key',
+        name: 'Пробный период',
         protocol: 'VLESS',
         uuid: randomUUID(),
         status: 'ACTIVE',
         expiresAt,
+        trafficLimitMb: TRIAL_TRAFFIC_LIMIT_MB,
       },
     });
+
+    // Ключ уходит узлу немедленно — иначе первые ~30 секунд после нажатия
+    // «Активировать пробный период» подключение не проходит.
+    try {
+      await this.xraySync.sync();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('[xray-sync] trial publish failed:', (err as Error).message);
+    }
 
     return {
       status: 'TRIAL',
       subscriptionId: subscription.id,
       expiresAt,
+      trialDays: TRIAL_DAYS,
+      trafficLimitMb: TRIAL_TRAFFIC_LIMIT_MB,
       accessKey: { id: key.id, status: key.status },
     };
   }

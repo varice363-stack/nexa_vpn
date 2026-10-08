@@ -28,11 +28,21 @@ class AppPage extends StatelessWidget {
     // в шапке: стрелка проверяет canPop и при пустом стеке уводит на главную,
     // а жест такой проверки не имел - на вершине стека он закрывал приложение.
     // PopScope здесь, а не в отдельных экранах: чинит сразу все страницы на AppPage.
+    // canPop здесь ВСЕГДА false, а решение принимается в момент жеста.
+    // Раньше стояло canPop: Navigator.of(context).canPop() — величина,
+    // посчитанная при сборке: пока экран жил, стек успевал измениться
+    // (например, после сохранения баннера, где стоял Navigator.pop вместо
+    // go_router pop), и жест «назад» уходил не туда — вплоть до закрытия
+    // приложения. Теперь: есть куда возвращаться — возвращаемся, нет —
+    // уходим на главный экран.
     return PopScope<void>(
-      canPop: Navigator.of(context).canPop(),
+      canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        if (showBackButton && !Navigator.of(context).canPop()) {
+        final router = GoRouter.of(context);
+        if (router.canPop()) {
+          router.pop();
+        } else if (showBackButton) {
           context.go('/');
         }
       },
@@ -49,9 +59,13 @@ class AppPage extends StatelessWidget {
                   children: [
                     if (showBackButton)
                       GestureDetector(
+                        // Тот же порядок, что и у системного жеста: pop через
+                        // go_router, иначе его стек расходится с навигатором и
+                        // следующий жест «назад» промахивается.
                         onTap: () {
-                          if (Navigator.canPop(context)) {
-                            Navigator.pop(context);
+                          final router = GoRouter.of(context);
+                          if (router.canPop()) {
+                            router.pop();
                           } else {
                             context.go('/');
                           }

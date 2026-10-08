@@ -1,5 +1,6 @@
 import { Injectable, Module, OnModuleInit } from '@nestjs/common';
 
+import { ProvisioningModule } from '../provisioning/provisioning.module';
 import { loadBillingConfig } from './billing.config';
 import { BillingController } from './billing.controller';
 import { PlansController } from './plans.controller';
@@ -34,6 +35,7 @@ class BillingCleanupScheduler implements OnModuleInit {
 }
 
 @Module({
+  imports: [ProvisioningModule],
   controllers: [BillingController, PlansController],
   providers: [BillingService, BillingCleanupScheduler],
   exports: [BillingService],

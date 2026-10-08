@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../widgets/common/admin_back_guard.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../models/promo_banner.dart';
@@ -21,10 +22,15 @@ import '../../widgets/common/glass_container.dart';
 /// сохранение уходит в PATCH /banners/:id. До этого правка была невозможна:
 /// оставалось удалить баннер и создать заново, теряя статистику показов.
 class AdminCreateBannerScreen extends ConsumerStatefulWidget {
-  const AdminCreateBannerScreen({super.key, this.initial});
+  const AdminCreateBannerScreen({super.key, this.initial, this.initialId});
 
-  /// Баннер, который редактируем; null = создаём новый.
+  /// Баннер, который редактируем; null = создаём новый или догружаем по id.
   final PromoBanner? initial;
+
+  /// id баннера для правки — страховка на случай, если `extra` не доехал
+  /// (перезапуск процесса, восстановление маршрута). Тогда экран дотянет
+  /// баннер с сервера и будет править его, а не создавать дубликат.
+  final String? initialId;
 
   @override
   ConsumerState<AdminCreateBannerScreen> createState() =>
@@ -43,8 +49,10 @@ class _AdminCreateBannerScreenState
 
   BannerPlacement _placement = BannerPlacement.home;
   bool _isSubmitting = false;
+  String? _editingId;
+  bool _loadingInitial = false;
 
-  bool get _isEditing => widget.initial != null;
+  bool get _isEditing => _editingId != null;
   File? _selectedImage;
   String? _imagePreviewPath;
   final ImagePicker _picker = ImagePicker();
@@ -109,6 +117,7 @@ class _AdminCreateBannerScreenState
   @override
   void initState() {
     super.initState();
+    _editingId = widget.initial?.id ?? widget.initialId;
     final b = widget.initial;
     if (b != null) {
       _titleController.text = b.title;
@@ -118,6 +127,36 @@ class _AdminCreateBannerScreenState
       _targetUrlController.text = b.targetUrl ?? '';
       _displayDurationController.text = '${b.displayDuration}';
       _placement = b.placement;
+    } else if (_editingId != null) {
+      _loadInitialFromServer();
+    }
+  }
+
+  /// Правка без объекта: забираем баннер с сервера по id.
+  Future<void> _loadInitialFromServer() async {
+    setState(() => _loadingInitial = true);
+    try {
+      final all = await ref.read(bannerRepositoryProvider).getAllBanners();
+      final found = all.where((x) => x.id == _editingId).toList();
+      if (found.isEmpty) {
+        if (mounted) _showError('Баннер не найден на сервере.');
+        return;
+      }
+      final b = found.first;
+      if (!mounted) return;
+      setState(() {
+        _titleController.text = b.title;
+        _descriptionController.text = b.description;
+        _imageUrlController.text = b.imageUrl ?? '';
+        _buttonTextController.text = b.buttonText ?? '';
+        _targetUrlController.text = b.targetUrl ?? '';
+        _displayDurationController.text = '${b.displayDuration}';
+        _placement = b.placement;
+      });
+    } catch (e) {
+      if (mounted) _showError('Не удалось загрузить баннер: $e');
+    } finally {
+      if (mounted) setState(() => _loadingInitial = false);
     }
   }
 
@@ -161,7 +200,7 @@ class _AdminCreateBannerScreenState
       // Создаём ИЛИ обновляем (редактирование) — картинка грузится после обоих.
       final banner = _isEditing
           ? await repo.updateBanner(
-              bannerId: widget.initial!.id,
+              bannerId: _editingId!,
               title: title,
               description: description,
               imageUrl: imageUrl,
@@ -204,6 +243,11 @@ class _AdminCreateBannerScreenState
         }
       }
 
+      // Главный экран держит баннеры в кэше: без обновления он показывал бы
+      // старый текст до перезапуска приложения — выглядело как «правка не
+      // сохранилась».
+      await ref.read(bannerProvider.notifier).refresh();
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -215,7 +259,7 @@ class _AdminCreateBannerScreenState
           backgroundColor: AppColors.success,
         ),
       );
-      Navigator.of(context).pop();
+      context.pop();
     } on ApiException catch (e) {
       // При редактировании в офлайне НЕ подсовываем локальную копию: это был бы
       // дубликат баннера, которого нет на сервере.
@@ -265,7 +309,7 @@ class _AdminCreateBannerScreenState
         duration: const Duration(seconds: 3),
       ),
     );
-    Navigator.of(context).pop();
+    context.pop();
   }
 
   void _showError(String message) {
@@ -304,7 +348,9 @@ class _AdminCreateBannerScreenState
   Widget build(BuildContext context) {
     return AdminBackGuard(
       child: AppPage(
-      title: _isEditing ? 'Изменить баннер' : 'Создать баннер',
+      title: _loadingInitial
+          ? 'Загружаем баннер…'
+          : (_isEditing ? 'Изменить баннер' : 'Создать баннер'),
       subtitle: _isEditing
           ? 'Правка без удаления: статистика показов сохраняется'
           : 'Рекламный баннер для партнёрской программы',
