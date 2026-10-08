@@ -72,14 +72,14 @@ class TrialScreen extends ConsumerWidget {
       // активным источником — остаётся нажать кнопку подключения.
       await ref.read(subscriptionProvider.notifier).activateTrial();
       messenger.showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
             'Пробный период активирован: 3 дня, лимит 2 ГБ. '
             'Ключ добавлен — подключитесь на главном экране.',
           ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 5),
+          duration: Duration(seconds: 5),
         ),
       );
     } catch (e) {
