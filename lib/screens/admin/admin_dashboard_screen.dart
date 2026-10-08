@@ -339,7 +339,9 @@ class _BannersTab extends ConsumerWidget {
 
   Widget _buildCreateBannerButton(BuildContext context, AppLocalizations l10n) {
     return GestureDetector(
-      onTap: () => context.push('/admin/create-banner'),
+      // Ведёт на СПИСОК баннеров (создание - там же). Раньше кнопка вела сразу
+      // в форму: созданный баннер нельзя было ни найти, ни удалить.
+      onTap: () => context.push('/admin/banners'),
       child: GlassContainer(
         borderRadius: BorderRadius.circular(16),
         padding: const EdgeInsets.all(16),
@@ -360,7 +362,7 @@ class _BannersTab extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.adminCreateBanner,
+                    l10n.adminBannersSection,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -369,7 +371,7 @@ class _BannersTab extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    l10n.adminCreateBannerSubtitle,
+                    l10n.adminBannersSectionSubtitle,
                     style: const TextStyle(
                       fontSize: 11,
                       color: AppColors.textSecondary,

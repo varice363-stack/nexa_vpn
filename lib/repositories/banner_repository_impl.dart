@@ -113,6 +113,10 @@ class BannerRepositoryImpl implements BannerRepository {
       _api.post('/banners/$bannerId/deactivate');
 
   @override
+  Future<void> deleteBanner(String bannerId) =>
+      _api.delete('/banners/$bannerId');
+
+  @override
   Future<void> uploadBannerImage({
     required String bannerId,
     required File imageFile,

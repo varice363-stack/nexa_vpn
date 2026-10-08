@@ -441,6 +441,8 @@
   "commonError": "Error",
   "adminCreateBanner": "Create Banner",
   "adminCreateBannerSubtitle": "Add new promotional banner",
+"adminBannersSection": "Banners: list and delete",
+  "adminBannersSectionSubtitle": "Show, hide or delete any banner, including the default one",
   "adminBannerTitle": "Title",
   "adminBannerDescription": "Description",
   "adminBannerImageUrl": "Image URL (optional)",

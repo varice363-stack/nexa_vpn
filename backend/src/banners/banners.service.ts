@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { promises as fs } from 'fs';
+import { join } from 'path';
 
 import { PrismaService } from '../common/prisma/prisma.service';
 import { BannerPlacement, CreateBannerDto } from './dto/create-banner.dto';
@@ -120,6 +122,35 @@ export class BannersService {
       });
     } catch {
       // Banner deleted between render and tracking — nothing to count.
+    }
+  }
+
+  /**
+   * Удалить баннер вместе с картинкой.
+   *
+   * Маршрута удаления не было вообще: начальный (тестовый) баннер нельзя было
+   * ни убрать из списка, ни снять с показа навсегда, только "деактивировать",
+   * и он висел в панели мусорной строкой. Файл загрузки удаляем следом, иначе
+   * ./uploads разрастался бы мёртвыми png.
+   */
+  async remove(id: string) {
+    const banner = await this.ensureExists(id);
+    await this.prisma.banner.delete({ where: { id } });
+    await this.removeUpload(banner.imageUrl);
+    return { deleted: true, id };
+  }
+
+  /** Удаляет файл из ./uploads, если imageUrl ведёт именно туда. */
+  private async removeUpload(imageUrl: string | null): Promise<void> {
+    if (!imageUrl || !imageUrl.startsWith('/uploads/')) return;
+    const name = imageUrl.slice('/uploads/'.length);
+    // '/' и '..' в имени = попытка выйти за каталог записью в БД: не идём.
+    if (!name || name.includes('/') || name.includes('..')) return;
+    const dir = join(process.cwd(), process.env.UPLOADS_DIR || 'uploads');
+    try {
+      await fs.unlink(join(dir, name));
+    } catch {
+      // файла нет (уже удалён) - баннер всё равно удалён, ошибкой не считаем
     }
   }
 

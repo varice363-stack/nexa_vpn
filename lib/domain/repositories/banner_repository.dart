@@ -34,6 +34,9 @@ abstract class BannerRepository {
   /// POST /banners/:id/deactivate — deactivate a banner (admin only).
   Future<void> deactivateBanner(String bannerId);
 
+  /// DELETE /banners/:id — удалить баннер навсегда (admin only).
+  Future<void> deleteBanner(String bannerId);
+
   /// POST /banners/:id/upload — upload image file for banner (admin only).
   Future<void> uploadBannerImage({
     required String bannerId,

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -84,6 +85,17 @@ export class BannersController {
    * them in the background and must never wait on, or fail because of,
    * analytics.
    */
+  /**
+   * Admin: удалить баннер навсегда. В отличие от deactivate убирает строку из
+   * панели и вычёркивает картинку из ./uploads - иначе "начальный" баннер
+   * нельзя было убрать никуда.
+   */
+  @Roles(Role.ADMIN)
+  @Delete(':id')
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.banners.remove(id);
+  }
+
   @Public()
   @Post(':id/impression')
   @HttpCode(HttpStatus.NO_CONTENT)

@@ -441,6 +441,8 @@
   "commonError": "Ошибка",
   "adminCreateBanner": "Создать баннер",
   "adminCreateBannerSubtitle": "Добавить новый промо-баннер",
+"adminBannersSection": "Баннеры: все и удаление",
+  "adminBannersSectionSubtitle": "Показать, скрыть или удалить любой баннер, в том числе начальный",
   "adminBannerTitle": "Заголовок",
   "adminBannerDescription": "Описание",
   "adminBannerImageUrl": "URL изображения (опционально)",

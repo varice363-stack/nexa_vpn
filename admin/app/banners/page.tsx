@@ -65,6 +65,14 @@ export default function BannersPage() {
     load();
   }
 
+  async function remove(b: Banner) {
+    // Раньше удаления не было ни в панели, ни на сервере: «начальный» баннер
+    // можно было только «отключить», и он вечно висел в списке.
+    if (!confirm(`Удалить "${b.title}" вместе с загруженной картинкой? Отменить нельзя.`)) return;
+    await api(`/banners/${b.id}`, { method: 'DELETE' });
+    load();
+  }
+
   async function uploadImage(b: Banner, file: File) {
     const formData = new FormData();
     formData.append('file', file);
@@ -218,10 +226,16 @@ export default function BannersPage() {
             >
               {b.active ? 'Отключить' : 'Включить'}
             </button>
+            <button
+              onClick={() => remove(b)}
+              className="px-2.5 py-1 rounded-md text-xs font-medium border border-rose-400/40 text-rose-300"
+            >
+              Удалить
+            </button>
           </div>
         ))}
         {banners.length === 0 && !error ? (
-          <div className="glass-card text-muted text-sm">No banners yet.</div>
+          <div className="glass-card text-muted text-sm">Баннеров пока нет.</div>
         ) : null}
       </div>
 

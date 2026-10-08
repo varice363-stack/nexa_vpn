@@ -24,7 +24,19 @@ class AppPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    // Системная «назад» (свайп с края / кнопка) обязана вести себя как стрелка
+    // в шапке: стрелка проверяет canPop и при пустом стеке уводит на главную,
+    // а жест такой проверки не имел - на вершине стека он закрывал приложение.
+    // PopScope здесь, а не в отдельных экранах: чинит сразу все страницы на AppPage.
+    return PopScope<void>(
+      canPop: Navigator.of(context).canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (showBackButton && !Navigator.of(context).canPop()) {
+          context.go('/');
+        }
+      },
+      child: Scaffold(
       body: AnimatedBackground(
         child: SafeArea(
           child: Column(
@@ -102,6 +114,7 @@ class AppPage extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

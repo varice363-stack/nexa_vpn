@@ -1,4 +1,9 @@
 import { NotFoundException } from '@nestjs/common';
+import { promises as fs } from 'fs';
+
+// Спай, а не jest.mock('fs'): мок всего модуля ломает @prisma/client, который
+// тоже лезет в fs (existsSync) при импорте.
+const unlink = jest.spyOn(fs, 'unlink').mockResolvedValue(undefined);
 
 import { PrismaService } from '../common/prisma/prisma.service';
 import { BannersService } from './banners.service';
@@ -41,6 +46,12 @@ function prismaMock(rows: Record<string, unknown>[] = []) {
       create: jest.fn(async ({ data }: any) => {
         const row = { id: 'new-id', impressions: 0, clicks: 0, ...data };
         store.push(row);
+        return row;
+      }),
+      delete: jest.fn(async ({ where }: any) => {
+        const i = store.findIndex((r: any) => r.id === where.id);
+        if (i < 0) throw new Error('Record to delete does not exist.');
+        const [row] = store.splice(i, 1);
         return row;
       }),
     },
@@ -174,5 +185,58 @@ describe('BannersService', () => {
     await expect(service.resetStats('nope')).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+
+  // Удаление баннера: раньше его не было ни в API, ни в панели, поэтому
+  // «начальный» баннер нельзя было убрать - только скрыть.
+  describe('remove', () => {
+    it('удаляет строку и возвращает id', async () => {
+      const { service, prisma } = make();
+      const res = await service.remove('b1');
+      expect(res).toEqual({ deleted: true, id: 'b1' });
+      expect(prisma.banner.delete).toHaveBeenCalledWith({ where: { id: 'b1' } });
+      expect(prisma._store.find((r: any) => r.id === 'b1')).toBeUndefined();
+    });
+
+    it('чистит файл загрузки, если картинка лежала в /uploads', async () => {
+      const rows = [{ id: 'bx', title: 't', description: 'd', active: true, imageUrl: '/uploads/123.png' }];
+      const { service } = make(rows as any);
+      unlink.mockClear();
+
+      await service.remove('bx');
+
+      expect(unlink).toHaveBeenCalledTimes(1);
+      expect(String((fs.unlink as jest.Mock).mock.calls[0][0])).toMatch(/\/uploads\/123\.png$/);
+    });
+
+    it('не трогает файловую систему для внешней ссылки и для баннера без картинки', async () => {
+      const { service } = make([
+        { id: 'ext', title: 't', description: 'd', active: true, imageUrl: 'https://cdn.example/a.png' },
+        { id: 'plain', title: 't', description: 'd', active: true, imageUrl: null },
+      ] as any);
+      (fs.unlink as jest.Mock).mockClear();
+
+      await service.remove('ext');
+      await service.remove('plain');
+
+      expect(unlink).not.toHaveBeenCalled();
+    });
+
+    it('не даёт выйти за каталог uploads через imageUrl', async () => {
+      const { service } = make([
+        { id: 'evil', title: 't', description: 'd', active: true, imageUrl: '/uploads/../../etc/passwd' },
+      ] as any);
+      (fs.unlink as jest.Mock).mockClear();
+
+      await service.remove('evil');
+
+      expect(unlink).not.toHaveBeenCalled();
+    });
+
+    it('несуществующий баннер - 404', async () => {
+      const { service, prisma } = make();
+      await expect(service.remove('nope')).rejects.toBeInstanceOf(NotFoundException);
+      expect(prisma.banner.delete).not.toHaveBeenCalled();
+    });
   });
 });
