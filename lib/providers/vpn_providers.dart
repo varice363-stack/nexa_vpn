@@ -30,9 +30,8 @@ final connectionManagerProvider = Provider<ConnectionManager>(
 
 /// Selects the tunnel backend.
 ///
-/// Overridden with `MockTunnelManager` in tests and anywhere a real tunnel is
-/// impossible; the default is the Xray engine so a normal build connects for
-/// real.
+/// Tests override it with their own fake; there is no simulated tunnel in the
+/// app. The default is the Xray engine, so a normal build connects for real.
 final tunnelManagerProvider = Provider<TunnelManager>(
   (ref) => XrayTunnelManager(logger: ref.watch(loggerProvider)),
 );

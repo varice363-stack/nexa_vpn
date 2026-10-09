@@ -12,9 +12,8 @@ import '../../models/vpn_status.dart';
 /// required our own server metadata would quietly break that promise.
 ///
 /// Implementations:
-///   * `XrayTunnelManager` — production, wraps `flutter_vless` (Xray-core);
-///   * `MockTunnelManager` — simulated phases, used in tests and on platforms
-///     without a native backend.
+///   * `XrayTunnelManager` — production, wraps `flutter_vless` (Xray-core).
+///     Тесты подставляют свой фейк этого интерфейса; симуляции туннеля нет.
 abstract class TunnelManager {
   /// Stream of tunnel phases; emits the current phase immediately on listen.
   Stream<TunnelPhase> get phases;
