@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -178,12 +177,6 @@ class _AdminCreateBannerScreenState
     super.dispose();
   }
 
-  String _generateLocalId() {
-    final rnd = Random.secure();
-    final hex = List.generate(8, (_) => rnd.nextInt(16).toRadixString(16)).join();
-    return 'local-$hex';
-  }
-
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -268,55 +261,14 @@ class _AdminCreateBannerScreenState
       );
       context.pop();
     } on ApiException catch (e) {
-      // При редактировании в офлайне НЕ подсовываем локальную копию: это был бы
-      // дубликат баннера, которого нет на сервере.
-      if (!_isEditing && (e.isNetworkError || e.statusCode == null)) {
-        await _saveLocally(title, description, imageUrl, buttonText, targetUrl, displayDuration);
-      } else {
-        _showError(_buildErrorMessage(e));
-      }
+      // Без связи с сервером баннер НЕ сохраняем на телефоне: локальная копия
+      // выглядела бы опубликованной, а на сервере её нет.
+      _showError(_buildErrorMessage(e));
     } catch (e) {
-      if (_isEditing) {
-        _showError('Не удалось сохранить: $e');
-      } else {
-        await _saveLocally(title, description, imageUrl, buttonText, targetUrl, displayDuration);
-      }
+      _showError(_isEditing ? 'Не удалось сохранить: $e' : 'Не удалось создать баннер: $e');
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
-  }
-
-  Future<void> _saveLocally(
-    String title,
-    String description,
-    String? imageUrl,
-    String? buttonText,
-    String? targetUrl,
-    int displayDuration,
-  ) async {
-    final banner = PromoBanner(
-      id: _generateLocalId(),
-      title: title,
-      description: description,
-      imageUrl: imageUrl,
-      buttonText: buttonText,
-      targetUrl: targetUrl,
-      placement: _placement,
-      active: true,
-      displayDuration: displayDuration,
-    );
-
-    await ref.read(bannerProvider.notifier).saveLocalBanner(banner);
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('💾 Баннер «$title» сохранён (демо-режим).'),
-        backgroundColor: AppColors.primary,
-        duration: const Duration(seconds: 3),
-      ),
-    );
-    context.pop();
   }
 
   void _showError(String message) {
@@ -332,7 +284,7 @@ class _AdminCreateBannerScreenState
   String _buildErrorMessage(Object e) {
     if (e is ApiException) {
       if (e.isNetworkError) {
-        return 'Нет связи с сервером. Баннер сохранён локально.';
+        return 'Нет связи с сервером. Баннер не сохранён — проверьте интернет и повторите.';
       }
       switch (e.statusCode) {
         case 401:
@@ -378,7 +330,7 @@ class _AdminCreateBannerScreenState
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Если сервер недоступен, баннер сохранится локально.',
+                    'Баннер сохраняется только на сервере: без связи он не создастся.',
                     style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                 ),

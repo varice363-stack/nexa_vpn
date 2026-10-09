@@ -2,21 +2,25 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../domain/repositories/banner_repository.dart';
 import '../models/promo_banner.dart';
-import '../services/api/api_exception.dart';
 import 'app_providers.dart';
 
-/// Ключ для хранения баннеров в локальном хранилище.
-const _kLocalBannersKey = 'morok_local_banners';
+/// Последний ответ сервера — только для работы без сети.
 const _kCachedBannersKey = 'morok_cached_banners';
 
-/// Активные промо-баннеры с offline-кэшем.
+/// Старое хранилище «локальных» баннеров (демо-режим админки). Его больше не
+/// читаем; удаляем у тех, у кого оно успело записаться.
+const _kLegacyLocalBannersKey = 'morok_local_banners';
+
+/// Активные промо-баннеры. Показываем ТОЛЬКО то, что отдал сервер.
 ///
-/// Стратегия:
-/// 1. Пробуем загрузить с сервера
-/// 2. При успехе — кэшируем и возвращаем
-/// 3. При ошибке — возвращаем кэш
-/// 4. Если кэша нет — демо-баннеры
+/// 1. Сервер ответил списком (в том числе пустым) — берём его как есть.
+///    Пустой ответ очищает кэш: иначе снятый с показа баннер вернулся бы
+///    офлайн.
+/// 2. Сервер недоступен — последний ответ сервера из кэша.
+/// 3. Никаких вшитых, демо и локальных баннеров: ни одна строка текста на
+///    главном экране не берётся из приложения.
 final bannerProvider =
     AsyncNotifierProvider<BannerNotifier, List<PromoBanner>>(
   BannerNotifier.new,
@@ -25,151 +29,82 @@ final bannerProvider =
 class BannerNotifier extends AsyncNotifier<List<PromoBanner>> {
   @override
   Future<List<PromoBanner>> build() async {
-    // Сначала пробуем загрузить с сервера
-    try {
-      final serverBanners =
-          await ref.watch(bannerRepositoryProvider).getActiveBanners();
-      if (serverBanners.isNotEmpty) {
-        // Кэшируем для offline
-        await _saveCachedBanners(serverBanners);
-        return serverBanners;
-      }
-    } on ApiException catch (e) {
-      ref.read(loggerProvider).debug('Banners API unavailable: $e', source: 'banner');
-    } catch (e) {
-      ref.read(loggerProvider).debug('Banners fetch error: $e', source: 'banner');
-    }
-
-    // Fallback: кэш → локальные → демо
-    final cached = await _loadCachedBanners();
-    if (cached.isNotEmpty) return cached;
-
-    final local = await _loadLocalBanners();
-    if (local.isNotEmpty) return local;
-
-    return _demoBanners;
+    final repo = ref.watch(bannerRepositoryProvider);
+    return _load(repo);
   }
 
+  /// Перечитать с сервера. Прежние данные не сбрасываем до ответа: иначе
+  /// баннер на время запроса пропадал бы и появлялся заново.
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    final repo = ref.read(bannerRepositoryProvider);
+    state = AsyncValue.data(await _load(repo));
+  }
+
+  Future<List<PromoBanner>> _load(BannerRepository repo) async {
+    await _dropLegacyLocalBanners();
     try {
-      final serverBanners =
-          await ref.read(bannerRepositoryProvider).getActiveBanners();
-      if (serverBanners.isNotEmpty) {
-        await _saveCachedBanners(serverBanners);
-        state = AsyncValue.data(serverBanners);
-        return;
-      }
-    } catch (_) {}
-
-    final local = await _loadLocalBanners();
-    if (local.isNotEmpty) {
-      state = AsyncValue.data(local);
-      return;
-    }
-
-    state = const AsyncValue.data([]);
-  }
-
-  /// Сохранить баннер локально (для демо-режима).
-  Future<void> saveLocalBanner(PromoBanner banner) async {
-    final existing = await _loadLocalBanners();
-    existing.add(banner);
-    await _saveLocalBanners(existing);
-    await refresh();
-  }
-
-  /// Удалить локальный баннер.
-  Future<void> removeLocalBanner(String bannerId) async {
-    final existing = await _loadLocalBanners();
-    existing.removeWhere((b) => b.id == bannerId);
-    await _saveLocalBanners(existing);
-    await refresh();
-  }
-
-  Future<List<PromoBanner>> _loadLocalBanners() async {
-    try {
-      final storage = ref.read(keyStorageProvider);
-      final raw = await storage.read(_kLocalBannersKey);
-      if (raw == null || raw.isEmpty) return [];
-      final list = jsonDecode(raw) as List;
-      return list
-          .map((item) => PromoBanner.fromJson(Map<String, Object?>.from(item as Map)))
-          .toList();
-    } catch (_) {
-      return [];
+      final banners = await repo.getActiveBanners();
+      await _saveCachedBanners(banners);
+      return banners;
+    } catch (e) {
+      ref.read(loggerProvider).debug(
+            'Banners unavailable, using last server answer: $e',
+            source: 'banner',
+          );
+      return _loadCachedBanners();
     }
   }
 
-  Future<void> _saveLocalBanners(List<PromoBanner> banners) async {
+  Future<void> _dropLegacyLocalBanners() async {
     try {
-      final storage = ref.read(keyStorageProvider);
-      final raw = jsonEncode(
-        banners.map((b) => {
-          'id': b.id,
-          'title': b.title,
-          'description': b.description,
-          'imageUrl': b.imageUrl,
-          'buttonText': b.buttonText,
-          'targetUrl': b.targetUrl,
-          'placement': b.placement.wireValue,
-          'active': b.active,
-          'displayDuration': b.displayDuration,
-        }).toList(),
-      );
-      await storage.write(_kLocalBannersKey, raw);
+      await ref.read(keyStorageProvider).delete(_kLegacyLocalBannersKey);
     } catch (_) {}
   }
 
   Future<List<PromoBanner>> _loadCachedBanners() async {
     try {
-      final storage = ref.read(keyStorageProvider);
-      final raw = await storage.read(_kCachedBannersKey);
-      if (raw == null || raw.isEmpty) return [];
-      final list = jsonDecode(raw) as List;
-      return list
-          .map((item) => PromoBanner.fromJson(Map<String, Object?>.from(item as Map)))
-          .toList();
+      final raw = await ref.read(keyStorageProvider).read(_kCachedBannersKey);
+      return _decode(raw);
     } catch (_) {
-      return [];
+      return const <PromoBanner>[];
     }
   }
 
   Future<void> _saveCachedBanners(List<PromoBanner> banners) async {
     try {
-      final storage = ref.read(keyStorageProvider);
-      final raw = jsonEncode(
-        banners.map((b) => {
-          'id': b.id,
-          'title': b.title,
-          'description': b.description,
-          'imageUrl': b.imageUrl,
-          'buttonText': b.buttonText,
-          'targetUrl': b.targetUrl,
-          'placement': b.placement.wireValue,
-          'active': b.active,
-          'displayDuration': b.displayDuration,
-        }).toList(),
-      );
-      await storage.write(_kCachedBannersKey, raw);
+      final raw = jsonEncode(banners.map(_encode).toList());
+      await ref.read(keyStorageProvider).write(_kCachedBannersKey, raw);
     } catch (_) {}
   }
 }
 
-/// Демо-баннеры для превью.
-const _demoBanners = [
-  PromoBanner(
-    id: 'demo-partner-1',
-    title: 'Партнёрская программа',
-    description: 'Зарабатывайте с Morok VPN! Приглашайте друзей и получайте 30% от каждой оплаты.',
-    placement: BannerPlacement.home,
-    active: true,
-    displayDuration: 30,
-    buttonText: 'Подробнее',
-  ),
-];
+List<PromoBanner> _decode(String? raw) {
+  if (raw == null || raw.isEmpty) return const <PromoBanner>[];
+  try {
+    final list = jsonDecode(raw) as List;
+    return list
+        .map((item) =>
+            PromoBanner.fromJson(Map<String, Object?>.from(item as Map)))
+        .toList();
+  } catch (_) {
+    return const <PromoBanner>[];
+  }
+}
 
-/// Баннеры для конкретной позиции.
+Map<String, Object?> _encode(PromoBanner b) => {
+      'id': b.id,
+      'title': b.title,
+      'description': b.description,
+      'imageUrl': b.imageUrl,
+      'buttonText': b.buttonText,
+      'targetUrl': b.targetUrl,
+      'placement': b.placement.wireValue,
+      'active': b.active,
+      'displayDuration': b.displayDuration,
+    };
+
+/// Баннеры для конкретной позиции. Пока список грузится или сервер молчит —
+/// пусто: на экране нет ничего, кроме реального баннера с сервера.
 final bannersForPlacementProvider =
     Provider.family<List<PromoBanner>, BannerPlacement>((ref, placement) {
   final banners = ref.watch(bannerProvider).value ?? const <PromoBanner>[];

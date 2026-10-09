@@ -10,18 +10,13 @@ import '../../../providers/banner_providers.dart';
 import '../../../services/api/api_config.dart';
 import 'invite_friend_sheet.dart';
 
-/// Живой баннер на главном экране.
+/// Баннеры главного экрана: только то, что вернул сервер.
 ///
-/// Раньше этот виджет рисовал зашитый текст «Партнёрская программа» и
-/// ничего не читал с сервера: `bannerProvider`, `bannersForPlacementProvider`
-/// и `bannerTrackerProvider` были написаны, но не потреблялись НИ ОДНИМ
-/// экраном. То есть панель «Баннеры» (создание, активация, счётчики
-/// показов/кликов, загрузка картинки) работала вхолостую — пользователь не
-/// видел ни одного баннера, а статистика не собиралась.
-///
-/// Теперь: карусель по `/banners?placement=home`, impression на показ,
-/// click на тап, CTA ведёт на `targetUrl` (только http/https — см.
-/// PromoBanner.hasExternalTarget), при пустом ответе — прежняя партнёрка.
+/// Пока список грузится, или сервер ответил пусто, виджет ничего не рисует —
+/// никаких вшитых подложек и текстов из приложения. Два и больше активных
+/// баннера образуют карусель (свайп, точки, автосмена по `displayDuration`);
+/// один баннер показывается карточкой без точек. CTA ведёт на `targetUrl`
+/// (только http/https — см. PromoBanner.hasExternalTarget).
 class HomeBannerStrip extends ConsumerStatefulWidget {
   const HomeBannerStrip({super.key});
 
@@ -89,7 +84,7 @@ class _HomeBannerStripState extends ConsumerState<HomeBannerStrip> {
   Widget build(BuildContext context) {
     final banners = ref.watch(bannersForPlacementProvider(BannerPlacement.home));
     if (banners.isEmpty) {
-      return const PartnerBanner();
+      return const SizedBox.shrink();
     }
     if (_index >= banners.length) {
       _index = banners.length - 1;
@@ -101,6 +96,7 @@ class _HomeBannerStripState extends ConsumerState<HomeBannerStrip> {
         SizedBox(
           height: 168,
           child: PageView.builder(
+            key: const ValueKey('banner-pages'),
             controller: _controller,
             itemCount: banners.length,
             onPageChanged: (i) => setState(() => _index = i),
@@ -113,6 +109,7 @@ class _HomeBannerStripState extends ConsumerState<HomeBannerStrip> {
         if (banners.length > 1) ...[
           const SizedBox(height: 8),
           Row(
+            key: const ValueKey('banner-dots'),
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               for (var i = 0; i < banners.length; i++)
@@ -273,122 +270,6 @@ class _BannerCard extends ConsumerWidget {
             ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// Партнёрская программа — статичная подложка, которую показываем, когда на
-/// сервере нет ни одного активного баннера.
-class PartnerBanner extends StatelessWidget {
-  const PartnerBanner({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // Тап по баннеру открывает окно приглашения: раньше кнопка «Пригласить»
-    // была нарисованной и не делала ничего.
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => showInviteFriendSheet(context),
-      child: _buildCard(context),
-    );
-  }
-
-  Widget _buildCard(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF6C63FF),
-            Color(0xFF4834D4),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6C63FF).withValues(alpha: 0.3),
-            blurRadius: 25,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(
-                Icons.emoji_events_rounded,
-                color: Colors.yellow,
-                size: 22,
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Партнёрская программа',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'Приглашай друзей и получай 15% от каждой оплаты',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Пригласить',
-                    style: TextStyle(
-                      color: Color(0xFF6C63FF),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  SizedBox(width: 6),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    color: Color(0xFF6C63FF),
-                    size: 14,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
