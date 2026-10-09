@@ -1,4 +1,6 @@
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -191,7 +193,12 @@ final adminRepositoryProvider = Provider<AdminRepository>(
 
 /// Session history.
 final sessionManagerProvider = Provider<SessionManager>(
-  (ref) => SessionManagerImpl(ref.watch(localSettingsProvider)),
+  // Выдуманную историю подключений пишем только в отладочной сборке:
+  // в релизе пользователь видит лишь реальные сессии.
+  (ref) => SessionManagerImpl(
+    ref.watch(localSettingsProvider),
+    seedDemo: kDebugMode,
+  ),
 );
 
 /// Ring-buffer logger.
