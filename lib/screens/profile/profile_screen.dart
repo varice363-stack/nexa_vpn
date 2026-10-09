@@ -9,6 +9,7 @@ import '../../widgets/common/app_page.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/glass_list_tile.dart';
 import '../../widgets/common/section_header.dart';
+import '../home/widgets/invite_friend_sheet.dart';
 
 /// Профиль: код устройства, настройки, поддержка, админка.
 class ProfileScreen extends ConsumerWidget {
@@ -42,6 +43,14 @@ class ProfileScreen extends ConsumerWidget {
             title: l10n.profileSettings,
             subtitle: l10n.profileSettingsHint,
             onTap: () => context.push('/settings'),
+          ),
+          // Приглашение друга — постоянная кнопка, а не баннер: без неё в
+          // приложении не было бы входа в программу, когда баннеров нет.
+          GlassListTile(
+            icon: Icons.group_add_rounded,
+            title: 'Пригласить друга',
+            subtitle: 'Друг получит неделю бесплатно',
+            onTap: () => showInviteFriendSheet(context),
           ),
           const SizedBox(height: 20),
           const SectionHeader(title: 'БЕЗОПАСНОСТЬ'),
