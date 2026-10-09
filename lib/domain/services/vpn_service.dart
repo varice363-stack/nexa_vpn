@@ -1,10 +1,14 @@
 import '../../models/connection_source.dart';
+import '../../models/tunnel_traffic.dart';
 import '../../models/vpn_status.dart';
 
 /// High-level VPN control surface used by the UI layer.
 abstract class VpnService {
   /// Stream of status changes; emits the current status immediately.
   Stream<VpnStatus> get statuses;
+
+  /// Живые счётчики туннеля: итоги и скорость. Приходят, пока туннель поднят.
+  Stream<TunnelTraffic> get traffic;
 
   VpnStatus get status;
 

@@ -7,6 +7,7 @@ import '../../core/utils/app_logger.dart';
 import '../../domain/services/tunnel_manager.dart';
 import '../../domain/services/vpn_service.dart';
 import '../../models/connection_source.dart';
+import '../../models/tunnel_traffic.dart';
 import '../../models/vpn_config.dart';
 import '../../models/vpn_status.dart';
 
@@ -91,6 +92,9 @@ class VpnServiceImpl implements VpnService {
 
   @override
   ConnectionSource? get activeSource => _activeSource;
+
+  @override
+  Stream<TunnelTraffic> get traffic => _tunnel.traffic;
 
   @override
   Stream<VpnStatus> get statuses async* {

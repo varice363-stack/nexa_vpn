@@ -6,6 +6,7 @@ import '../../core/errors/app_exception.dart';
 import '../../core/utils/app_logger.dart';
 import '../../domain/services/tunnel_manager.dart';
 import '../../models/connection_source.dart';
+import '../../models/tunnel_traffic.dart';
 import '../../models/vpn_config.dart';
 import '../../models/vpn_status.dart';
 
@@ -23,6 +24,9 @@ class XrayTunnelManager implements TunnelManager {
   final StreamController<TunnelPhase> _controller =
       StreamController<TunnelPhase>.broadcast();
 
+  final StreamController<TunnelTraffic> _trafficController =
+      StreamController<TunnelTraffic>.broadcast();
+
   FlutterVless? _engine;
   TunnelPhase _phase = TunnelPhase.idle;
   bool _initialised = false;
@@ -39,6 +43,9 @@ class XrayTunnelManager implements TunnelManager {
 
   @override
   TunnelPhase get phase => _phase;
+
+  @override
+  Stream<TunnelTraffic> get traffic => _trafficController.stream;
 
   @override
   Stream<TunnelPhase> get phases async* {
@@ -76,6 +83,14 @@ class XrayTunnelManager implements TunnelManager {
   }
 
   void _onStatus(VlessStatus status) {
+    // Движок присылает итоги и скорость вместе со статусом (раз в секунду).
+    // Берём их как есть: в приложении ничего не считается и не выдумывается.
+    _trafficController.add(TunnelTraffic(
+      uploadBytes: status.upload,
+      downloadBytes: status.download,
+      uploadBytesPerSec: status.uploadSpeed,
+      downloadBytesPerSec: status.downloadSpeed,
+    ));
     switch (status.connectionState) {
       case VlessConnectionState.connected:
         _emit(TunnelPhase.connected);

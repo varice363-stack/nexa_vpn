@@ -1,4 +1,5 @@
 import '../../models/connection_source.dart';
+import '../../models/tunnel_traffic.dart';
 import '../../models/vpn_config.dart';
 import '../../models/vpn_status.dart';
 
@@ -17,6 +18,10 @@ import '../../models/vpn_status.dart';
 abstract class TunnelManager {
   /// Stream of tunnel phases; emits the current phase immediately on listen.
   Stream<TunnelPhase> get phases;
+
+  /// Живые счётчики туннеля (итоги и скорость) от нативного движка.
+  /// Приходят раз в секунду, пока туннель поднят. После остановки поток молчит.
+  Stream<TunnelTraffic> get traffic;
 
   TunnelPhase get phase;
 

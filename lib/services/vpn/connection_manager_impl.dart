@@ -6,12 +6,13 @@ import '../../domain/services/connection_manager.dart';
 import '../../domain/services/vpn_service.dart';
 import '../../models/connection_session.dart';
 import '../../models/connection_stats.dart';
+import '../../models/tunnel_traffic.dart';
 import '../../models/vpn_status.dart';
 
 /// Tracks the active session and persists it on completion.
 ///
-/// Throughput is simulated (deterministic pseudo-random walk) until the
-/// native tunnel reports real byte counters — see [TunnelManager] docs.
+/// Объём и скорость берутся из счётчиков туннеля ([VpnService.traffic]),
+/// а не генерируются здесь.
 class ConnectionManagerImpl implements ConnectionManager {
   ConnectionManagerImpl({required AppLogger logger}) : _logger = logger;
 
@@ -21,6 +22,7 @@ class ConnectionManagerImpl implements ConnectionManager {
       StreamController<ConnectionStats>.broadcast();
 
   StreamSubscription<VpnStatus>? _statusSub;
+  StreamSubscription<TunnelTraffic>? _trafficSub;
   Timer? _ticker;
   VpnService? _service;
   SessionManager? _sessions;
@@ -31,7 +33,6 @@ class ConnectionManagerImpl implements ConnectionManager {
   int _bytesUp = 0;
   double _speedDown = 0;
   double _speedUp = 0;
-  int _sessionIndex = 0;
 
   ConnectionStats _current = const ConnectionStats();
 
@@ -49,6 +50,7 @@ class ConnectionManagerImpl implements ConnectionManager {
     _service = service;
     _sessions = sessions;
     _statusSub = service.statuses.listen(_onStatus);
+    _trafficSub = service.traffic.listen(_onTraffic);
   }
 
   void _onStatus(VpnStatus status) {
@@ -66,11 +68,23 @@ class ConnectionManagerImpl implements ConnectionManager {
     }
   }
 
+  /// Счётчики приходят от туннеля раз в секунду. Скорость переводим из байт/с
+  /// в Мбит/с: так её показывает главный экран.
+  void _onTraffic(TunnelTraffic t) {
+    if (_startedAt == null) return;
+    _bytesDown = t.downloadBytes;
+    _bytesUp = t.uploadBytes;
+    _speedDown = t.downloadBytesPerSec * 8 / 1000000;
+    _speedUp = t.uploadBytesPerSec * 8 / 1000000;
+    _emit();
+  }
+
   void _startSession() {
     _startedAt = DateTime.now();
     _bytesDown = 0;
     _bytesUp = 0;
-    _sessionIndex = _sessionIndex + 1;
+    _speedDown = 0;
+    _speedUp = 0;
     _emit();
     _ticker?.cancel();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _emit());
@@ -78,11 +92,6 @@ class ConnectionManagerImpl implements ConnectionManager {
 
   void _emit() {
     if (_startedAt == null) return;
-    // Simulated throughput: 60–180 Mbps down, 25–80 Mbps up.
-    _speedDown = 60 + (_sessionIndex * 37 + _bytesDown ~/ 500000) % 120;
-    _speedUp = 25 + (_sessionIndex * 13 + _bytesUp ~/ 300000) % 55;
-    _bytesDown += (_speedDown * 1024 * 1024 / 8).round();
-    _bytesUp += (_speedUp * 1024 * 1024 / 8).round();
     _current = ConnectionStats(
       startedAt: _startedAt,
       duration: DateTime.now().difference(_startedAt!),
@@ -110,6 +119,11 @@ class ConnectionManagerImpl implements ConnectionManager {
       bytesUp: _bytesUp,
     );
     _startedAt = null;
+    _speedDown = 0;
+    _speedUp = 0;
+    // Последний снимок не должен хранить скорость отключённого туннеля.
+    _current = _current.copyWith(speedDown: 0, speedUp: 0);
+    if (!_controller.isClosed) _controller.add(_current);
     try {
       await _sessions?.addSession(session);
     } catch (e) {
@@ -126,6 +140,7 @@ class ConnectionManagerImpl implements ConnectionManager {
   void dispose() {
     _ticker?.cancel();
     _statusSub?.cancel();
+    _trafficSub?.cancel();
     _controller.close();
   }
 }
