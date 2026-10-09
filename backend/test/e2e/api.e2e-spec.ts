@@ -189,3 +189,20 @@ describe('ошибки ввода: сервер отвечает 4xx, а не 50
     expect((await api('GET', '/health')).status).toBe(200);
   });
 });
+
+describe('уведомления: широковещательное прочитано только тем, кто его открыл', () => {
+  it('один отметил прочитанным — у второго оно остаётся непрочитанным', async () => {
+    const a = await registerUser('ntfA');
+    const b = await registerUser('ntfB');
+    const created = await api('POST', '/notifications', { token: admin, body: { title: 'Тест', body: 'Текст' } });
+    expect([200, 201]).toContain(created.status);
+    const id = created.data.id as string;
+
+    const find = (list: any) => (list.data as Array<{ id: string; read: boolean }>).find((n) => n.id === id);
+    expect(find(await api('GET', '/notifications/me', { token: a.token }))?.read).toBe(false);
+
+    expect((await api('PATCH', `/notifications/${id}/read`, { token: a.token })).status).toBe(200);
+    expect(find(await api('GET', '/notifications/me', { token: a.token }))?.read).toBe(true);
+    expect(find(await api('GET', '/notifications/me', { token: b.token }))?.read).toBe(false);
+  });
+});

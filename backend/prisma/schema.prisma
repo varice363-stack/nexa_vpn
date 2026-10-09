@@ -77,18 +77,18 @@ enum PaymentProvider {
 // ── User ─────────────────────────────────────────────────────────────────
 
 model User {
-  id           String   @id @default(uuid())
+  id           String     @id @default(uuid())
   /// Optional: accounts are opt-in. Access is normally tied to a
   /// recovery code, so most buyers never hand over an address.
-  email        String?  @unique
+  email        String?    @unique
   /// Device identifier for auto-registered users (no email/password).
-  deviceId     String?  @unique
+  deviceId     String?    @unique
   /// Null for code-only accounts that never set a password.
   passwordHash String?
-  role         Role     @default(USER)
+  role         Role       @default(USER)
   country      String?
   status       UserStatus @default(ACTIVE)
-  createdAt    DateTime @default(now())
+  createdAt    DateTime   @default(now())
   lastLogin    DateTime?
   trialUsedAt  DateTime?
 
@@ -105,11 +105,12 @@ model User {
   /// период после переустановки. Хранится необратимый хеш, не сам номер.
   deviceFingerprint String?
 
-  subscriptions      Subscription[]
-  notifications      Notification[]
-  devices            Device[]
-  accessKeys         AccessKey[]
+  subscriptions       Subscription[]
+  notifications       Notification[]
+  devices             Device[]
+  accessKeys          AccessKey[]
   paymentTransactions PaymentTransaction[]
+  notificationReads   NotificationRead[]
 
   @@index([role])
   @@index([status])
@@ -120,28 +121,28 @@ model User {
 // ── VPN Server ───────────────────────────────────────────────────────────
 
 model VpnServer {
-  id          String   @id @default(uuid())
+  id          String         @id @default(uuid())
   name        String
   country     String
   countryCode String
   city        String
-  ip          String   @unique
+  ip          String         @unique
   protocol    ServerProtocol @default(WIREGUARD)
-  port        Int?     // VLESS ingress port (null = default 443)
-  transport   String?  // VLESS transport: tcp | ws | grpc (null = tcp)
-  security    String?  // VLESS security: none | tls | reality (null = none)
-  sni         String?  // TLS/REALITY SNI for the ingress
-  flow        String?  // VLESS flow (e.g. xtls-rprx-vision) — public param
-  publicKey   String?  // REALITY public key (pbk) — public, NOT a secret
-  shortId     String?  // REALITY short id (sid) — public param
-  load        Float    @default(0)
-  ping        Int      @default(0)
-  premium     Boolean  @default(false)
-  status      ServerStatus @default(ACTIVE)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  port        Int? // VLESS ingress port (null = default 443)
+  transport   String? // VLESS transport: tcp | ws | grpc (null = tcp)
+  security    String? // VLESS security: none | tls | reality (null = none)
+  sni         String? // TLS/REALITY SNI for the ingress
+  flow        String? // VLESS flow (e.g. xtls-rprx-vision) — public param
+  publicKey   String? // REALITY public key (pbk) — public, NOT a secret
+  shortId     String? // REALITY short id (sid) — public param
+  load        Float          @default(0)
+  ping        Int            @default(0)
+  premium     Boolean        @default(false)
+  status      ServerStatus   @default(ACTIVE)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
-  accessKeys     AccessKey[]
+  accessKeys AccessKey[]
 
   @@index([status])
   @@index([country])
@@ -151,18 +152,18 @@ model VpnServer {
 // The sellable product. NOT tied to any payment provider.
 
 model SubscriptionPlan {
-  id          String    @id @default(uuid())
-  code        PlanCode  @unique
-  name        String
-  description String?
+  id           String   @id @default(uuid())
+  code         PlanCode @unique
+  name         String
+  description  String?
   durationDays Int
-  price       Decimal   @db.Decimal(10, 2)
-  currency    String    @default("RUB")
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  price        Decimal  @db.Decimal(10, 2)
+  currency     String   @default("RUB")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  subscriptions      Subscription[]
+  subscriptions       Subscription[]
   paymentTransactions PaymentTransaction[]
 }
 
@@ -193,32 +194,32 @@ model Subscription {
 // without a provider id do not collide).
 
 model PaymentTransaction {
-  id                String          @id @default(uuid())
-  userId            String
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subscriptionId    String?
-  subscription      Subscription?   @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
-  planId            String?         // plan resolved at checkout (billing truth)
-  plan              SubscriptionPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
-  provider          PaymentProvider
-  providerPaymentId String?
-  amount            Decimal         @db.Decimal(10, 2)
-  currency          String          @default("RUB")
-  status            PaymentStatus   @default(PENDING)
-  idempotencyKey    String?         // client-supplied key (checkout dedup)
-  webhookEvent      String?         // last webhook event received (payment.paid, ...)
-  webhookProcessedAt DateTime?      // last webhook processing timestamp
+  id                 String            @id @default(uuid())
+  userId             String
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId     String?
+  subscription       Subscription?     @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  planId             String? // plan resolved at checkout (billing truth)
+  plan               SubscriptionPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+  provider           PaymentProvider
+  providerPaymentId  String?
+  amount             Decimal           @db.Decimal(10, 2)
+  currency           String            @default("RUB")
+  status             PaymentStatus     @default(PENDING)
+  idempotencyKey     String? // client-supplied key (checkout dedup)
+  webhookEvent       String? // last webhook event received (payment.paid, ...)
+  webhookProcessedAt DateTime? // last webhook processing timestamp
 
   // ── USDT (TRC-20 / BEP-20) manual confirmation — TASK #029 ────────────
-  cryptoAddress      String?   // адрес, на который пользователь переводит USDT
-  cryptoNetwork      String?   // TRC20 | BEP20
-  cryptoAmount       Float?    // сумма в USDT: дробный остаток = ключ сверки
+  cryptoAddress      String? // адрес, на который пользователь переводит USDT
+  cryptoNetwork      String? // TRC20 | BEP20
+  cryptoAmount       Float? // сумма в USDT: дробный остаток = ключ сверки
   cryptoExpiresAt    DateTime? // инвойс протух → CANCELLED
-  cryptoTxHash       String?   // @unique: один хэш = одна транзакция (анти-повтор)
+  cryptoTxHash       String? // @unique: один хэш = одна транзакция (анти-повтор)
   cryptoSubmittedAt  DateTime? // когда пользователь прислал хэш
-  cryptoReviewedNote String?   // что написал админ при подтверждении/отказе
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  cryptoReviewedNote String? // что написал админ при подтверждении/отказе
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   @@unique([provider, providerPaymentId])
   @@unique([cryptoTxHash])
@@ -231,30 +232,30 @@ model PaymentTransaction {
 // ── Banner ───────────────────────────────────────────────────────────────
 
 model Banner {
-  id          String   @id @default(uuid())
-  title       String
-  description String
-  imageUrl    String?
-  buttonText  String?
+  id              String   @id @default(uuid())
+  title           String
+  description     String
+  imageUrl        String?
+  buttonText      String?
   /// External destination opened when the banner CTA is tapped.
   /// Use this for referral links (e.g., registration with referral code).
   /// Null keeps the legacy behaviour (in-app navigation to Premium).
-  targetUrl   String?
+  targetUrl       String?
   /// Referral code for tracking (optional).
-  referralCode String?
+  referralCode    String?
   /// Placement slot: "home" (default) or "premium".
-  placement   String   @default("home")
+  placement       String   @default("home")
   /// Display order within a slot — lower comes first.
-  sortOrder   Int      @default(0)
+  sortOrder       Int      @default(0)
   /// Duration (seconds) this banner stays visible in the carousel.
   /// Defaults to 30s. Set per-banner to control the auto-rotate cadence.
   displayDuration Int      @default(30)
   /// Ad performance counters (TASK #020).
-  impressions Int      @default(0)
-  clicks      Int      @default(0)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  impressions     Int      @default(0)
+  clicks          Int      @default(0)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([active])
   @@index([placement, active])
@@ -262,21 +263,35 @@ model Banner {
 
 // ── Connection Log ───────────────────────────────────────────────────────
 
-
 // ── Notification ─────────────────────────────────────────────────────────
 
 model Notification {
-  id        String   @id @default(uuid())
+  id        String             @id @default(uuid())
   userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   body      String
-  type      String   @default("info")
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
+  type      String             @default("info")
+  read      Boolean            @default(false)
+  createdAt DateTime           @default(now())
+  /// Прочтения широковещательных уведомлений (userId = null), по каждому пользователю.
+  reads     NotificationRead[]
 
   @@index([userId, read])
   @@index([createdAt])
+}
+
+/// Кто из пользователей прочитал широковещательное уведомление. Раньше флаг
+/// `read` у широковещательной строки был общим: прочитал один — прочитали все.
+model NotificationRead {
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  readAt         DateTime     @default(now())
+
+  @@id([userId, notificationId])
+  @@index([notificationId])
 }
 
 // ── Device ────────────────────────────────────────────────────────────────
@@ -299,31 +314,31 @@ model Device {
 // ── AccessKey (Provisioning) ──────────────────────────────────────────────
 
 model AccessKey {
-  id         String    @id @default(uuid())
+  id             String     @id @default(uuid())
   // Nullable: a key can be sold and activated without an account
   // (TASK #021 — hybrid auth). It is bound to a user only when the
   // owner later registers and claims it.
-  userId     String?
-  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String?
+  user           User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   // Human-readable redemption code handed to the buyer, e.g.
   // NEXA-7QK2-M4XP. Null for keys generated inside an account.
-  code       String?   @unique
-  activatedAt DateTime?
+  code           String?    @unique
+  activatedAt    DateTime?
   // Raw device fingerprint sent by the client when redeeming a code.
   // Distinct from `deviceId`, which is a FK into the Device table and only
   // exists for registered accounts.
-  boundDevice String?
-  deviceId   String?
-  device     Device?   @relation(fields: [deviceId], references: [id], onDelete: SetNull)
-  serverId   String?   // deterministic ingress assignment (TASK #011)
-  server     VpnServer? @relation(fields: [serverId], references: [id], onDelete: SetNull)
-  name       String
-  protocol   String    @default("VLESS")
-  uuid       String    @unique
-  status     String    @default("ACTIVE") // ACTIVE | REVOKED | EXPIRED
-  createdAt  DateTime  @default(now())
-  expiresAt  DateTime?
-  lastUsedAt DateTime?
+  boundDevice    String?
+  deviceId       String?
+  device         Device?    @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  serverId       String? // deterministic ingress assignment (TASK #011)
+  server         VpnServer? @relation(fields: [serverId], references: [id], onDelete: SetNull)
+  name           String
+  protocol       String     @default("VLESS")
+  uuid           String     @unique
+  status         String     @default("ACTIVE") // ACTIVE | REVOKED | EXPIRED
+  createdAt      DateTime   @default(now())
+  expiresAt      DateTime?
+  lastUsedAt     DateTime?
   /// Лимит трафика в мегабайтах (null = без лимита).
   ///
   /// Считается по реальной статистике ядра: хостовый сборщик раз в минуту
