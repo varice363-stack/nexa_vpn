@@ -551,7 +551,7 @@ class _TrialFeaturesCard extends StatelessWidget {
           ...[
             (Icons.speed, l10n.trialFeatureUnlimited),
             (Icons.dns, l10n.trialFeatureAllServers),
-            (Icons.devices, l10n.trialFeature3Devices),
+            (Icons.credit_card_off_rounded, l10n.trialFeatureNoCard),
             (Icons.security, l10n.trialFeatureFullProtection),
           ].map((item) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),

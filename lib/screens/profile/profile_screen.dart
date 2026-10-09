@@ -53,29 +53,6 @@ class ProfileScreen extends ConsumerWidget {
             onTap: () => showInviteFriendSheet(context),
           ),
           const SizedBox(height: 20),
-          const SectionHeader(title: 'БЕЗОПАСНОСТЬ'),
-          GlassListTile(
-            icon: Icons.shield_rounded,
-            title: 'SOCKS5 Shield',
-            subtitle: 'Эксклюзив: ваш SOCKS5 защищён паролем',
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                'УНИКУМ',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.green,
-                ),
-              ),
-            ),
-            onTap: () => context.push('/socks5-shield'),
-          ),
-          const SizedBox(height: 20),
           SectionHeader(title: l10n.profileSupport.toUpperCase()),
           GlassListTile(
             icon: Icons.support_agent_rounded,

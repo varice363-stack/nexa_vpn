@@ -122,7 +122,7 @@
   "profileGuestHint": "Sign in to sync devices, keys and subscriptions",
   "profilePremiumMember": "Premium member",
   "profileAllUnlocked": "All features unlocked",
-  "profileUpgradeHint": "Upgrade for unlimited data and 4K streaming",
+  "profileUpgradeHint": "Get a subscription for unlimited traffic",
   "profileNexaPremium": "MOROK Premium",
   "profileMyAccess": "My Access",
   "profileMyAccessHint": "Subscription and access keys",
@@ -476,17 +476,15 @@
   },
   "devicesTitle": "Devices",
   "devicesSubtitle": "Manage your connected devices",
-  "devicesLimit": "Device limit",
-  "devicesNoConnections": "No devices connected yet",
-  "devicesLimitReached": "Device limit reached",
-  "devicesSlotsAvailable": "{count} slots available",
-  "@devicesSlotsAvailable": {
+  "devicesConnectedCount": "Connected devices: {count}",
+  "@devicesConnectedCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
+  "devicesNoConnections": "No devices connected yet",
   "devicesJustNow": "Just now",
   "devicesMinutesAgo": "{minutes} min ago",
   "@devicesMinutesAgo": {
@@ -560,17 +558,14 @@
     }
   },
   "devicesEmpty": "You haven't connected any devices yet. Connect through the app and it will appear here.",
-  "devicesUpgradeTitle": "Need more devices?",
-  "devicesUpgradeBody": "Upgrade to Premium to connect up to 5 devices simultaneously.",
-  "devicesUpgradeButton": "Upgrade plan",
   "trialTitle": "Free Trial",
   "trialSubtitle": "Try MOROK VPN for free",
   "trialBenefitTitle": "3 days free",
   "trialBenefitSubtitle": "Full access to all features without restrictions",
   "trialPeriod7Days": "3-day trial period",
-  "trialFeatureUnlimited": "Unlimited traffic",
+  "trialFeatureUnlimited": "2 GB of traffic",
   "trialFeatureAllServers": "Access to all servers",
-  "trialFeature3Devices": "Connect up to 3 devices",
+  "trialFeatureNoCard": "No card required",
   "trialFeatureFullProtection": "Full VLESS + Reality protection",
   "trialActivateButton": "Activate free trial",
   "trialNoPayment": "No credit card required",

@@ -6,6 +6,4 @@ abstract final class AppConstants {
   /// Ring buffer capacity of the in-app logger.
   static const int maxLogEntries = 200;
 
-  /// Seed sessions used by the statistics screen until real history exists.
-  static const int demoSeedSessions = 14;
 }

@@ -9,8 +9,6 @@ import 'app/app.dart';
 import 'firebase_options.dart';
 import 'providers/app_providers.dart';
 import 'services/api/api_config.dart';
-import 'services/security/security_service.dart';
-import 'core/utils/app_logger.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,16 +18,6 @@ Future<void> main() async {
 
   // Local persistence
   final prefs = await SharedPreferences.getInstance();
-
-  // Run security checks in release mode — NON-FATAL, only logs
-  if (kReleaseMode) {
-    try {
-      final securityService = SecurityService(AppLogger());
-      await securityService.runStartupChecks();
-    } catch (e) {
-      debugPrint('Security checks skipped: $e');
-    }
-  }
 
   // Initialize Firebase in release mode only
   if (kReleaseMode) {

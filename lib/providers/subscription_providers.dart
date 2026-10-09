@@ -127,42 +127,6 @@ class SubscriptionNotifier extends AsyncNotifier<SubscriptionState> {
     return next;
   }
 
-  /// Subscribe to a paid plan.
-  ///
-  /// BILLING INTEGRATION (TODO — external infrastructure):
-  /// replace with `in_app_purchase` / RevenueCat once the backend exposes
-  /// a purchase/verify endpoint. Today the state is persisted locally.
-  Future<void> subscribe(PremiumPlan plan) async {
-    // Determine tier from plan id
-    final tier = plan.id.contains('premium')
-        ? SubscriptionTier.premium
-        : plan.id.contains('standard')
-            ? SubscriptionTier.standard
-            : SubscriptionTier.free;
-
-    final next = SubscriptionState(
-      tier: tier,
-      planId: plan.id,
-      expiresAt: plan.isLifetime
-          ? null
-          : DateTime.now().add(const Duration(days: 30)),
-      isTrialActive: false, // Paid subscription replaces trial
-    );
-
-    state = AsyncData(next);
-    await ref.read(configRepositoryProvider).saveSubscription(next);
-
-    ref.read(notificationServiceProvider).push(
-          title: tier == SubscriptionTier.free
-              ? 'Free plan activated'
-              : 'Welcome to ${tier.name}',
-          body: tier == SubscriptionTier.free
-              ? 'You have 3 GB of free traffic per month.'
-              : '${plan.name} plan is now active. Enjoy unlimited access.',
-          icon: AppNotificationIcon.promo,
-        );
-  }
-
   /// Re-reads the truth from the backend.
   Future<void> refresh() async {
     state = const AsyncLoading();

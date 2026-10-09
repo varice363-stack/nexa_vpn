@@ -1,28 +1,17 @@
 /// Экран «Устройства»: реальные данные с бэкенда.
 ///
-/// Предыдущая версия была декорацией: `_getMockDevices()` рисовал Pixel 6 /
-/// iPhone 13 / MacBook Pro по количеству `state.devicesUsed`, кнопка
-/// «Отключить» показывала снэкбар «устройство отключено» и не звала никуда,
-/// а в коде висело `// TODO: Call backend API to disconnect device`.
-/// Итог для пользователя: он «отвязывал» телефон, телефон продолжал ходить по
-/// ключу, а на новой трубке ключ не активировался (boundDevice занят), и
-/// никаких подсказок об этом не было.
-///
 /// Теперь: GET /devices и DELETE /devices/:id (бэкенд помечает устройство
 /// отозванным и отвязывает его ключи — код можно ввести на новом телефоне).
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../models/premium_plan.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/app_page.dart';
-import '../../widgets/common/glass_button.dart';
 import '../../widgets/common/glass_container.dart';
 
 /// Запись /devices в том виде, как её отдаёт бэкенд
@@ -72,7 +61,6 @@ class DevicesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final subscription = ref.watch(subscriptionProvider);
     final devices = ref.watch(devicesListProvider);
 
     return AppPage(
@@ -81,11 +69,7 @@ class DevicesScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _DeviceLimitCard(
-            devicesUsed: subscription.value?.devicesUsed ?? 0,
-            deviceLimit: subscription.value?.deviceLimit ?? 1,
-            tier: subscription.value?.tier ?? SubscriptionTier.free,
-          ),
+          _DeviceCountCard(count: devices.value?.length),
           const SizedBox(height: 16),
           devices.when(
             loading: () => const Padding(
@@ -122,9 +106,6 @@ class DevicesScreen extends ConsumerWidget {
               );
             },
           ),
-          const SizedBox(height: 16),
-          if (subscription.value != null && !subscription.value!.canAddDevice)
-            const _UpgradePrompt(),
         ],
       ),
     );
@@ -263,146 +244,39 @@ class _DeviceCard extends ConsumerWidget {
   }
 }
 
-class _DeviceLimitCard extends StatelessWidget {
-  const _DeviceLimitCard({
-    required this.devicesUsed,
-    required this.deviceLimit,
-    required this.tier,
-  });
+class _DeviceCountCard extends StatelessWidget {
+  const _DeviceCountCard({required this.count});
 
-  final int devicesUsed;
-  final int deviceLimit;
-  final SubscriptionTier tier;
+  /// null — список ещё грузится.
+  final int? count;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final progress = deviceLimit <= 0 ? 0.0 : devicesUsed / deviceLimit;
-
     return GlassContainer(
       borderRadius: BorderRadius.circular(20),
       padding: const EdgeInsets.all(20),
       color: AppColors.primary.withValues(alpha: 0.06),
       borderColor: AppColors.primary.withValues(alpha: 0.25),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.devices_rounded,
-                size: 20,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                l10n.devicesLimit,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '$devicesUsed / $deviceLimit',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Text(
-                tier.name.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress.clamp(0.0, 1.0),
-              backgroundColor: AppColors.surface.withValues(alpha: 0.1),
-              valueColor: progress > 0.8
-                  ? const AlwaysStoppedAnimation<Color>(AppColors.warning)
-                  : const AlwaysStoppedAnimation<Color>(AppColors.primary),
-              minHeight: 6,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            devicesUsed == 0
-                ? l10n.devicesNoConnections
-                : devicesUsed >= deviceLimit
-                    ? l10n.devicesLimitReached
-                    : l10n.devicesSlotsAvailable(deviceLimit - devicesUsed),
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _UpgradePrompt extends StatelessWidget {
-  const _UpgradePrompt();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return GlassContainer(
-      borderRadius: BorderRadius.circular(18),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.workspace_premium_rounded,
-                size: 18,
-                color: AppColors.premium,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                l10n.devicesUpgradeTitle,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.devicesUpgradeBody,
-            style: const TextStyle(
-              fontSize: 12.5,
-              color: AppColors.textSecondary,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 12),
-          GlassButton(
-            label: l10n.devicesUpgradeButton,
-            icon: Icons.arrow_forward_rounded,
-            gradient: AppColors.premiumGradient,
-            foreground: Colors.white,
-            onTap: () => context.go('/premium'),
+          const Icon(Icons.devices_rounded, size: 20, color: AppColors.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: count == null
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(
+                    l10n.devicesConnectedCount(count!),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
           ),
         ],
       ),

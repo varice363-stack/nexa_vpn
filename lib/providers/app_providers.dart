@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,7 +35,6 @@ import '../services/identity/device_fingerprint.dart';
 import '../services/identity/identity_store.dart';
 import '../services/notification_service.dart';
 import '../services/security/ssl_pinning_service.dart';
-import '../services/security/security_service.dart';
 
 /// Injected in `main()` via ProviderScope override.
 final sharedPreferencesProvider = Provider<SharedPreferences>(
@@ -196,7 +194,6 @@ final sessionManagerProvider = Provider<SessionManager>(
   // в релизе пользователь видит лишь реальные сессии.
   (ref) => SessionManagerImpl(
     ref.watch(localSettingsProvider),
-    seedDemo: kDebugMode,
   ),
 );
 
@@ -219,7 +216,3 @@ final notificationServiceProvider = Provider<NotificationService>(
   },
 );
 
-/// Security service — создаётся лениво, не блокирует запуск.
-final securityServiceProvider = Provider<SecurityService>((ref) {
-  return SecurityService(AppLogger());
-});

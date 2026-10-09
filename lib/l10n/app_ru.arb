@@ -122,7 +122,7 @@
   "profileGuestHint": "Войдите, чтобы синхронизировать устройства, ключи и подписки",
   "profilePremiumMember": "Premium-подписчик",
   "profileAllUnlocked": "Все возможности открыты",
-  "profileUpgradeHint": "Оформите Premium для безлимита и качества 4K",
+  "profileUpgradeHint": "Оформите подписку для безлимитного трафика",
   "profileNexaPremium": "MOROK Premium",
   "profileMyAccess": "Мой доступ",
   "profileMyAccessHint": "Подписка и ключи доступа",
@@ -476,17 +476,15 @@
   },
   "devicesTitle": "Устройства",
   "devicesSubtitle": "Управляйте подключёнными устройствами",
-  "devicesLimit": "Лимит устройств",
-  "devicesNoConnections": "Пока нет подключённых устройств",
-  "devicesLimitReached": "Достигнут лимит устройств",
-  "devicesSlotsAvailable": "{count} слотов свободно",
-  "@devicesSlotsAvailable": {
+  "devicesConnectedCount": "Подключено устройств: {count}",
+  "@devicesConnectedCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
+  "devicesNoConnections": "Пока нет подключённых устройств",
   "devicesJustNow": "Только что",
   "devicesMinutesAgo": "{minutes} мин. назад",
   "@devicesMinutesAgo": {
@@ -560,17 +558,14 @@
     }
   },
   "devicesEmpty": "Вы ещё не подключали устройства. Подключитесь через приложение, и оно появится здесь.",
-  "devicesUpgradeTitle": "Нужно больше устройств?",
-  "devicesUpgradeBody": "Перейдите на Premium для подключения до 5 устройств одновременно.",
-  "devicesUpgradeButton": "Обновить тариф",
   "trialTitle": "Пробный период",
   "trialSubtitle": "Попробуйте MOROK VPN бесплатно",
   "trialBenefitTitle": "3 дня бесплатно",
   "trialBenefitSubtitle": "Полный доступ ко всем функциям без ограничений",
   "trialPeriod7Days": "Пробный период 3 дня",
-  "trialFeatureUnlimited": "Безлимитный трафик",
+  "trialFeatureUnlimited": "2 ГБ трафика",
   "trialFeatureAllServers": "Доступ ко всем серверам",
-  "trialFeature3Devices": "Подключение до 3 устройств",
+  "trialFeatureNoCard": "Без привязки карты",
   "trialFeatureFullProtection": "Полная защита VLESS + Reality",
   "trialActivateButton": "Активировать пробный период",
   "trialNoPayment": "Привязка карты не требуется",
