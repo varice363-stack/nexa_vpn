@@ -75,7 +75,16 @@ export class XrayClientSyncService implements OnApplicationBootstrap {
   async desiredClients(): Promise<XrayClientEntry[]> {
     const now = new Date();
     const keys = await this.prisma.accessKey.findMany({
-      where: { status: 'ACTIVE', OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+      where: {
+        status: 'ACTIVE',
+        AND: [
+          { OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
+          // Ключ заблокированного или удалённого владельца в ядро не выкладываем:
+          // блокировка обязана отключать туннель, а не только вход в API.
+          // Непривязанные ключи (userId = null) не затрагиваются.
+          { OR: [{ userId: null }, { user: { status: 'ACTIVE' } }] },
+        ],
+      },
       select: { id: true, uuid: true, name: true, serverId: true },
     });
 

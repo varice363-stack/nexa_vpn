@@ -63,11 +63,15 @@ describe('XrayClientSyncService.desiredClients', () => {
     // фильтр «кому можно» живёт в запросе, а не в памяти — список может расти
     const findMany = prisma.__accessKey.findMany as unknown as jest.Mock;
     const arg = findMany.mock.calls[0][0] as {
-      where: { status: string; OR: unknown[] };
+      where: { status: string; AND: unknown[] };
       select: Record<string, boolean>;
     };
     expect(arg.where.status).toBe('ACTIVE');
-    expect(arg.where.OR).toEqual([{ expiresAt: null }, { expiresAt: { gt: expect.any(Date) } }]);
+    // срок действия + статус владельца: заблокированного/удалённого в ядро не пускаем
+    expect(arg.where.AND).toEqual([
+      { OR: [{ expiresAt: null }, { expiresAt: { gt: expect.any(Date) } }] },
+      { OR: [{ userId: null }, { user: { status: 'ACTIVE' } }] },
+    ]);
     expect(arg.select.code).toBeUndefined(); // код доступа наружу не отдаём
   });
 

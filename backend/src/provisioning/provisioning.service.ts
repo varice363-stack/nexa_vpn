@@ -64,6 +64,16 @@ export class ProvisioningService {
         'An active subscription is required to create access keys',
       );
     }
+    // Ключ привязывается только к устройству, которое зарегистрировал этот
+    // же пользователь. Раньше неизвестный deviceId падал на внешнем ключе
+    // (500), а чужой проходил молча.
+    if (dto.deviceId) {
+      const device = await this.prisma.device.findFirst({
+        where: { id: dto.deviceId, userId: user.id, revokedAt: null },
+        select: { id: true },
+      });
+      if (!device) throw new NotFoundException('Device not found');
+    }
     const uuid = randomUUID();
     const server = await this.pickServer();
     const key = await this.prisma.accessKey.create({

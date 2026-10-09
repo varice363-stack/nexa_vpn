@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { PaymentStatus, PaymentProvider as ProviderName, SubscriptionStatus } from '@prisma/client';
 import { randomUUID } from 'crypto';
 
@@ -75,8 +80,12 @@ export class BillingService {
       [this.config.provider]: primary,
       crypto: this.crypto,
     };
-    // Keep 'mock' resolvable for webhooks when the real provider is off.
-    if (this.config.provider !== 'mock') {
+    // Mock-провайдер подписывает события константой и никого не проверяет,
+    // поэтому в production он не регистрируется вообще (ни как основной, ни
+    // для вебхуков). В разработке остаётся доступен для вебхуков.
+    if (process.env.NODE_ENV === 'production') {
+      delete this.providers['mock'];
+    } else if (this.config.provider !== 'mock') {
       this.providers['mock'] = PaymentProviderFactory.create('mock');
     }
   }
@@ -133,6 +142,10 @@ export class BillingService {
     // и конфиг очереди разошлись бы).
     const provider =
       this.config.provider === 'crypto' ? this.crypto : this.providers[this.config.provider];
+    if (!provider) {
+      // Честный отказ до записи PENDING: без провайдера оплаты не бывает.
+      throw new ServiceUnavailableException('Оплата сейчас недоступна');
+    }
     // Инвойс строим ДО записи, чтобы на не настроенном кошельке упасть честно,
     // а не оставить пользователю висячий PENDING.
     let invoice: CryptoInvoice | null = null;
@@ -708,7 +721,9 @@ export class BillingService {
       include: { plan: { select: { id: true, name: true, code: true } } },
     });
     // Idempotency keys are admin-only; never expose them to the user.
-    return rows.map(({ idempotencyKey, ...rest }) => ({
+    // providerPaymentId — ключ для вебхука: по нему подтверждают оплату, поэтому
+    // пользователю он не отдаётся (раньше по нему можно было бы подделать PAID).
+    return rows.map(({ idempotencyKey, providerPaymentId, ...rest }) => ({
       ...rest,
       planName: rest.plan?.name ?? null,
     }));
@@ -719,7 +734,8 @@ export class BillingService {
       where: { id, userId: user.id },
     });
     if (!tx) throw new NotFoundException('Transaction not found');
-    return tx;
+    const { providerPaymentId, idempotencyKey, ...safe } = tx;
+    return safe;
   }
 
   async allTransactions() {

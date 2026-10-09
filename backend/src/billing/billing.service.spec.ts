@@ -651,3 +651,65 @@ describe('BillingService', () => {
     });
   });
 });
+
+describe('раунд 9: продовый режим и приватность транзакций', () => {
+  const savedEnv = { ...process.env };
+  afterEach(() => {
+    process.env = { ...savedEnv };
+  });
+
+  it('пользователю не отдаём providerPaymentId (ключ вебхука) ни в списке, ни в одной транзакции', async () => {
+    const row = {
+      id: 't1',
+      userId: 'u1',
+      status: PaymentStatus.PENDING,
+      amount: 199,
+      providerPaymentId: 'SECRET-WEBHOOK-KEY',
+      idempotencyKey: 'idem-1',
+      plan: { id: 'p1', name: 'Morok 30 Days', code: PlanCode.MONTHLY },
+    };
+    const prisma = makePrisma({
+      paymentTransaction: {
+        findMany: jest.fn(async () => [row]),
+        findFirst: jest.fn(async () => row),
+      },
+    });
+    const service = new BillingService(prisma, xrayStub as never);
+
+    const list = await service.myTransactions(user);
+    const one = await service.transaction(user, 't1');
+
+    for (const item of [list[0], one]) {
+      expect(JSON.stringify(item)).not.toContain('SECRET-WEBHOOK-KEY');
+      expect(item).not.toHaveProperty('providerPaymentId');
+      expect(item).not.toHaveProperty('idempotencyKey');
+    }
+    expect(one.id).toBe('t1');
+    expect(list[0].planName).toBe('Morok 30 Days');
+  });
+
+  it('в production mock-провайдер не принимает вебхуки и не создаёт PENDING-заказы', async () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.PAYMENT_PROVIDER;
+    const prisma = makePrisma();
+    const service = new BillingService(prisma, xrayStub as never);
+
+    await expect(
+      service.handleWebhook('mock', { event: 'payment.paid', providerPaymentId: 'x' }),
+    ).rejects.toThrow('Unknown payment provider');
+
+    await expect(service.checkout(user, 'p1')).rejects.toThrow('Оплата сейчас недоступна');
+    expect(prisma.paymentTransaction.create).not.toHaveBeenCalled();
+  });
+
+  it('вне production mock-вебхук по-прежнему доступен для разработки', async () => {
+    process.env.NODE_ENV = 'test';
+    delete process.env.PAYMENT_PROVIDER;
+    const prisma = makePrisma();
+    const service = new BillingService(prisma, xrayStub as never);
+    // подпись неверна → 400, а не «провайдер не найден»
+    await expect(
+      service.handleWebhook('mock', { event: 'payment.paid', providerPaymentId: 'x' }),
+    ).rejects.toThrow('Invalid webhook signature');
+  });
+});

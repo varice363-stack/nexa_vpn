@@ -82,6 +82,12 @@ function makePrisma(overrides: Record<string, unknown> = {}) {
       ),
       ...(overrides.vpnServer as Record<string, unknown> | undefined),
     },
+    // Устройство ищется по id и владельцу; чужое или неизвестное — null.
+    device: {
+      findFirst: jest.fn(async () => ({ id: 'dev-1' })),
+      findMany: jest.fn(async () => []),
+      ...(overrides.device as Record<string, unknown> | undefined),
+    },
     ...overrides,
   } as any;
 }
@@ -98,6 +104,48 @@ const subscriptions = {
 const statsStub = { usageByKeyPrefix: async () => null } as never;
 
 const xrayStub = { publishedKeyIds: jest.fn(async () => new Set<string>()) } as never;
+
+describe('ProvisioningService.create — владелец устройства', () => {
+  it('неизвестное или чужое устройство даёт 404 и ключ не создаётся', async () => {
+    const prisma = makePrisma({
+      device: { findFirst: jest.fn(async () => null) },
+    });
+    const service = new ProvisioningService(
+      prisma,
+      subscriptions,
+      new VlessConfigService(),
+      xrayStub,
+      statsStub,
+    );
+
+    await expect(
+      service.create(user, {
+        name: 'Чужой телефон',
+        deviceId: '00000000-0000-4000-8000-000000000099',
+      }),
+    ).rejects.toThrow('Device not found');
+    // поиск идёт по владельцу: чужое устройство для этого user не находится
+    const lookup = (prisma.device.findFirst as jest.Mock).mock.calls[0][0] as {
+      where: { userId: string };
+    };
+    expect(lookup.where.userId).toBe('u1');
+    expect(prisma.accessKey.create).not.toHaveBeenCalled();
+  });
+
+  it('без deviceId ключ создаётся, как раньше (устройство не обязательно)', async () => {
+    const prisma = makePrisma();
+    const service = new ProvisioningService(
+      prisma,
+      subscriptions,
+      new VlessConfigService(),
+      xrayStub,
+      statsStub,
+    );
+    await service.create(user, { name: 'Без устройства' });
+    expect(prisma.device.findFirst).not.toHaveBeenCalled();
+    expect(prisma.accessKey.create).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe('ProvisioningService (TASK #011 — server assignment)', () => {
   it('new AccessKey receives a serverId (deterministic assignment)', async () => {

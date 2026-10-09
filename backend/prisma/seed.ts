@@ -39,6 +39,12 @@ async function main() {
   // возвращал бы старый — «сменил пароль, а он опять прежний». Сид задаёт
   // пароль только при создании админа; принудительный сброс — через
   // ADMIN_PASSWORD_FORCE=true (аварийный путь, если пароль забыт).
+  const isProduction = process.env.NODE_ENV === 'production';
+  // В production без своего пароля админ получил бы публичный «admin1234».
+  // Сид в этом случае останавливается, а не создаёт известную учётку.
+  if (isProduction && !process.env.ADMIN_PASSWORD) {
+    throw new Error('ADMIN_PASSWORD обязателен при NODE_ENV=production');
+  }
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin1234';
   const adminHash = await bcrypt.hash(adminPassword, 12);
   const forcePassword = process.env.ADMIN_PASSWORD_FORCE === 'true';
@@ -56,18 +62,21 @@ async function main() {
     },
   });
 
-  // Demo user: user@morokvpn.app / user1234
-  const userHash = await bcrypt.hash('user1234', 10);
-  await prisma.user.upsert({
-    where: { email: 'user@morokvpn.app' },
-    update: {},
-    create: {
-      email: 'user@morokvpn.app',
-      passwordHash: userHash,
-      role: Role.USER,
-      country: 'TR',
-    },
-  });
+  // Демо-пользователь с известным паролем — только для разработки. На проде
+  // его не создаём (и существующий надо удалить вручную: см. отчёт раунда 9).
+  if (!isProduction) {
+    const userHash = await bcrypt.hash('user1234', 10);
+    await prisma.user.upsert({
+      where: { email: 'user@morokvpn.app' },
+      update: {},
+      create: {
+        email: 'user@morokvpn.app',
+        passwordHash: userHash,
+        role: Role.USER,
+        country: 'TR',
+      },
+    });
+  }
 
   // Main active MOROK VLESS Reality server
   await prisma.vpnServer.upsert({
@@ -106,7 +115,7 @@ async function main() {
     },
   });
 
-  console.log(`Seed complete: admin@morokvpn.app (пароль ${process.env.ADMIN_PASSWORD ? 'из ADMIN_PASSWORD' : 'дефолтный'}), user@morokvpn.app / user1234.`);
+  console.log(`Seed complete: admin@morokvpn.app (пароль ${process.env.ADMIN_PASSWORD ? 'из ADMIN_PASSWORD' : 'дефолтный'})${isProduction ? '' : ', демо user@morokvpn.app / user1234'}.`);
 }
 
 main()
