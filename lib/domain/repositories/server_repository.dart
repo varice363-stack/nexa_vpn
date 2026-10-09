@@ -4,8 +4,7 @@ import '../../models/server.dart';
 abstract class ServerRepository {
   /// Returns all available servers.
   ///
-  /// May hit a network backend in the future; today backed by the static
-  /// catalog with simulated latency and ping refresh.
+  /// Backed by the backend API (`GET /servers`).
   Future<List<Server>> getServers();
 
   /// Resolves a single server by id, or `null`.

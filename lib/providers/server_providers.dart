@@ -1,13 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/datasources/server_catalog.dart';
 import '../models/server.dart';
 import 'app_providers.dart';
 
 /// Asynchronously loaded server list.
 ///
-/// Source: backend API via [serverRepositoryProvider] with an automatic
-/// fallback to the local static catalog when the API is unreachable.
+/// Source: backend API via [serverRepositoryProvider]. If the API is
+/// unreachable the list is in error state; no servers are invented.
 final serversProvider = AsyncNotifierProvider<ServersNotifier, List<Server>>(
   ServersNotifier.new,
 );
@@ -72,6 +71,3 @@ class FavoritesNotifier extends AsyncNotifier<List<String>> {
   bool isFavorite(Server server) =>
       state.value?.contains(server.id) ?? false;
 }
-
-/// Fallback catalog constant kept for tests and non-reactive contexts.
-List<Server> get catalogServers => kServers;

@@ -2,18 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../providers/connection_source_providers.dart';
-import '../../../providers/server_providers.dart';
+import '../../../providers/vpn_providers.dart';
 
-/// Карточка текущего сервера с флагом страны.
+/// Карточка подключённого ключа: его название и живой пинг.
 class ServerCard extends ConsumerWidget {
   const ServerCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeSource = ref.watch(activeSourceProvider);
-    final selectedServer = ref.watch(selectedServerProvider);
-    
-    final server = selectedServer;
+    final ping = ref.watch(livePingProvider).value;
+
     final sourceLabel = activeSource?.label ?? 'Неизвестный сервер';
 
     return Container(
@@ -43,7 +42,7 @@ class ServerCard extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          // Флаг страны
+          // Флаг пока нейтральный: у ключа нет страны, а список серверов не подставляем
           Container(
             width: 48,
             height: 48,
@@ -62,10 +61,10 @@ class ServerCard extends ConsumerWidget {
                 width: 1,
               ),
             ),
-            child: Center(
+            child: const Center(
               child: Text(
-                server?.flagEmoji ?? '🌍',
-                style: const TextStyle(fontSize: 26),
+                '🌍',
+                style: TextStyle(fontSize: 26),
               ),
             ),
           ),
@@ -76,7 +75,7 @@ class ServerCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  server?.displayName ?? sourceLabel,
+                  sourceLabel,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -103,7 +102,7 @@ class ServerCard extends ConsumerWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Ping: ${server?.ping ?? '—'} мс',
+                      'Пинг: ${ping ?? '—'} мс',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 12,

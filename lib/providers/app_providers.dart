@@ -10,7 +10,6 @@ import '../core/utils/app_logger.dart';
 import '../data/datasources/local_settings_datasource.dart';
 import '../data/repositories/config_repository_impl.dart';
 import '../data/repositories/key_storage_impl.dart';
-import '../data/repositories/server_repository_impl.dart';
 import '../data/repositories/session_manager_impl.dart';
 import '../domain/repositories/admin_repository.dart';
 import '../domain/repositories/auth_repository.dart';
@@ -153,11 +152,11 @@ final accessRepositoryProvider = Provider<AccessRepository>(
   (ref) => AccessRepositoryImpl(api: ref.watch(apiClientProvider)),
 );
 
-/// Server catalog: backend API with local static fallback.
+/// Server list from the backend. No local stand-in: when the API is down the
+/// error is shown as it is, instead of invented servers.
 final serverRepositoryProvider = Provider<ServerRepository>(
   (ref) => ApiServerRepository(
     api: ref.watch(apiClientProvider),
-    fallback: ServerRepositoryImpl(),
     logger: ref.watch(loggerProvider),
   ),
 );
