@@ -1,43 +1,57 @@
 #!/usr/bin/env python3
 """
-MOROK VPN — сборка конфига ядра из того, что выдал бэкенд (TASK #030-B).
+MOROK VPN — синхронизация клиентов с ядром Xray (TASK #030-C).
 
 Вход:
-  /var/lib/morok/reality-keys.json   privateKey/shortIds/dest/serverNames/port
-  /var/lib/morok/xray-clients.json   [{id: <uuid ключа>, email: <id AccessKey>}]
+  /var/lib/morok/reality-keys.json   privateKey/shortIds/dest/serverNames/port/apiPort
+  /var/lib/morok/xray-clients.json   {"clients": [{id: <uuid ключа>, email: <id AccessKey>}]}
 Выход:
-  /etc/morok/xray/config.json        конфиг, который читает morok-xray.service
+  /etc/morok/xray/config.json        конфиг, с которым стартует morok-xray.service
+  /var/lib/morok/xray-applied.json   что РЕАЛЬНО загружено в работающее ядро
+  /var/lib/morok/xray-sync.state     диагностика для GET /provisioning/xray/status
 
-Почему не правка конфига Marzban: панель держит ядро как `xray run -config stdin:`
-и генерирует конфиг сама — файловая правка до неё не доходит (проверено живьём:
-3 клиента в файле, handshake по-прежнему «processed invalid connection»).
+Как применяется изменение (важно: SIGHUP здесь не работает):
+  Xray 25.x на SIGHUP завершается, а systemd поднимает его заново через 2 с.
+  Значит, `systemctl reload` = обрыв всех активных подключений. Поэтому:
+    * только добавились клиенты  → горячо, через `xray api adu`, без перезапуска;
+    * кто-то удалён / заблокирован / истёк → новые подключения закрываются через
+      `xray api rmu`, а ядро перезапускается, чтобы оборвать уже идущие сессии
+      (иначе заблокированный пользователь доигрывает текущую сессию);
+    * изменились параметры ядра (Reality, API, policy) → перезапуск.
+  Если горячее добавление не подтвердилось, падаем на перезапуск — сходимость важнее.
 
-Ключевое: конфиг перезаписывается ТОЛЬКО когда содержимое реально изменилось
-(сравнение по хэшу «ключевой» части). Лишний SIGHUP = разрыв всех активных
-туннелей, поэтому просто так мы ядро не трогаем.
+Состояние сверяется по xray-applied.json, а не по конфигу на диске: конфиг
+может быть записан, а ядро при этом ещё не получило изменения.
 """
 
+import fcntl
 import hashlib
 import json
 import os
+import re
+import shlex
 import subprocess
 import sys
+import tempfile
 import time
 
-KEYS = "/var/lib/morok/reality-keys.json"
-DESIRED = "/var/lib/morok/xray-clients.json"
+KEYS = os.environ.get("XRAY_KEYS", "/var/lib/morok/reality-keys.json")
+DESIRED = os.environ.get("XRAY_DESIRED", "/var/lib/morok/xray-clients.json")
 CONFIG = os.environ.get("XRAY_CONFIG", "/etc/morok/xray/config.json")
-# Стейт читается бэкендом (GET /provisioning/xray/status): по нему панель
-# понимает, когда узел в последний раз применял список.
+APPLIED = os.environ.get("XRAY_APPLIED", "/var/lib/morok/xray-applied.json")
 STATE = os.environ.get("XRAY_STATE", "/var/lib/morok/xray-sync.state")
+LOCK = os.environ.get("XRAY_LOCK", "/run/morok-xray-sync.lock")
 UNIT = os.environ.get("XRAY_UNIT", "morok-xray")
-
+# Для тестов можно подменить команду перезапуска; на проде — systemctl.
+RESTART_CMD = os.environ.get("XRAY_RESTART_CMD")
+XRAY_BIN = os.environ.get("XRAY_BIN", "/opt/morok/xray/xray")
+TAG = "VLESS-Reality"
 QUIET = "--quiet" in sys.argv
 
 
 def log(*a):
     if not QUIET:
-        print("[morok-xray]", *a)
+        print("[morok-xray]", *a, flush=True)
 
 
 def read_json(path, default=None):
@@ -46,60 +60,75 @@ def read_json(path, default=None):
             return json.load(fh)
     except FileNotFoundError:
         if default is None:
-            raise SystemExit(f"нет файла {path} — сначала выполни install-node.sh")
+            raise SystemExit(f"нет файла {path} — сначала выполни install.sh")
         return default
 
 
-def clients():
+def load_optional(path):
+    """Файл может отсутствовать (первый запуск) — тогда None, без ошибки."""
+    try:
+        with open(path) as fh:
+            return json.load(fh)
+    except FileNotFoundError:
+        return None
+
+
+def atomic_write(path, text):
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path) or ".", prefix=".tmp-")
+    with os.fdopen(fd, "w") as fh:
+        fh.write(text)
+    # mkstemp даёт 0600; systemd-юнит работает с UMask=0077. Файлы не секретные
+    # (UUID ключей и счётчики), а backend читает состояние — делаем 0644 явно.
+    os.chmod(tmp, 0o644)
+    os.replace(tmp, path)
+
+
+def desired_clients():
     doc = read_json(DESIRED, {"clients": []})
-    out = []
+    seen, out = set(), []
     for c in doc.get("clients") or []:
         cid = (c or {}).get("id")
-        if cid:
+        if cid and cid not in seen:
+            seen.add(cid)
             out.append({"id": cid, "email": str(c.get("email") or cid)[:64], "flow": "xtls-rprx-vision"})
-    # порядок фиксируем: иначе hash меняется на ровном месте и гоняет SIGHUP
+    # порядок фиксируем: иначе отпечаток меняется на ровном месте
     return sorted(out, key=lambda x: x["id"])
 
 
-def build():
+def build(clients):
     k = read_json(KEYS)
-    inbound = {
-        "listen": "0.0.0.0",
-        "port": int(k.get("port") or 443),
-        "protocol": "vless",
-        "tag": "VLESS-Reality",
-        "settings": {"clients": clients(), "decryption": "none", "fallbacks": []},
-        "streamSettings": {
-            "network": "tcp",
-            "security": "reality",
-            "realitySettings": {
-                "show": False,
-                "dest": k.get("dest") or "telegram.org:443",
-                "xver": 0,
-                "serverNames": k.get("serverNames") or ["telegram.org"],
-                "privateKey": k["privateKey"],
-                "shortIds": k.get("shortIds") or [""],
-                "maxTimediff": 0,
-            },
-        },
-        "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"]},
-    }
-    # Локальный API для статистики. Нужен, чтобы знать реальный трафик каждого
-    # ключа: без него «лимит трафика» в панели был бы цифрой, которая ничего не
-    # ограничивает. Слушает только петлю — снаружи недоступен.
-    #
-    # ВАЖНО: именно `api.listen`, а НЕ отдельный dokodemo-door инбаунд с
-    # tag: api. В Xray 25.x прежняя схема молча не работает: подключения к
-    # такому инбаунду уходят в DIRECT и gRPC не отвечает
-    # («failed to dial 127.0.0.1:10085»). Проверено на копии ядра 25.9.11:
-    # с api.listen запрос к StatsService возвращает данные, с dokodemo-инбаундом
-    # (без api.listen) — не отвечает вообще.
-    api_listen = f"127.0.0.1:{int(k.get('apiPort') or 10085)}"
+    port = int(k.get("port") or 443)
+    api_port = int(k.get("apiPort") or 10085)
     return {
-        "log": {"loglevel": "warning"},  # access-лог не ведём: см. docs/RISK_ASSESSMENT_RF.md
-        "api": {"tag": "api", "listen": api_listen, "services": ["StatsService"]},
+        "log": {"loglevel": "warning"},  # access-лог не ведём
+        # StatsService — трафик по ключам; HandlerService — горячее добавление/удаление.
+        # Слушает только петлю.
+        "api": {"tag": "api", "listen": f"127.0.0.1:{api_port}", "services": ["StatsService", "HandlerService"]},
         "stats": {},
-        "inbounds": [inbound],
+        "inbounds": [
+            {
+                "listen": "0.0.0.0",
+                "port": port,
+                "protocol": "vless",
+                "tag": TAG,
+                "settings": {"clients": clients, "decryption": "none", "fallbacks": []},
+                "streamSettings": {
+                    "network": "tcp",
+                    "security": "reality",
+                    "realitySettings": {
+                        "show": False,
+                        "dest": k.get("dest") or "telegram.org:443",
+                        "xver": 0,
+                        "serverNames": k.get("serverNames") or ["telegram.org"],
+                        "privateKey": k["privateKey"],
+                        "shortIds": k.get("shortIds") or [""],
+                        "maxTimediff": 0,
+                    },
+                },
+                "sniffing": {"enabled": True, "destOverride": ["http", "tls", "quic"]},
+            }
+        ],
         "outbounds": [{"protocol": "freedom", "tag": "DIRECT"}, {"protocol": "blackhole", "tag": "BLOCK"}],
         "policy": {
             "levels": {
@@ -107,7 +136,7 @@ def build():
                     "handshake": 4,
                     "connIdle": 300,
                     "idleTimeout": 60,
-                    # Без этих двух флагов Xray не считает трафик по клиентам.
+                    # Без этих флагов Xray не считает трафик по клиентам.
                     "statsUserUplink": True,
                     "statsUserDownlink": True,
                 }
@@ -116,111 +145,159 @@ def build():
     }
 
 
-def sig_of(cfg):
-    """Отпечаток «содержательного» конфига.
-
-    Раньше хэшировался только VLESS-инбаунд: добавление api/stats/policy не
-    меняло отпечаток, и на живом узле изменение просто не применилось бы
-    («без изменений»). Теперь в отпечаток входит всё, что мы генерируем, —
-    и по-прежнему ничего лишнего: при неизменном конфиге ядро не трогаем.
-    """
+def static_sig(cfg):
+    """Отпечаток всего, КРОМЕ списка клиентов. Изменился — нужен перезапуск."""
+    inbound = {k: v for k, v in cfg["inbounds"][0].items() if k != "settings"}
+    inbound["settings"] = {k: v for k, v in cfg["inbounds"][0]["settings"].items() if k != "clients"}
     core = json.dumps(
-        {
-            "vless": cfg["inbounds"][0],
-            "api": cfg.get("api"),
-            "stats": cfg.get("stats"),
-            "policy": cfg.get("policy"),
-        },
+        {"inbound": inbound, "api": cfg.get("api"), "stats": cfg.get("stats"), "policy": cfg.get("policy"),
+         "outbounds": cfg.get("outbounds")},
         sort_keys=True,
     ).encode()
     return hashlib.sha256(core).hexdigest()
 
 
-def reload_core():
-    """Перезапуск ядра без обрыва соединений, если умеем; иначе — nothing."""
+def read_applied():
+    """Что загружено в ядро. Если файла нет (первый запуск после обновления) — берём из конфига."""
+    doc = load_optional(APPLIED)
+    if doc is not None:
+        return doc
+    if os.path.exists(CONFIG):
+        try:
+            old = read_json(CONFIG)
+            ids = [c["id"] for c in old["inbounds"][0]["settings"].get("clients", [])]
+            return {"sig": static_sig(old), "clients": ids}
+        except (SystemExit, KeyError, IndexError, ValueError, TypeError):
+            return None
+    return None
+
+
+def write_applied(sig, ids):
+    atomic_write(APPLIED, json.dumps({"sig": sig, "clients": ids, "at": time.time()}))
+
+
+def write_config(cfg):
+    if os.path.exists(CONFIG):
+        with open(CONFIG) as fh:
+            prev = fh.read()
+        atomic_write(CONFIG + ".bak", prev)
+    atomic_write(CONFIG, json.dumps(cfg, indent=2, ensure_ascii=False))
+
+
+def unit_active():
     r = subprocess.run(["systemctl", "is-active", UNIT], capture_output=True, text=True)
-    if r.stdout.strip() == "active":
-        subprocess.run(["systemctl", "reload", UNIT], capture_output=True, text=True)
-        return "systemctl-reload"
-    # Юнита нет — значит ядро пока принадлежит панели: трогаем только своё.
-    return "skip (unit %s не активен)" % UNIT
+    return r.stdout.strip() == "active"
 
 
-def core_clients():
-    """Сколько клиентов ядро держит ПРЯМО СЕЙЧАС (по своему конфиг).
+def restart_core():
+    """True — перезапуск выполнен; False — ошибка; None — пропущено (ядро не наше)."""
+    if RESTART_CMD:
+        cmd = shlex.split(RESTART_CMD)
+    else:
+        if not unit_active():
+            return None  # юнита нет — ядро пока принадлежит панели: не трогаем
+        cmd = ["systemctl", "restart", UNIT]
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    return r.returncode == 0
 
-    Только число, без id: конфиг ядра содержит privateKey'ы Reality, и
-    показывать их бэкенду незачем — бэкенд и /etc/morok не видит (в compose
-    примонтирован только /var/lib/morok).
-    """
+
+def hot_add(clients, port):
+    """Добавить клиентов в работающее ядро. Успех — только если ядро подтвердило число."""
+    payload = {
+        "inbounds": [
+            {
+                "listen": "127.0.0.1",
+                "port": port,
+                "tag": TAG,
+                "protocol": "vless",
+                "settings": {"clients": clients, "decryption": "none"},
+            }
+        ]
+    }
+    fd, path = tempfile.mkstemp(prefix="adu-", suffix=".json")
+    with os.fdopen(fd, "w") as fh:
+        json.dump(payload, fh)
     try:
-        cfg = read_json(CONFIG) or {}
-        return sum(len(ib.get("settings", {}).get("clients", []) or [])
-                   for ib in cfg.get("inbounds", [])
-                   if ib.get("protocol") in ("vless", "vmess", "trojan", "shadowsocks"))
-    except Exception:
-        return None
+        api = f"127.0.0.1:{int(read_json(KEYS).get('apiPort') or 10085)}"
+        r = subprocess.run([XRAY_BIN, "api", "adu", f"--server={api}", path],
+                           capture_output=True, text=True, timeout=60)
+    finally:
+        os.unlink(path)
+    out = (r.stdout or "") + (r.stderr or "")
+    # rc у `xray api adu` = 0 даже при ошибке — смотрим на текст.
+    ok = f"Added {len(clients)} user(s)" in out and "failed" not in out.lower()
+    if not ok:
+        log("горячее добавление не подтвердилось:", out.strip()[-300:])
+    return ok
 
 
-def write_state(clients_count, changed):
-    """Стейт для GET /provisioning/xray/status.
+def core_clients_count(applied):
+    return len(applied["clients"]) if applied else None
 
-    Пишется в ОБЕИХ ветках — и при «без изменений», и после применения.
-    Раньше запись стояла только в ветке «без изменений», поэтому
-    nodeAppliedAt уезжал в момент первой установки и панель вечно показывала
-    «узел отстал на N часов», хотя ядро перезапускалось каждую минуту.
-    """
+
+def write_state(clients_count, action):
     try:
-        os.makedirs(os.path.dirname(STATE), exist_ok=True)
-        tmp = STATE + ".tmp"
-        with open(tmp, "w") as fh:
-            json.dump(
-                {
-                    "at": time.time(),
-                    "clients": clients_count,
-                    "coreClients": core_clients(),
-                    "changed": changed,
-                    "source": "build-xray-config",
-                },
-                fh,
-            )
-        os.replace(tmp, STATE)
+        atomic_write(
+            STATE,
+            json.dumps(
+                {"at": time.time(), "clients": clients_count, "coreClients": clients_count,
+                 "changed": action != "noop", "action": action, "source": "build-xray-config"}
+            ),
+        )
     except OSError:
         pass  # статус — диагностика, а не условие работы ядра
 
 
 def main():
-    cfg = build()
-    want = sig_of(cfg)
-    old = None
-    if os.path.exists(CONFIG):
-        try:
-            old = sig_of(read_json(CONFIG))
-        except SystemExit:
-            old = None
-    if old == want:
-        n = len(cfg["inbounds"][0]["settings"]["clients"])
-        write_state(n, False)
-        log(f"без изменений: {n} клиентов в ядре")
-        return 0
+    os.makedirs(os.path.dirname(LOCK) or ".", exist_ok=True)
+    lock_fh = open(LOCK, "w")
+    fcntl.flock(lock_fh, fcntl.LOCK_EX)  # два запуска (path + cron) не должны мешать друг другу
 
-    os.makedirs(os.path.dirname(CONFIG), exist_ok=True)
-    if os.path.exists(CONFIG):
-        with open(CONFIG) as fh:
-            prev = fh.read()
-        tmp = CONFIG + ".bak"
-        with open(tmp, "w") as fh:
-            fh.write(prev)
-    tmp = CONFIG + ".new"
-    with open(tmp, "w") as fh:
-        json.dump(cfg, fh, indent=2, ensure_ascii=False)
-    os.replace(tmp, CONFIG)
-    n = len(cfg["inbounds"][0]["settings"]["clients"])
-    how = reload_core()
-    write_state(n, True)
-    log(f"конфиг переписан, клиентов: {n}; применение: {how}")
+    clients = desired_clients()
+    cfg = build(clients)
+    want_sig = static_sig(cfg)
+    want_ids = [c["id"] for c in clients]
+    applied = read_applied()
+    port = int(read_json(KEYS).get("port") or 443)
+
+    if applied is None or applied["sig"] != want_sig:
+        action = "restart-config"
+        write_config(cfg)
+        res = restart_core()
+    else:
+        applied_ids = set(applied["clients"])
+        added = [c for c in clients if c["id"] not in applied_ids]
+        removed = [i for i in applied["clients"] if i not in set(want_ids)]
+        if not added and not removed:
+            action = "noop"
+            res = True
+        elif removed:
+            action = "restart-removed"
+            write_config(cfg)
+            res = restart_core()
+        else:
+            action = "hot-add"
+            write_config(cfg)  # файл должен совпадать с желаемым — на случай будущего перезапуска
+            res = hot_add(added, port)
+            if not res:
+                action = "restart-after-failed-hot-add"
+                res = restart_core()
+
+    if res is None:
+        log("ядро не управляется этим скриптом (юнит не активен) — пропуск")
+        write_state(len(want_ids), "skipped")
+        return 0
+    if res is False:
+        log(f"применение не удалось: {action}")
+        write_state(len(want_ids), action + "-FAILED")
+        return 1
+
+    if action != "noop":
+        write_applied(want_sig, want_ids)
+    write_state(len(want_ids), action)
+    log(f"клиентов: {len(want_ids)}; действие: {action}")
     return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
