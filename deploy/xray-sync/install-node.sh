@@ -107,7 +107,8 @@ Wants=network-online.target
 [Service]
 Type=simple
 ExecStart=$XRAY_DIR/xray run -config $CFG
-ExecReload=/bin/kill -HUP \$MAINPID
+# ExecReload НЕ задаём: Xray на SIGHUP завершается, systemd поднимает его через 2 с —
+# то есть reload рвёт все подключения. Клиенты применяются горячо (xray api adu).
 Restart=always
 RestartSec=2
 NoNewPrivileges=yes
