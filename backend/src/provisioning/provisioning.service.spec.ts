@@ -103,7 +103,10 @@ const subscriptions = {
  */
 const statsStub = { usageByKeyPrefix: async () => null } as never;
 
-const xrayStub = { publishedKeyIds: jest.fn(async () => new Set<string>()) } as never;
+const xrayStub = {
+  publishedKeyIds: jest.fn(async () => new Set<string>()),
+  sync: jest.fn(async () => null),
+} as never;
 
 describe('ProvisioningService.create — владелец устройства', () => {
   it('неизвестное или чужое устройство даёт 404 и ключ не создаётся', async () => {
@@ -423,7 +426,7 @@ describe('ProvisioningService (TASK #011 — server assignment)', () => {
       prisma,
       subscriptions,
       new VlessConfigService(),
-      { publishedKeyIds: jest.fn(async () => new Set<string>()) } as never,
+      { publishedKeyIds: jest.fn(async () => new Set<string>()), sync: jest.fn(async () => null) } as never,
       statsStub,
     );
     // Нет файла -> не врать «не выложен», а показать неизвестность.

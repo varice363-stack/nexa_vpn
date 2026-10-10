@@ -102,6 +102,13 @@ describe('блокировка и удаление отключают VPN, а н
     expect(inXrayClients(u.keyId)).toBe(true);
   });
 
+  it('ключ, выданный админом, сразу попадает в клиенты ядра (без ожидания тика)', async () => {
+    // Регрессия: раньше issue() не публиковал ключ, и первые ~30 с vless:// не работал.
+    const r = await api('POST', '/provisioning/issue', { token: admin, body: { name: 'Тест' } });
+    expect(r.status).toBe(201);
+    expect(inXrayClients(r.data.id)).toBe(true);
+  });
+
   it('удалённый аккаунт тоже пропадает из клиентов ядра', async () => {
     const u = await premiumUserWithKey();
     await syncXray(admin);

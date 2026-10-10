@@ -56,6 +56,30 @@ describe('AccessActivationService', () => {
       expect(prisma.accessKey.create.mock.calls[0][0].data.userId).toBeNull();
     });
 
+    it('publishes the new key to Xray in the same request (no 30 s gap)', async () => {
+      const prisma = makePrisma();
+      const sync = jest.fn(async () => ({ written: 1, path: '/dev/null' }));
+      const svc = new AccessActivationService(prisma, provisioning, { sync } as any);
+
+      await svc.issue({ name: 'Promo' });
+
+      expect(sync).toHaveBeenCalledTimes(1);
+    });
+
+    it('a publish failure does not break issuing the key', async () => {
+      const prisma = makePrisma();
+      const sync = jest.fn(async () => {
+        throw new Error('disk full');
+      });
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const svc = new AccessActivationService(prisma, provisioning, { sync } as any);
+
+      const key = await svc.issue({ name: 'Promo' });
+
+      expect(key.code).toMatch(/^MOROK-/);
+      warn.mockRestore();
+    });
+
     it('treats a missing duration as a lifetime key', async () => {
       const prisma = makePrisma();
       const svc = new AccessActivationService(prisma, provisioning, xraySync);

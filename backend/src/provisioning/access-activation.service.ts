@@ -132,6 +132,10 @@ export class AccessActivationService {
     // Конфигурация отдаётся сразу: без неё выдача в панели выглядела как
     // «код создан», а vless:// приходилось искать руками. URI нужен и тому,
     // кто отправляет ключ другу, и тому, кто хочет проверить узел сам.
+    // Ядро должно знать о ключе до того, как его увидит админ и пошлёт другу:
+    // иначе vless:// отдаётся, а UUID в Xray ещё нет — клиент получает таймаут
+    // до ближайшего тика синхронизации (до 30 с).
+    await this.publish();
     const contract = await this.provisioning.toContract(null, key);
     return { ...key, config: contract.config };
   }
@@ -217,10 +221,13 @@ export class AccessActivationService {
       throw new BadRequestException('CODE_REVOKED');
     }
 
-    return this.prisma.accessKey.update({
+    const updated = await this.prisma.accessKey.update({
       where: { id: key.id },
       data: { userId, activatedAt: key.activatedAt ?? new Date() },
     });
+    // Владелец изменился — ядро должно пересчитать допуск сразу.
+    await this.publish();
+    return updated;
   }
 
   /** Looks a key up by code without mutating it (status polling). */

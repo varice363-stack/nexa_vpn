@@ -86,6 +86,8 @@ export class ProvisioningService {
         uuid,
       },
     });
+    // Ядро узнаёт о новом ключе сразу, а не на следующем тике (до 30 с).
+    await this.xraySync.sync().catch(() => null);
     return this.toContract(user, key);
   }
 
