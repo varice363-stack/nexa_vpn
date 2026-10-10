@@ -15,6 +15,14 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // За nginx (HTTPS-вход) все запросы приходят с 127.0.0.1 / адреса docker-сети.
+  // Без доверия к прокси req.ip — один и тот же адрес для ВСЕХ пользователей,
+  // и лимит запросов становится общим на весь сервис.
+  // Доверяем только петле и внутренним адресам: заголовок X-Forwarded-For,
+  // присланный напрямую из интернета (публичный peer), не учитывается.
+  // TRUST_PROXY можно переопределить (например, 'false' при прямом доступе).
+  app.set('trust proxy', process.env.TRUST_PROXY?.trim() || 'loopback, uniquelocal');
+
   // ── Security Headers (Helmet) ──────────────────────────────────────────
   app.use(
     helmet({
