@@ -134,8 +134,8 @@ systemctl enable --now morok-xray.service
 sleep 3
 systemctl is-active morok-xray.service | sed 's/^/  morok-xray: /'
 
-# ── 6. cron: перегенерация конфига и SIGHUP при изменении списка ключей ──
+# ── 6. cron: перегенерация конфига и горячее применение списка ключей ──
 ( crontab -l 2>/dev/null | grep -vE "morok-xray-sync|morok-build-xray-config" ; \
   echo '* * * * * /usr/local/bin/morok-build-xray-config --quiet >> /var/log/morok-xray-sync.log 2>&1' ) | crontab -
-log "cron: минута на применение; немедленно: morok-build-xray-config && systemctl reload morok-xray"
+log "cron: минута на применение; немедленно: /usr/local/bin/morok-build-xray-config (горячо, без обрыва; перезапуск только при удалении клиентов)"
 log "готово. проверка: curl -s -m 5 http://127.0.0.1:3000/app-api/health; ss -ltnp | grep :443"
