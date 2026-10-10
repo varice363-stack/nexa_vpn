@@ -139,14 +139,22 @@ export default function KeysManager({ compact = false }: { compact?: boolean }) 
         setNote(ok ? `Код ${key.code} скопирован` : `Не удалось скопировать — вот код: ${key.code}`);
         return;
       }
-      const cfg = await api<{ uri: string; code: string | null }>(
-        `/provisioning/admin-config/${key.id}`,
-      );
-      const ok = await copyText(cfg.uri);
+      // Бэкенд отдаёт ссылка в поле config.uri (см. adminContract → toContract).
+      const cfg = await api<{
+        code: string | null;
+        config: { uri: string | null; unavailableReason?: string | null } | null;
+      }>(`/provisioning/admin-config/${key.id}`);
+      const uri = cfg.config?.uri;
+      if (!uri) {
+        throw new Error(
+          cfg.config?.unavailableReason ?? 'Для этого ключа нет vless-ссылки',
+        );
+      }
+      const ok = await copyText(uri);
       setNote(
         ok
           ? 'Ссылка vless:// скопирована — можно отправить в Hiddify/v2rayNG'
-          : `Не удалось скопировать автоматически, вот ссылка: ${cfg.uri}`,
+          : `Не удалось скопировать автоматически, вот ссылка: ${uri}`,
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось получить конфигурацию');
@@ -347,6 +355,7 @@ export default function KeysManager({ compact = false }: { compact?: boolean }) 
               />
               <button
                 type="button"
+                disabled={!issued.config?.uri}
                 onClick={() => copyText(issued.config?.uri ?? '').then((ok) =>
                   setNote(ok ? 'Ссылка vless:// скопирована' : 'Скопируйте ссылку вручную') )}
                 className="px-2 py-1 rounded border border-white/15 text-xs text-muted whitespace-nowrap"
