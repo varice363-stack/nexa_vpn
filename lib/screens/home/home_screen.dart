@@ -5,13 +5,15 @@ import 'package:go_router/go_router.dart';
 import '../../models/vpn_status.dart';
 import '../../providers/connection_source_providers.dart';
 import '../../providers/vpn_providers.dart';
-import 'widgets/protected_card.dart';
 import 'widgets/power_button_widget.dart';
 import 'widgets/stats_row.dart';
 import 'widgets/server_card.dart';
 import 'widgets/partner_banner.dart';
 
 /// Главный экран MOROK VPN.
+///
+/// Компактная раскладка: шапка со статусом, кнопка ключа, кнопка питания,
+/// статистика, затем баннеры — всё помещается на экране без прокрутки.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -66,41 +68,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               padding: const EdgeInsets.only(bottom: 90),
               child: Column(
                 children: [
-                  // Хедер
                   _buildHeader(context, ref),
-                  
-                  const SizedBox(height: 12),
 
-                  // Кнопка добавления ключа / подписки (как в Hiddify)
+                  const SizedBox(height: 6),
+
+                  // Кнопка добавления ключа / подписки
                   _buildAddKeyButton(context, activeSource?.label),
-                  
-                  const SizedBox(height: 14),
-                  
-                  // Компактная карточка "ЗАЩИЩЕНО / НЕ ЗАЩИЩЕНО"
-                  const ProtectedCard(),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Круглая кнопка с встроенным логотипом MOROK
-                  // (Чистая без дыма когда выключено, с дымом/свечением при подключении)
+
+                  const SizedBox(height: 10),
+
+                  // Круглая кнопка подключения (с логотипом MOROK)
                   const PowerButtonWidget(),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Статистика (Пинг / Загрузка / Отдача)
+
+                  const SizedBox(height: 8),
+
+                  // Статистика: Загрузка / Отдача / Пинг
                   const StatsRow(),
-                  
-                  const SizedBox(height: 14),
-                  
-                  // Карточка активного сервера (показывается ТОЛЬКО при подключении)
-                  if (isConnected) ...[
-                    const ServerCard(),
-                    const SizedBox(height: 14),
-                  ],
-                  
-                  // Баннеры только с сервера (панель «Баннеры»). Нет ответа
-                  // или пусто — блок не показываем, ничего не подставляем.
+
+                  const SizedBox(height: 10),
+
+                  // Баннеры сразу под статистикой, чтобы были видны без прокрутки.
+                  // Нет ответа или пусто — блок не показываем, ничего не подставляем.
                   const HomeBannerStrip(),
+
+                  // Карточка активного сервера — только при подключении
+                  if (isConnected) ...[
+                    const SizedBox(height: 10),
+                    const ServerCard(),
+                  ],
                 ],
               ),
             ),
@@ -110,7 +105,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  /// Яркая видимая кнопка вставки ключа / подписки (по аналогии с Hiddify)
+  /// Кнопка вставки ключа / подписки.
   Widget _buildAddKeyButton(BuildContext context, String? activeLabel) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -154,7 +149,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      activeLabel != null ? 'Ключ активен: $activeLabel' : 'Добавить ключ или подписку',
+                      activeLabel != null
+                          ? 'Ключ активен: $activeLabel'
+                          : 'Добавить ключ или подписку',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -188,9 +185,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   Widget _buildHeader(BuildContext context, WidgetRef ref) {
     final status = ref.watch(connectionStateProvider);
-    
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    final duration = ref.watch(connectionStatsProvider).value?.duration;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Row(
         children: [
           Image.asset(
@@ -210,58 +208,84 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ),
           const Spacer(),
+          VpnStatusPill(status: status, duration: duration ?? Duration.zero),
+        ],
+      ),
+    );
+  }
+}
+
+/// Маленькая плашка статуса: «Активно · 00:12:34» при подключении.
+///
+/// Время берётся из реальной сессии ([ConnectionStats.duration]), которое
+/// обновляется раз в секунду, пока туннель поднят.
+class VpnStatusPill extends StatelessWidget {
+  const VpnStatusPill({super.key, required this.status, required this.duration});
+
+  final VpnStatus status;
+  final Duration duration;
+
+  @override
+  Widget build(BuildContext context) {
+    final (Color color, String label) = switch (status) {
+      VpnStatus.connected => (
+          const Color(0xFF22C55E),
+          'Активно · ${_formatDuration(duration)}',
+        ),
+      VpnStatus.connecting => (const Color(0xFFF59E0B), 'Подключение…'),
+      VpnStatus.reconnecting => (const Color(0xFFF59E0B), 'Переподключение…'),
+      VpnStatus.disconnecting => (const Color(0xFFF59E0B), 'Отключение…'),
+      VpnStatus.error => (const Color(0xFFEF4444), 'Ошибка'),
+      VpnStatus.disconnected => (const Color(0xFF94A3B8), 'Отключено'),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            width: 6,
+            height: 6,
             decoration: BoxDecoration(
-              color: status == VpnStatus.connected 
-                  ? const Color(0xFF22C55E).withValues(alpha: 0.15)
-                  : Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: status == VpnStatus.connected 
-                    ? const Color(0xFF22C55E).withValues(alpha: 0.3)
-                    : Colors.white.withValues(alpha: 0.1),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: status == VpnStatus.connected 
-                        ? const Color(0xFF22C55E)
-                        : Colors.white.withValues(alpha: 0.5),
-                    boxShadow: [
-                      if (status == VpnStatus.connected)
-                        BoxShadow(
-                          color: const Color(0xFF22C55E).withValues(alpha: 0.8),
-                          blurRadius: 6,
-                        ),
-                    ],
+              shape: BoxShape.circle,
+              color: color,
+              boxShadow: [
+                if (status == VpnStatus.connected)
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.8),
+                    blurRadius: 6,
                   ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  status == VpnStatus.connected ? 'ЗАЩИЩЕНО' : 'ОТКЛЮЧЕНО',
-                  style: TextStyle(
-                    color: status == VpnStatus.connected 
-                        ? const Color(0xFF22C55E)
-                        : Colors.white.withValues(alpha: 0.7),
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
-                ),
               ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
         ],
       ),
     );
+  }
+
+  static String _formatDuration(Duration d) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    final h = d.inHours;
+    final m = d.inMinutes.remainder(60);
+    final s = d.inSeconds.remainder(60);
+    return '${two(h)}:${two(m)}:${two(s)}';
   }
 }
 
@@ -281,17 +305,17 @@ class _SmokePainter extends CustomPainter {
       const _SmokeBlob(x: 0.8, y: 0.6, size: 190, speed: 0.45, alpha: 0.03),
       const _SmokeBlob(x: 0.5, y: 0.5, size: 300, speed: 0.2, alpha: 0.02),
     ];
-    
+
     for (final blob in blobs) {
       final dx = t * 40 * blob.speed;
       final dy = t * 25 * blob.speed;
       final x = blob.x * size.width + dx % (size.width * 0.3) - size.width * 0.15;
       final y = blob.y * size.height + dy % (size.height * 0.3) - size.height * 0.15;
-      
+
       final paint = Paint()
         ..color = const Color(0xFF22D3EE).withValues(alpha: blob.alpha)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, blob.size);
-      
+
       canvas.drawCircle(Offset(x, y), blob.size * 0.5, paint);
     }
   }

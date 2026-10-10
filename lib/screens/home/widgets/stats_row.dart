@@ -23,14 +23,14 @@ class StatsRow extends ConsumerWidget {
             icon: Icons.arrow_downward_rounded,
             label: 'Загрузка',
             value: isConnected ? (stats?.speedDown ?? 0).toStringAsFixed(1) : '—',
-            unit: 'Мб/с',
+            unit: 'Мбит/с',
           ),
           const SizedBox(width: 12),
           _StatItem(
             icon: Icons.arrow_upward_rounded,
             label: 'Отдача',
             value: isConnected ? (stats?.speedUp ?? 0).toStringAsFixed(1) : '—',
-            unit: 'Мб/с',
+            unit: 'Мбит/с',
           ),
           const SizedBox(width: 12),
           _StatItem(
@@ -62,7 +62,7 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [
@@ -81,8 +81,8 @@ class _StatItem extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 34,
+              height: 34,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF2DD4BF), Color(0xFF14B8A6)],
@@ -101,10 +101,10 @@ class _StatItem extends StatelessWidget {
               child: Icon(
                 icon,
                 color: Colors.white,
-                size: 22,
+                size: 19,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
               label,
               style: TextStyle(
